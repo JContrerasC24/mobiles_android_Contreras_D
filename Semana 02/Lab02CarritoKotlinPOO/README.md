@@ -10,7 +10,7 @@
 
 ## Prompt utilizado con IA
 
-> "Ayúdame a convertir un carrito de compras en Kotlin a una versión que
+> "Ayúdame a convertir un carrito de compras en Kotlin a una versión que,
 > implemente los 4 pilares de la Programación Orientada a Objetos::
 > encapsulamiento, abstracción, herencia y polimorfismo, usando una clase
 > abstracta Producto y al menos dos subclases con comportamiento distinto,
