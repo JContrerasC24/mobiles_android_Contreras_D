@@ -14,7 +14,7 @@
 > implemente los 4 pilares de la Programación Orientada a Objetos::
 > encapsulamiento, abstracción, herencia y polimorfismo, usando una clase
 > abstracta Producto y al menos dos subclases con comportamiento distinto,
-> más una clase Carrito que administre la lista de forma polimórfica."
+> más una clase Carrito que administre la lista de forma polimórfica.".
 
 ## Los 4 pilares de POO en este código
 
