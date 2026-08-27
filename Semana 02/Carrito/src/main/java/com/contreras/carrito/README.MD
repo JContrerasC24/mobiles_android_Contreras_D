@@ -15,7 +15,7 @@ y muestra un reporte formateado con columnas alineadas.
 - `calcularDescuento()`: Aplica 5% si supera 3000, 10% si supera 5000
 
 ## Captura de consola
-![Captura](captura.png)
+!![img.png](img.png)
 
 ## Respuesta: ¿Por qué nombre y precio son val pero cantidad es var?
 - **`val` (nombre y precio):** Son inmutables porque el nombre y precio de un producto
