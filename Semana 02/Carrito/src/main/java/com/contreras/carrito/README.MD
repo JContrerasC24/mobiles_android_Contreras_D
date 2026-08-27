@@ -1,26 +1,25 @@
-# Lab02 - Carrito de Compras Kotlin
+# Lab02 - Carrito de Compras en Kotlin
 
-**Nombre:** Jose Contreras Cabrera
+**Nombre:** Jose Contreras
+**Cliente del sistema:** Jose Contreras
 
 ## Descripción
-Programa de consola en Kotlin que simula un carrito de compras de la tienda TECSUP.
-Implementa funciones para calcular subtotal, IGV (18%), total, descuentos por monto
-y muestra un reporte formateado con columnas alineadas.
+Programa de consola en Kotlin que simula un carrito de compras para la tienda TECSUP.
+El sistema permite agregar productos, calcular el subtotal, el IGV (18%) y el total a pagar.
+Además, implementa un reporte con columnas alineadas, identifica el producto más caro
+y aplica descuentos automáticos según el monto total de la compra.
 
 ## Funciones implementadas
-- `calcularSubtotal()`: Suma el precio × cantidad de todos los productos
-- `calcularIGV()`: Calcula el 18% del subtotal
-- `calcularTotal()`: Suma subtotal + IGV
-- `mostrarDetalle()`: Muestra el detalle del carrito con formato
-- `calcularDescuento()`: Aplica 5% si supera 3000, 10% si supera 5000
+- `calcularSubtotal()`: Recorre la lista y suma el precio por cantidad de cada producto.
+- `calcularIGV()`: Calcula el 18% del subtotal.
+- `calcularTotal()`: Suma el subtotal y el IGV.
+- `mostrarDetalle()`: Imprime el reporte del carrito con formato de columnas alineadas.
+- `calcularDescuento()`: Aplica un 5% de descuento si el total supera 3000, 10% si supera 5000, o 0 en otro caso.
 
-## Captura de consola
-!![img.png](img.png)
+## Captura de la consola
+!![img_1.png](img_1.png)
 
-## Respuesta: ¿Por qué nombre y precio son val pero cantidad es var?
-- **`val` (nombre y precio):** Son inmutables porque el nombre y precio de un producto
-  no deben cambiar una vez creado el objeto, manteniendo la integridad de los datos.
-- **`var` (cantidad):** Es mutable porque el usuario puede modificar la cantidad de
-  unidades que desea comprar en cualquier momento.
-- **¿Qué pasa si intentas cambiar el precio?** Kotlin muestra error de compilación:
-  *"Val cannot be reassigned"* (No se puede reasignar un valor inmutable).
+## Análisis: ¿Por qué nombre y precio son `val` pero cantidad es `var`?
+- **`val` (nombre y precio):** Se usan porque son propiedades inmutables. Una vez que el producto se crea, su identidad (nombre) y su valor base (precio) no deben cambiar para mantener la integridad de los datos.
+- **`var` (cantidad):** Se usa porque es una propiedad mutable. El usuario debe poder modificar la cantidad de unidades que desea llevar en el carrito en cualquier momento.
+- **¿Qué pasaría si intentas cambiar el precio?** Kotlin arrojaría un error de compilación indicando *"Val cannot be reassigned"* (No se puede reasignar un valor inmutable), ya que `val` no permite modificar su valor después de la inicialización.
