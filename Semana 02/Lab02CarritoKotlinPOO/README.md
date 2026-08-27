@@ -1,6 +1,6 @@
 # Laboratorio 02 - Carrito de Compras en Kotlin (Version con IA - POO)
 
-**Alumno:** Jose Contreras
+**Alumno:** José Contreras
 **Curso:** Programación en Móviles
 **Rama:** semana02-con-ia
 
