@@ -31,7 +31,7 @@
 - `ProductoElectronico`: agrega meses de garantía.
 - `ProductoPerecible`: agrega días para vencer y aplica descuento automático si faltan 3 días o menos.
 - `Carrito`: administra la lista de productos de forma polimórfica y concentra la lógica de subtotal, IGV, descuento y reporte.
-- `main()`: crea productos de ambas subclases, genera el reporte, y demuestra búsqueda/eliminación.
+- `main()`: crea productos de ambas subclases, genera el reporte, y demuestra búsqueda/eliminación..
 
 ## Diferencias frente a la versión sin IA
 
