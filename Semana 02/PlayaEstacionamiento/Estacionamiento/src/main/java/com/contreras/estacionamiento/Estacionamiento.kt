@@ -13,9 +13,45 @@ val tarifas = mapOf(
     "camioneta" to 10.0
 )
 
+/**
+ * Placas registradas como clientes frecuentes. En un sistema real esto
+ * vendria de una base de datos; aqui lo simulamos con una lista fija.
+ */
+val clientesFrecuentes = setOf("ABC-123", "XYZ-789")
+
+const val MAX_VEHICULOS = 30
+
+fun esClienteFrecuente(placa: String): Boolean {
+    return clientesFrecuentes.contains(placa.uppercase())
+}
+
+/**
+ * Calcula el monto a pagar aplicando recargos POR TRAMO DE HORA:
+ * - Horas 1 y 2: tarifa normal (100%).
+ * - Horas 3 y 4: tarifa + 20% de recargo (solo esas horas).
+ * - Hora 5 en adelante: tarifa + 50% de recargo (solo esas horas).
+ * Ejemplo con auto (S/4/hora) y 6 horas:
+ *   2h normales (4x2=8) + 2h al 20% (4*1.2x2=9.6) + 2h al 50% (4*1.5x2=12) = 29.6
+ * Al final, si el cliente es frecuente (segun su placa), se aplica un
+ * descuento del 10% sobre el monto total.
+ */
 fun calcularTarifa(vehiculo: Vehiculo): Double {
-    val tarifaHora = tarifas[vehiculo.tipo.lowercase()] ?: 0.0
-    return tarifaHora * vehiculo.horas
+    val tarifaBase = tarifas[vehiculo.tipo.lowercase()] ?: 0.0
+    val horas = vehiculo.horas
+
+    val horasNormales = minOf(horas, 2)
+    val horasConRecargo20 = if (horas > 2) minOf(horas - 2, 2) else 0
+    val horasConRecargo50 = if (horas > 4) horas - 4 else 0
+
+    var monto = (horasNormales * tarifaBase) +
+            (horasConRecargo20 * tarifaBase * 1.20) +
+            (horasConRecargo50 * tarifaBase * 1.50)
+
+    if (esClienteFrecuente(vehiculo.placa)) {
+        monto *= 0.90
+    }
+
+    return monto
 }
 
 fun buscarPorPlaca(vehiculos: List<Vehiculo>, placa: String): Vehiculo? {
@@ -24,10 +60,11 @@ fun buscarPorPlaca(vehiculos: List<Vehiculo>, placa: String): Vehiculo? {
 
 fun mostrarVehiculo(vehiculo: Vehiculo) {
     val total = calcularTarifa(vehiculo)
+    val frecuente = if (esClienteFrecuente(vehiculo.placa)) " (Cliente frecuente)" else ""
     println(
         String.format(
-            "Placa: %-8s | Tipo: %-11s | Horas: %2d | Cliente: %-15s | Total: S/ %.2f",
-            vehiculo.placa, vehiculo.tipo, vehiculo.horas, vehiculo.cliente, total
+            "Placa: %-8s | Tipo: %-11s | Horas: %2d | Cliente: %-15s | Total: S/ %.2f%s",
+            vehiculo.placa, vehiculo.tipo, vehiculo.horas, vehiculo.cliente, total, frecuente
         )
     )
 }
@@ -47,12 +84,12 @@ fun leerVehiculo(): Vehiculo {
 
     var horas: Int
     do {
-        print("Horas estacionado: ")
+        print("Horas estacionado (minimo 1): ")
         horas = readLine()?.trim()?.toIntOrNull() ?: -1
-        if (horas <= 0) {
-            println("Ingrese un numero de horas valido (mayor a 0).")
+        if (horas < 1) {
+            println("Ningun vehiculo puede registrar menos de una hora.")
         }
-    } while (horas <= 0)
+    } while (horas < 1)
 
     print("Nombre del cliente: ")
     val cliente = readLine()?.trim() ?: ""
@@ -60,16 +97,29 @@ fun leerVehiculo(): Vehiculo {
     return Vehiculo(placa, tipo, horas, cliente)
 }
 
+fun leerCantidadVehiculos(): Int {
+    var cantidad: Int
+    do {
+        print("¿Cuantos vehiculos desea registrar? (maximo $MAX_VEHICULOS): ")
+        cantidad = readLine()?.trim()?.toIntOrNull() ?: -1
+        if (cantidad < 0) {
+            println("Ingrese un numero valido.")
+        } else if (cantidad > MAX_VEHICULOS) {
+            println("No se pueden registrar mas de $MAX_VEHICULOS vehiculos.")
+        }
+    } while (cantidad < 0 || cantidad > MAX_VEHICULOS)
+    return cantidad
+}
+
 fun main() {
     println("=========================================")
     println("   PLAYA DE ESTACIONAMIENTO - TARIFARIO")
     println("=========================================")
     println("Moto: S/ 2.00/hora | Auto: S/ 4.00/hora | Camioneta: S/ 10.00/hora")
+    println("Horas 1-2: normal | Horas 3-4: +20% | Hora 5+: +50% | Cliente frecuente: -10%")
     println()
 
-    print("¿Cuantos vehiculos desea registrar? ")
-    val cantidad = readLine()?.trim()?.toIntOrNull() ?: 0
-
+    val cantidad = leerCantidadVehiculos()
     val vehiculos = mutableListOf<Vehiculo>()
 
     for (i in 1..cantidad) {
