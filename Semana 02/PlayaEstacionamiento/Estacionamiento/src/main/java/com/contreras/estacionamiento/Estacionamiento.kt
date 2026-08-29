@@ -13,29 +13,35 @@ val tarifas = mapOf(
     "camioneta" to 10.0
 )
 
-/**
- * Placas registradas como clientes frecuentes. En un sistema real esto
- * vendria de una base de datos; aqui lo simulamos con una lista fija.
- */
-val clientesFrecuentes = setOf("ABC-123", "XYZ-789")
-
 const val MAX_VEHICULOS = 30
 
-fun esClienteFrecuente(placa: String): Boolean {
-    return clientesFrecuentes.contains(placa.uppercase())
+/**
+ * Cuenta cuantas veces aparece cada placa en la lista de vehiculos
+ * registrados. Esto permite detectar clientes frecuentes de forma
+ * dinamica, en base a los datos reales del dia, sin listas fijas.
+ */
+fun contarFrecuenciaPorPlaca(vehiculos: List<Vehiculo>): Map<String, Int> {
+    return vehiculos.groupingBy { it.placa.uppercase() }.eachCount()
+}
+
+/**
+ * Un vehiculo es "cliente frecuente" si su placa aparece MAS DE UNA VEZ
+ * entre los vehiculos registrados en el dia (es decir, regreso a la
+ * playa de estacionamiento mas de una vez).
+ */
+fun esClienteFrecuente(placa: String, frecuencia: Map<String, Int>): Boolean {
+    return (frecuencia[placa.uppercase()] ?: 0) > 1
 }
 
 /**
  * Calcula el monto a pagar aplicando recargos POR TRAMO DE HORA:
- * - Horas 1 y 2: tarifa normal (100%).
- * - Horas 3 y 4: tarifa + 20% de recargo (solo esas horas).
- * - Hora 5 en adelante: tarifa + 50% de recargo (solo esas horas).
- * Ejemplo con auto (S/4/hora) y 6 horas:
- *   2h normales (4x2=8) + 2h al 20% (4*1.2x2=9.6) + 2h al 50% (4*1.5x2=12) = 29.6
- * Al final, si el cliente es frecuente (segun su placa), se aplica un
- * descuento del 10% sobre el monto total.
+ * - Horas 1 y 2: tarifa normal.
+ * - Horas 3 y 4: tarifa + 20% de recargo.
+ * - Hora 5 en adelante: tarifa + 50% de recargo.
+ * Si la placa del vehiculo aparece mas de una vez en el registro del
+ * dia (cliente frecuente), se aplica un 10% de descuento sobre el total.
  */
-fun calcularTarifa(vehiculo: Vehiculo): Double {
+fun calcularTarifa(vehiculo: Vehiculo, frecuencia: Map<String, Int>): Double {
     val tarifaBase = tarifas[vehiculo.tipo.lowercase()] ?: 0.0
     val horas = vehiculo.horas
 
@@ -47,7 +53,7 @@ fun calcularTarifa(vehiculo: Vehiculo): Double {
             (horasConRecargo20 * tarifaBase * 1.20) +
             (horasConRecargo50 * tarifaBase * 1.50)
 
-    if (esClienteFrecuente(vehiculo.placa)) {
+    if (esClienteFrecuente(vehiculo.placa, frecuencia)) {
         monto *= 0.90
     }
 
@@ -58,15 +64,52 @@ fun buscarPorPlaca(vehiculos: List<Vehiculo>, placa: String): Vehiculo? {
     return vehiculos.find { it.placa.equals(placa, ignoreCase = true) }
 }
 
-fun mostrarVehiculo(vehiculo: Vehiculo) {
-    val total = calcularTarifa(vehiculo)
-    val frecuente = if (esClienteFrecuente(vehiculo.placa)) " (Cliente frecuente)" else ""
+fun mostrarVehiculo(vehiculo: Vehiculo, frecuencia: Map<String, Int>) {
+    val total = calcularTarifa(vehiculo, frecuencia)
+    val frecuente = if (esClienteFrecuente(vehiculo.placa, frecuencia)) " (Cliente frecuente)" else ""
     println(
         String.format(
             "Placa: %-8s | Tipo: %-11s | Horas: %2d | Cliente: %-15s | Total: S/ %.2f%s",
             vehiculo.placa, vehiculo.tipo, vehiculo.horas, vehiculo.cliente, total, frecuente
         )
     )
+}
+
+fun mostrarResumenDelDia(vehiculos: List<Vehiculo>, frecuencia: Map<String, Int>) {
+    println("\n=========================================")
+    println("           RESUMEN DEL DIA")
+    println("=========================================")
+
+    if (vehiculos.isEmpty()) {
+        println("No se registraron vehiculos el dia de hoy.")
+        return
+    }
+
+    val totalVehiculos = vehiculos.size
+    val totalMotos = vehiculos.count { it.tipo == "moto" }
+    val totalAutos = vehiculos.count { it.tipo == "auto" }
+    val totalCamionetas = vehiculos.count { it.tipo == "camioneta" }
+
+    println("Vehiculos atendidos: $totalVehiculos")
+    println("  - Motos: $totalMotos")
+    println("  - Autos: $totalAutos")
+    println("  - Camionetas: $totalCamionetas")
+
+    val recaudacionTotal = vehiculos.sumOf { calcularTarifa(it, frecuencia) }
+    println(String.format("\nRecaudacion total: S/ %.2f", recaudacionTotal))
+
+    val vehiculoMayorPago = vehiculos.maxByOrNull { calcularTarifa(it, frecuencia) }
+    if (vehiculoMayorPago != null) {
+        val montoMayor = calcularTarifa(vehiculoMayorPago, frecuencia)
+        println(
+            String.format(
+                "Vehiculo con mayor pago -> Placa: %s | Cliente: %s | Monto: S/ %.2f",
+                vehiculoMayorPago.placa, vehiculoMayorPago.cliente, montoMayor
+            )
+        )
+    }
+
+    println("=========================================")
 }
 
 fun leerVehiculo(): Vehiculo {
@@ -116,7 +159,7 @@ fun main() {
     println("   PLAYA DE ESTACIONAMIENTO - TARIFARIO")
     println("=========================================")
     println("Moto: S/ 2.00/hora | Auto: S/ 4.00/hora | Camioneta: S/ 10.00/hora")
-    println("Horas 1-2: normal | Horas 3-4: +20% | Hora 5+: +50% | Cliente frecuente: -10%")
+    println("Horas 1-2: normal | Horas 3-4: +20% | Hora 5+: +50% | Cliente frecuente (placa repetida): -10%")
     println()
 
     val cantidad = leerCantidadVehiculos()
@@ -127,11 +170,15 @@ fun main() {
         vehiculos.add(leerVehiculo())
     }
 
-    println("\n--- Resumen de vehiculos registrados ---")
+    // Se calcula la frecuencia UNA VEZ, con todos los vehiculos ya registrados,
+    // para saber que placas se repiten en el dia.
+    val frecuencia = contarFrecuenciaPorPlaca(vehiculos)
+
+    println("\n--- Detalle de vehiculos registrados ---")
     if (vehiculos.isEmpty()) {
         println("No se registro ningun vehiculo.")
     } else {
-        vehiculos.forEach { mostrarVehiculo(it) }
+        vehiculos.forEach { mostrarVehiculo(it, frecuencia) }
     }
 
     println()
@@ -145,11 +192,13 @@ fun main() {
         val encontrado = buscarPorPlaca(vehiculos, placaBuscada)
         if (encontrado != null) {
             println("\nVehiculo encontrado:")
-            mostrarVehiculo(encontrado)
+            mostrarVehiculo(encontrado, frecuencia)
         } else {
             println("\nNo se encontro ningun vehiculo con la placa '$placaBuscada'.")
         }
     }
+
+    mostrarResumenDelDia(vehiculos, frecuencia)
 
     println("\nFin del programa.")
 }
