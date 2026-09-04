@@ -16,42 +16,52 @@ val tarifas = mapOf(
 
 const val MAX_VEHICULOS = 30
 
-/**
- * Cuenta cuantas veces aparece cada placa en la lista de vehiculos
- * registrados. Esto permite detectar clientes frecuentes de forma
- * dinamica, en base a los datos reales del dia, sin listas fijas.
- */
 fun contarFrecuenciaPorPlaca(vehiculos: List<Vehiculo>): Map<String, Int> {
     return vehiculos.groupingBy { it.placa.uppercase() }.eachCount()
 }
 
-/**
- * Un vehiculo es "cliente frecuente" si su placa aparece MAS DE UNA VEZ
- * entre los vehiculos registrados en el dia.
- */
 fun esClienteFrecuente(placa: String, frecuencia: Map<String, Int>): Boolean {
     return (frecuencia[placa.uppercase()] ?: 0) > 1
 }
 
 /**
- * Calcula el monto a pagar aplicando recargos POR TRAMO DE HORA:
- * - Horas 1 y 2: tarifa normal.
- * - Horas 3 y 4: tarifa + 20% de recargo.
- * - Hora 5 en adelante: tarifa + 50% de recargo.
- * Si la placa del vehiculo aparece mas de una vez en el registro del
- * dia (cliente frecuente), se aplica un 10% de descuento sobre el total.
+ * Calcula el monto a pagar por horas, aplicando el porcentaje de la
+ * tarifa que corresponde a cada tramo:
+ * - Horas 1 y 2: no se cobra nada (0%).
+ * - Horas 3 a 5: se cobra el 20% de la tarifa por cada una de esas horas.
+ * - Horas 6 a 10: se cobra el 40% de la tarifa por cada una de esas horas.
+ * - Hora 11 en adelante: se cobra el 50% de la tarifa por cada una.
+ * Es un calculo ESCALONADO: cada hora paga segun el tramo en el que cae,
+ * no se recalculan las horas anteriores.
  */
-fun calcularTarifa(vehiculo: Vehiculo, frecuencia: Map<String, Int>): Double {
+fun calcularMontoPorHoras(vehiculo: Vehiculo): Double {
     val tarifaBase = tarifas[vehiculo.tipo.lowercase()] ?: 0.0
     val horas = vehiculo.horas
 
-    val horasNormales = minOf(horas, 2)
-    val horasConRecargo20 = if (horas > 2) minOf(horas - 2, 2) else 0
-    val horasConRecargo50 = if (horas > 4) horas - 4 else 0
+    val horasGratis = minOf(horas, 2)
+    val horasAl20 = if (horas > 2) minOf(horas - 2, 3) else 0
+    val horasAl40 = if (horas > 5) minOf(horas - 5, 5) else 0
+    val horasAl50 = if (horas > 10) horas - 10 else 0
 
-    var monto = (horasNormales * tarifaBase) +
-            (horasConRecargo20 * tarifaBase * 1.20) +
-            (horasConRecargo50 * tarifaBase * 1.50)
+    return (horasGratis * tarifaBase * 0.0) +
+            (horasAl20 * tarifaBase * 0.20) +
+            (horasAl40 * tarifaBase * 0.40) +
+            (horasAl50 * tarifaBase * 0.50)
+}
+
+/**
+ * Calcula el monto final aplicando, en orden:
+ * 1. El costo por horas segun el tramo (calcularMontoPorHoras).
+ * 2. Si ese monto supera S/ 500, se aplica un 20% de descuento.
+ * 3. Si el cliente es frecuente (placa repetida en el dia), se aplica
+ *    un 10% de descuento adicional sobre el resultado anterior.
+ */
+fun calcularTarifa(vehiculo: Vehiculo, frecuencia: Map<String, Int>): Double {
+    var monto = calcularMontoPorHoras(vehiculo)
+
+    if (monto > 500.0) {
+        monto *= 0.80
+    }
 
     if (esClienteFrecuente(vehiculo.placa, frecuencia)) {
         monto *= 0.90
@@ -161,7 +171,8 @@ fun main() {
     println("   PLAYA DE ESTACIONAMIENTO - TARIFARIO")
     println("=========================================")
     println("Moto: S/ 2.00/hora | Vehiculo: S/ 4.00/hora | Camioneta: S/ 10.00/hora | Trailer: S/ 20.00/hora")
-    println("Horas 1-2: normal | Horas 3-4: +20% | Hora 5+: +50% | Cliente frecuente (placa repetida): -10%")
+    println("Horas 1-2: gratis | Horas 3-5: 20% | Horas 6-10: 40% | Hora 11+: 50%")
+    println("Si el total supera S/ 500: -20% | Cliente frecuente (placa repetida): -10%")
     println()
 
     val cantidad = leerCantidadVehiculos()
