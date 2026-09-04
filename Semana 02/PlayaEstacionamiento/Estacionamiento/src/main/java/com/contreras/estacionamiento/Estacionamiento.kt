@@ -9,8 +9,9 @@ data class Vehiculo(
 
 val tarifas = mapOf(
     "moto" to 2.0,
-    "auto" to 4.0,
-    "camioneta" to 10.0
+    "vehiculo" to 4.0,
+    "camioneta" to 10.0,
+    "trailer" to 20.0
 )
 
 const val MAX_VEHICULOS = 30
@@ -26,8 +27,7 @@ fun contarFrecuenciaPorPlaca(vehiculos: List<Vehiculo>): Map<String, Int> {
 
 /**
  * Un vehiculo es "cliente frecuente" si su placa aparece MAS DE UNA VEZ
- * entre los vehiculos registrados en el dia (es decir, regreso a la
- * playa de estacionamiento mas de una vez).
+ * entre los vehiculos registrados en el dia.
  */
 fun esClienteFrecuente(placa: String, frecuencia: Map<String, Int>): Boolean {
     return (frecuencia[placa.uppercase()] ?: 0) > 1
@@ -85,15 +85,17 @@ fun mostrarResumenDelDia(vehiculos: List<Vehiculo>, frecuencia: Map<String, Int>
         return
     }
 
-    val totalVehiculos = vehiculos.size
+    val totalVehiculosRegistrados = vehiculos.size
     val totalMotos = vehiculos.count { it.tipo == "moto" }
-    val totalAutos = vehiculos.count { it.tipo == "auto" }
+    val totalVehiculo = vehiculos.count { it.tipo == "vehiculo" }
     val totalCamionetas = vehiculos.count { it.tipo == "camioneta" }
+    val totalTrailers = vehiculos.count { it.tipo == "trailer" }
 
-    println("Vehiculos atendidos: $totalVehiculos")
+    println("Vehiculos atendidos: $totalVehiculosRegistrados")
     println("  - Motos: $totalMotos")
-    println("  - Autos: $totalAutos")
+    println("  - Vehiculos: $totalVehiculo")
     println("  - Camionetas: $totalCamionetas")
+    println("  - Trailers: $totalTrailers")
 
     val recaudacionTotal = vehiculos.sumOf { calcularTarifa(it, frecuencia) }
     println(String.format("\nRecaudacion total: S/ %.2f", recaudacionTotal))
@@ -118,10 +120,10 @@ fun leerVehiculo(): Vehiculo {
 
     var tipo: String
     do {
-        print("Tipo de vehiculo (moto / auto / camioneta): ")
+        print("Tipo de vehiculo (moto / vehiculo / camioneta / trailer): ")
         tipo = readLine()?.trim()?.lowercase() ?: ""
         if (!tarifas.containsKey(tipo)) {
-            println("Tipo invalido. Solo se acepta: moto, auto o camioneta.")
+            println("Tipo invalido. Solo se acepta: moto, vehiculo, camioneta o trailer.")
         }
     } while (!tarifas.containsKey(tipo))
 
@@ -158,7 +160,7 @@ fun main() {
     println("=========================================")
     println("   PLAYA DE ESTACIONAMIENTO - TARIFARIO")
     println("=========================================")
-    println("Moto: S/ 2.00/hora | Auto: S/ 4.00/hora | Camioneta: S/ 10.00/hora")
+    println("Moto: S/ 2.00/hora | Vehiculo: S/ 4.00/hora | Camioneta: S/ 10.00/hora | Trailer: S/ 20.00/hora")
     println("Horas 1-2: normal | Horas 3-4: +20% | Hora 5+: +50% | Cliente frecuente (placa repetida): -10%")
     println()
 
@@ -170,8 +172,6 @@ fun main() {
         vehiculos.add(leerVehiculo())
     }
 
-    // Se calcula la frecuencia UNA VEZ, con todos los vehiculos ya registrados,
-    // para saber que placas se repiten en el dia.
     val frecuencia = contarFrecuenciaPorPlaca(vehiculos)
 
     println("\n--- Detalle de vehiculos registrados ---")
