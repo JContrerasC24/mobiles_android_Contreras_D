@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,7 +60,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
         Text(
             text = "Nuevo producto",
             style = MaterialTheme.typography.headlineSmall
@@ -72,7 +72,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
@@ -81,7 +80,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
 
         Row(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
@@ -101,10 +99,8 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-
         Button(
             onClick = {
-
                 if (nombre.isNotBlank() && precio.isNotBlank() && cantidad.isNotBlank()) {
                     mostrarResumen = true
                 }
@@ -116,9 +112,7 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-
         if (mostrarResumen) {
-
             val precioNum = precio.toDoubleOrNull() ?: 0.0
             val cantidadNum = cantidad.toIntOrNull() ?: 0
             val importe = precioNum * cantidadNum
@@ -130,22 +124,18 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-
                     Text(
                         text = nombre,
                         style = MaterialTheme.typography.titleLarge
                     )
 
-
                     Text(
                         text = "Precio: S/ " + String.format("%.2f", precioNum)
                     )
 
-
                     Text(
                         text = "Cantidad: $cantidadNum"
                     )
-
 
                     Text(
                         text = "Importe total: S/ " + String.format("%.2f", importe),
@@ -154,6 +144,12 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "✓ Producto registrado correctamente",
+                color = Color(0xFF2E7D32)
+            )
         }
     }
 }
