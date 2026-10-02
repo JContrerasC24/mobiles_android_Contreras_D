@@ -13,14 +13,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PantallaInicio(modifier: Modifier = Modifier) {
+fun PantallaInicio(
+    favoritos: List<Int>,
+    onToggleFavorito: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(productosDemo) { producto ->
-            TarjetaProducto(producto)
+            TarjetaProducto(
+                producto = producto,
+                esFavorito = producto.id in favoritos,
+                onToggleFavorito = { onToggleFavorito(producto.id) }
+            )
         }
     }
 }

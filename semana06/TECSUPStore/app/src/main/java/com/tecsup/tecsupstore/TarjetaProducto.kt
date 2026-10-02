@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -40,7 +41,11 @@ import androidx.compose.ui.unit.dp
 import java.util.Locale
 
 @Composable
-fun TarjetaProducto(producto: Producto) {
+fun TarjetaProducto(
+    producto: Producto,
+    esFavorito: Boolean,
+    onToggleFavorito: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -74,11 +79,23 @@ fun TarjetaProducto(producto: Producto) {
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Favoritos") },
-                        leadingIcon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                        text = { Text(if (esFavorito) "Quitar de favoritos" else "Favoritos") },
+                        leadingIcon = {
+                            Icon(
+                                if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = if (esFavorito) Morado else Color.Unspecified
+                            )
+                        },
                         onClick = {
                             expanded = false
-                            Toast.makeText(context, "${producto.nombre} agregado a favoritos", Toast.LENGTH_SHORT).show()
+                            val mensaje = if (esFavorito) {
+                                "${producto.nombre} quitado de favoritos"
+                            } else {
+                                "${producto.nombre} agregado a favoritos"
+                            }
+                            onToggleFavorito()
+                            Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
                         }
                     )
                     HorizontalDivider()
