@@ -88,9 +88,8 @@ fun AppNavegacion() {
                 modifier = Modifier.padding(padding)
             ) {
                 composable("inicio") { PantallaInicio(favoritos, alternarFavorito) }
-                composable("pedidos") { PantallaSimple("Mis pedidos") }
+
                 composable("favoritos") { PantallaFavoritos(favoritos, alternarFavorito) }
-                composable("perfil") { PantallaSimple("Perfil") }
             }
         }
     }
