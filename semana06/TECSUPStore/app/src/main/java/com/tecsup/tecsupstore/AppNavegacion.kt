@@ -19,18 +19,30 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavegacion() {
+    val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            AppDrawer(onNavegar = { scope.launch { drawerState.close() } })
+            AppDrawer(
+                onNavegar = { ruta ->
+                    scope.launch { drawerState.close() }
+                    navController.navigate(ruta) {
+                        popUpTo("inicio")
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
     ) {
         Scaffold(
@@ -55,8 +67,16 @@ fun AppNavegacion() {
                 )
             }
         ) { padding ->
-            PantallaInicio(Modifier.padding(padding))
+            NavHost(
+                navController = navController,
+                startDestination = "inicio",
+                modifier = Modifier.padding(padding)
+            ) {
+                composable("inicio") { PantallaInicio() }
+                composable("pedidos") { PantallaSimple("Mis pedidos") }
+                composable("favoritos") { PantallaSimple("Favoritos") }
+                composable("perfil") { PantallaSimple("Perfil") }
+            }
         }
     }
 }
-
