@@ -49,6 +49,7 @@ fun AppNavegacion() {
         drawerContent = {
             AppDrawer(
                 rutaActual = rutaActual,
+                cantidadFavoritos = favoritos.size,
                 onNavegar = { ruta ->
                     scope.launch { drawerState.close() }
                     navController.navigate(ruta) {
@@ -88,7 +89,7 @@ fun AppNavegacion() {
             ) {
                 composable("inicio") { PantallaInicio(favoritos, alternarFavorito) }
                 composable("pedidos") { PantallaSimple("Mis pedidos") }
-                composable("favoritos") { PantallaSimple("Favoritos") }
+                composable("favoritos") { PantallaFavoritos(favoritos, alternarFavorito) }
                 composable("perfil") { PantallaSimple("Perfil") }
             }
         }

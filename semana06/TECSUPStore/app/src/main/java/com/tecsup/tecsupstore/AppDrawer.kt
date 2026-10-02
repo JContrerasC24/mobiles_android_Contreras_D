@@ -1,5 +1,6 @@
 package com.tecsup.tecsupstore
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,10 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
@@ -27,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +45,13 @@ val destinosDrawer = listOf(
 )
 
 @Composable
-fun AppDrawer(rutaActual: String, onNavegar: (String) -> Unit) {
+fun AppDrawer(
+    rutaActual: String,
+    cantidadFavoritos: Int,
+    onNavegar: (String) -> Unit
+) {
+    val context = LocalContext.current
+
     ModalDrawerSheet {
         Row(
             modifier = Modifier.padding(24.dp),
@@ -68,6 +78,13 @@ fun AppDrawer(rutaActual: String, onNavegar: (String) -> Unit) {
             NavigationDrawerItem(
                 label = { Text(destino.titulo) },
                 icon = { Icon(destino.icono, contentDescription = null) },
+                badge = {
+                    if (destino.ruta == "favoritos" && cantidadFavoritos > 0) {
+                        Badge(containerColor = Morado, contentColor = Color.White) {
+                            Text(cantidadFavoritos.toString())
+                        }
+                    }
+                },
                 selected = destino.ruta == rutaActual,
                 colors = NavigationDrawerItemDefaults.colors(
                     selectedContainerColor = MoradoClaro,
@@ -78,5 +95,15 @@ fun AppDrawer(rutaActual: String, onNavegar: (String) -> Unit) {
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
+
+        NavigationDrawerItem(
+            label = { Text("Cerrar sesion") },
+            icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
+            selected = false,
+            onClick = {
+                Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
     }
 }

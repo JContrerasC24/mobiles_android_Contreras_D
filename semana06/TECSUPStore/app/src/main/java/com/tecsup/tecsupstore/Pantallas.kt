@@ -34,8 +34,30 @@ fun PantallaInicio(
 }
 
 @Composable
-fun PantallaSimple(titulo: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(titulo)
+fun PantallaFavoritos(
+    favoritos: List<Int>,
+    onToggleFavorito: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val lista = productosDemo.filter { it.id in favoritos }
+
+    if (lista.isEmpty()) {
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Aún no tienes favoritos")
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(lista) { producto ->
+                TarjetaProducto(
+                    producto = producto,
+                    esFavorito = true,
+                    onToggleFavorito = { onToggleFavorito(producto.id) }
+                )
+            }
+        }
     }
 }
