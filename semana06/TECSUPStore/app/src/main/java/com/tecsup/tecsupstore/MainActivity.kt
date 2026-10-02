@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
             TECSUPStoreTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     PantallaInicio(Modifier.padding(innerPadding))
+                    AppNavegacion()
                 }
             }
         }
