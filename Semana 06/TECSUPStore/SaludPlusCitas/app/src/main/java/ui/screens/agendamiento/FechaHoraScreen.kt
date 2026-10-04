@@ -1,75 +1,91 @@
 package com.contreras.saludplus.citas.ui.screens.agendamiento
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.contreras.saludplus.citas.data.repository.Repositorio
 import com.contreras.saludplus.citas.navigation.Rutas
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import com.contreras.saludplus.citas.util.CalendarioCitas
+import java.time.LocalDate
 
-// Permite elegir una fecha y un horario disponible.
+// Presenta cinco días hábiles y sus horarios disponibles.
 @Composable
 fun FechaHoraScreen(
     navController: NavHostController,
     medicoId: Int
 ) {
-    val contexto = LocalContext.current
-
-    // Mantiene el formato interno utilizado por las rutas.
-    val formatoFecha = remember {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US)
-    }
-
-    // Inicia la selección con la fecha actual del dispositivo.
-    var fechaSeleccionada by rememberSaveable(medicoId) {
-        mutableStateOf(
-            formatoFecha.format(Calendar.getInstance().time)
-        )
-    }
-
-    // Conserva la hora seleccionada durante recreaciones.
-    var horaSeleccionada by rememberSaveable(medicoId) {
-        mutableStateOf<String?>(null)
-    }
-
-    var error by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    // Consulta el médico y los horarios de la fecha seleccionada.
+    val hoy = LocalDate.now()
     val medico = Repositorio.obtenerMedico(medicoId)
+
+    // Conserva el desplazamiento semanal durante cambios de configuración.
+    var semanasAdelante by rememberSaveable(medicoId) {
+        mutableIntStateOf(0)
+    }
+
+    val inicio = hoy.plusWeeks(semanasAdelante.toLong())
+    val dias = CalendarioCitas.proximosDiasHabiles(inicio)
+
+    // Selecciona inicialmente el primer día de cada ventana.
+    var fechaSeleccionada by rememberSaveable(
+        medicoId,
+        hoy.toString(),
+        semanasAdelante
+    ) {
+        mutableStateOf(dias.first().toString())
+    }
+
+    // Evita conservar una fecha fuera de los días mostrados.
+    val fechaActual = fechaSeleccionada.takeIf { seleccion ->
+        dias.any { it.toString() == seleccion }
+    } ?: dias.first().toString()
+
+    // Reinicia la hora cuando cambia la fecha efectiva.
+    var horaSeleccionada by rememberSaveable(
+        medicoId,
+        fechaActual
+    ) {
+        mutableStateOf<String?>(null)
+    }
+
+    var error by remember(medicoId, fechaActual) {
+        mutableStateOf<String?>(null)
+    }
+
+    // Consulta nuevamente los horarios durante cada recomposición.
     val horarios = Repositorio.horariosDisponibles(
         medicoId = medicoId,
-        fecha = fechaSeleccionada
+        fecha = fechaActual
     )
 
-    // Invalida visualmente una selección que dejó de estar disponible.
     val horaValida = horaSeleccionada?.takeIf {
         it in horarios
     }
@@ -80,11 +96,8 @@ fun FechaHoraScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Regresa a la selección del médico.
         TextButton(
-            onClick = {
-                navController.popBackStack()
-            }
+            onClick = { navController.popBackStack() }
         ) {
             Text("Volver")
         }
@@ -95,72 +108,125 @@ fun FechaHoraScreen(
         )
 
         if (medico == null) {
-            // Evita continuar con un identificador inexistente.
             Text(
-                text = "El médico seleccionado no existe.",
+                text = "No se encontró el médico seleccionado.",
                 color = MaterialTheme.colorScheme.error
             )
         } else {
-            Text(
-                text = medico.nombre,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = medico.nombre,
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-            Text(
-                text = medico.descripcion,
-                style = MaterialTheme.typography.bodyMedium
-            )
+                    Text(medico.descripcion)
+                }
+            }
 
-            Text(
-                text = "Fecha seleccionada: $fechaSeleccionada",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            // Abre el calendario nativo de Android.
-            OutlinedButton(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    val fechaInicial = Calendar.getInstance().apply {
-                        time = requireNotNull(
-                            formatoFecha.parse(fechaSeleccionada)
-                        )
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    enabled = semanasAdelante > 0,
+                    onClick = {
+                        // Impide retroceder antes de la ventana inicial.
+                        if (semanasAdelante > 0) {
+                            semanasAdelante -= 1
+                            horaSeleccionada = null
+                            error = null
+                        }
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronLeft,
+                        contentDescription = "Semana anterior"
+                    )
+                }
 
-                    val calendario = DatePickerDialog(
-                        contexto,
-                        { _, anio, mes, dia ->
-                            // Convierte la selección al formato interno.
-                            val nuevaFecha = Calendar.getInstance().apply {
-                                set(anio, mes, dia)
-                            }
+                Text(
+                    text = CalendarioCitas.mesYAnio(dias.first()),
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-                            fechaSeleccionada = formatoFecha.format(
-                                nuevaFecha.time
-                            )
+                IconButton(
+                    onClick = {
+                        semanasAdelante += 1
+                        horaSeleccionada = null
+                        error = null
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = "Semana siguiente"
+                    )
+                }
+            }
 
-                            // Reinicia la hora al cambiar la fecha.
+            Text(
+                text = "Próximos 5 días hábiles",
+                style = MaterialTheme.typography.labelLarge
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                dias.forEach { dia ->
+                    val fechaIso = dia.toString()
+                    val seleccionado = fechaIso == fechaActual
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            fechaSeleccionada = fechaIso
                             horaSeleccionada = null
                             error = null
                         },
-                        fechaInicial.get(Calendar.YEAR),
-                        fechaInicial.get(Calendar.MONTH),
-                        fechaInicial.get(Calendar.DAY_OF_MONTH)
-                    )
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (seleccionado) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            },
+                            contentColor = if (seleccionado) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = CalendarioCitas.diaCorto(dia),
+                                style = MaterialTheme.typography.labelMedium
+                            )
 
-                    // Impide seleccionar días anteriores a hoy.
-                    val inicioHoy = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
+                            // Incluye el mes para aclarar los cambios mensuales.
+                            Text(
+                                text = "${dia.dayOfMonth}/${dia.monthValue}",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
                     }
-
-                    calendario.datePicker.minDate = inicioHoy.timeInMillis
-                    calendario.show()
                 }
-            ) {
-                Text("Elegir fecha")
             }
+
+            Text(
+                text = CalendarioCitas.fechaLarga(fechaActual),
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             Text(
                 text = "Horarios disponibles",
@@ -168,22 +234,17 @@ fun FechaHoraScreen(
             )
 
             if (horarios.isEmpty()) {
-                // Explica por qué la cuadrícula está vacía.
-                Text(
-                    text = "No quedan horarios disponibles. Selecciona otra fecha.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("No quedan horarios para este día. Selecciona otro.")
             }
 
-            // Distribuye los horarios disponibles en tres columnas.
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
+                contentPadding = PaddingValues(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(
                     items = horarios,
@@ -191,8 +252,8 @@ fun FechaHoraScreen(
                 ) { hora ->
                     val seleccionada = hora == horaValida
 
-                    // Destaca el horario seleccionado mediante sus colores.
                     Card(
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             horaSeleccionada = hora
                             error = null
@@ -206,15 +267,13 @@ fun FechaHoraScreen(
                             contentColor = if (seleccionada) {
                                 MaterialTheme.colorScheme.onPrimary
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                MaterialTheme.colorScheme.onSurface
                             }
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        )
                     ) {
                         Text(
                             text = hora,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.titleMedium
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
                 }
@@ -223,35 +282,35 @@ fun FechaHoraScreen(
             Text(
                 text = horaValida?.let {
                     "Hora seleccionada: $it"
-                } ?: "Selecciona un horario para continuar."
+                } ?: "Selecciona un horario."
             )
 
-            error?.let { mensaje ->
+            error?.let {
                 Text(
-                    text = mensaje,
+                    text = it,
                     color = MaterialTheme.colorScheme.error
                 )
             }
 
             Button(
-                enabled = horaValida != null,
                 modifier = Modifier.fillMaxWidth(),
+                enabled = horaValida != null,
                 onClick = {
-                    val hora = horaValida
+                    val hora = horaSeleccionada
 
-                    // Revisa nuevamente la disponibilidad antes de avanzar.
-                    val disponibles = Repositorio.horariosDisponibles(
-                        medicoId = medicoId,
-                        fecha = fechaSeleccionada
-                    )
-
-                    if (hora != null && hora in disponibles) {
-                        // Envía médico, fecha y hora a Confirmar cita.
+                    // Verifica disponibilidad antes de abrir la confirmación.
+                    if (
+                        hora != null &&
+                        hora in Repositorio.horariosDisponibles(
+                            medicoId,
+                            fechaActual
+                        )
+                    ) {
                         navController.navigate(
                             Rutas.confirmarCita(
-                                medicoId = medicoId,
-                                fecha = fechaSeleccionada,
-                                hora = hora
+                                medicoId,
+                                fechaActual,
+                                hora
                             )
                         ) {
                             launchSingleTop = true
