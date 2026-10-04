@@ -25,9 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.contreras.saludplus.citas.data.repository.Repositorio
 import com.contreras.saludplus.citas.navigation.Rutas
+import com.contreras.saludplus.citas.util.CalendarioCitas
 import java.util.Locale
 
-// Presenta el resumen y permite confirmar la reserva.
+// Presenta la fecha en español y confirma la reserva.
 @Composable
 fun ConfirmarCitaScreen(
     navController: NavHostController,
@@ -42,12 +43,10 @@ fun ConfirmarCitaScreen(
         Repositorio.obtenerEspecialidad(it.especialidadId)
     }
 
-    // Conserva el motivo durante cambios de configuración.
     var motivo by rememberSaveable(medicoId, fecha, hora) {
         mutableStateOf("")
     }
 
-    // Muestra errores y evita confirmaciones repetidas.
     var error by remember(medicoId, fecha, hora) {
         mutableStateOf<String?>(null)
     }
@@ -75,10 +74,7 @@ fun ConfirmarCitaScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Text(
-            text = "Revisa los datos antes de reservar.",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text("Revisa los datos antes de reservar.")
 
         if (usuario == null) {
             Text(
@@ -91,9 +87,7 @@ fun ConfirmarCitaScreen(
                 color = MaterialTheme.colorScheme.error
             )
         } else {
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -108,12 +102,17 @@ fun ConfirmarCitaScreen(
                     )
 
                     Text("Paciente: ${usuario.nombres}")
-                    Text("Fecha: $fecha")
+
+                    // Cambia la presentación sin modificar la fecha guardada.
+                    Text(
+                        text = "Fecha: ${CalendarioCitas.fechaLarga(fecha)}"
+                    )
+
                     Text("Hora: $hora")
 
                     Text(
                         text = String.format(
-                            Locale("es", "PE"),
+                            Locale.forLanguageTag("es-PE"),
                             "Consulta: S/ %.2f",
                             medico.precioConsulta
                         ),
@@ -135,9 +134,9 @@ fun ConfirmarCitaScreen(
                 maxLines = 5
             )
 
-            error?.let { mensaje ->
+            error?.let {
                 Text(
-                    text = mensaje,
+                    text = it,
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -146,8 +145,9 @@ fun ConfirmarCitaScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = citaGuardadaId == null,
                 onClick = {
-                    // Evita guardar nuevamente una cita confirmada.
                     if (citaGuardadaId == null) {
+
+                        // Conserva la fecha ISO para verificar y guardar horarios.
                         val cita = Repositorio.agendarCita(
                             medicoId = medicoId,
                             fecha = fecha,
