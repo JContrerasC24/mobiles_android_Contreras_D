@@ -2,34 +2,35 @@ package com.contreras.saludplus.citas.ui.screens.perfil
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import com.contreras.saludplus.citas.data.repository.Repositorio
 import com.contreras.saludplus.citas.navigation.Rutas
 import com.contreras.saludplus.citas.ui.components.PantallaEnConstruccion
-import com.contreras.saludplus.citas.data.repository.Repositorio
-// Será la pantalla de datos del paciente conectado.
+import com.contreras.saludplus.citas.ui.components.PantallaPrincipal
+
+// Presenta Perfil y conserva el cierre de sesión.
 @Composable
 fun PerfilScreen(navController: NavHostController) {
-    // TODO: Mostrar usuarioActual y cerrar sesión mediante Repositorio.
-    PantallaEnConstruccion(
-        titulo = "Mi perfil",
-        descripcion = "Datos del paciente pendientes",
-        acciones = listOf(
-            // Prueba el regreso a Splash sin una sesión real.
-            // Cierra la sesión y elimina el historial privado.
-            "Cerrar sesión" to {
-                Repositorio.cerrarSesion()
+    PantallaPrincipal(
+        navController = navController,
+        destinoActual = Rutas.PERFIL
+    ) {
+        // TODO: Mostrar los datos completos del paciente conectado.
+        PantallaEnConstruccion(
+            titulo = "Mi perfil",
+            descripcion = "Datos del paciente pendientes",
+            acciones = listOf(
+                // Finaliza la sesión y elimina el historial privado.
+                "Cerrar sesión" to {
+                    Repositorio.cerrarSesion()
 
-                navController.navigate(Rutas.SPLASH) {
-                    popUpTo(Rutas.INICIO) {
-                        inclusive = true
+                    navController.navigate(Rutas.SPLASH) {
+                        popUpTo(Rutas.INICIO) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
                     }
-                    launchSingleTop = true
                 }
-            },
-
-            // Regresa a la pantalla anterior.
-            "Volver" to {
-                navController.popBackStack()
-            }
+            )
         )
-    )
+    }
 }
