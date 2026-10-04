@@ -1,288 +1,121 @@
 package com.contreras.saludplus.citas.ui.screens.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.contreras.saludplus.citas.data.repository.Repositorio
 import com.contreras.saludplus.citas.navigation.Rutas
-import com.contreras.saludplus.citas.ui.components.PantallaPrincipal
-import com.contreras.saludplus.citas.ui.theme.AzulClaroSaludPlus
-import com.contreras.saludplus.citas.ui.theme.AzulSaludPlus
-import com.contreras.saludplus.citas.ui.theme.ColorCitas
-import com.contreras.saludplus.citas.ui.theme.ColorPerfil
-import com.contreras.saludplus.citas.ui.theme.ColorResultados
-import com.contreras.saludplus.citas.ui.theme.FondoCitas
-import com.contreras.saludplus.citas.ui.theme.FondoPerfil
-import com.contreras.saludplus.citas.ui.theme.FondoResultados
+import com.contreras.saludplus.citas.ui.components.*
+import com.contreras.saludplus.citas.ui.theme.*
 
-// Presenta los accesos principales y las especialidades destacadas.
+// Distribuye los cuatro accesos como en el diseño de referencia.
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    val nombre = Repositorio.usuarioActual
-        ?.nombres
-        ?.trim()
-        ?.substringBefore(" ")
-        ?.takeIf { it.isNotBlank() }
-        ?: "Paciente"
-
+    val nombre = Repositorio.usuarioActual?.nombres?.trim()?.substringBefore(" ") ?: "Paciente"
     val destacadas = Repositorio.especialidadesDestacadas()
-
-    PantallaPrincipal(
-        navController = navController,
-        destinoActual = Rutas.INICIO
-    ) {
-        LazyColumn(
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
+    var menuAbierto by remember { mutableStateOf(false) }
+    PantallaPrincipal(navController, Rutas.INICIO) {
+        LazyColumn(contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "¡Hola, $nombre!",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            text = "¿Qué deseas hacer hoy?",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            navController.navigate(Rutas.NOTIFICACIONES) {
-                                launchSingleTop = true
-                            }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Box {
+                        IconButton(onClick = { menuAbierto = true }) { Icon(Icons.Filled.Menu, "Abrir menú") }
+                        DropdownMenu(expanded = menuAbierto, onDismissRequest = { menuAbierto = false }) {
+                            DropdownMenuItem(text = { Text("Mi perfil") }, onClick = {
+                                menuAbierto = false
+                                navController.navigate(Rutas.PERFIL) { launchSingleTop = true }
+                            })
+                            DropdownMenuItem(text = { Text("Términos y condiciones") }, onClick = {
+                                menuAbierto = false
+                                navController.navigate(Rutas.TERMINOS) { launchSingleTop = true }
+                            })
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Ver notificaciones",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    }
+                    IconButton(onClick = { navController.navigate(Rutas.NOTIFICACIONES) { launchSingleTop = true } }) {
+                        Icon(Icons.Outlined.Notifications, "Ver notificaciones")
                     }
                 }
+                Text("¡Hola, $nombre!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("¿Qué deseas hacer hoy?", Modifier.padding(top = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AccesoInicio(
-                        titulo = "Agendar cita",
-                        descripcion = "Elige tu médico",
-                        icono = Icons.Outlined.MedicalServices,
-                        fondo = AzulClaroSaludPlus,
-                        color = AzulSaludPlus,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Rutas.ESPECIALIDADES) {
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-
-                    AccesoInicio(
-                        titulo = "Mis citas",
-                        descripcion = "Revisa tus reservas",
-                        icono = Icons.Outlined.CalendarMonth,
-                        fondo = FondoCitas,
-                        color = ColorCitas,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Rutas.MIS_CITAS) {
-                                launchSingleTop = true
-                            }
-                        }
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AccesoReferencia("Agendar cita", Icons.Filled.CalendarMonth, AzulClaroSaludPlus,
+                        AzulSaludPlus, Modifier.weight(1f)) { navController.navigate(Rutas.ESPECIALIDADES) }
+                    AccesoReferencia("Mis citas", Icons.Filled.EventAvailable, FondoCitas,
+                        ColorCitas, Modifier.weight(1f)) { navController.navigate(Rutas.MIS_CITAS) }
                 }
             }
-
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AccesoInicio(
-                        titulo = "Mis datos",
-                        descripcion = "Consulta tu perfil",
-                        icono = Icons.Outlined.Person,
-                        fondo = FondoPerfil,
-                        color = ColorPerfil,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Rutas.PERFIL) {
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-
-                    AccesoInicio(
-                        titulo = "Resultados",
-                        descripcion = "Consulta los ejemplos",
-                        icono = Icons.Outlined.Description,
-                        fondo = FondoResultados,
-                        color = ColorResultados,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Rutas.RESULTADOS) {
-                                launchSingleTop = true
-                            }
-                        }
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AccesoReferencia("Mis datos", Icons.Filled.Person, FondoPerfil,
+                        ColorPerfil, Modifier.weight(1f)) { navController.navigate(Rutas.PERFIL) }
+                    AccesoReferencia("Resultados", Icons.Filled.Description, FondoResultados,
+                        ColorResultados, Modifier.weight(1f)) { navController.navigate(Rutas.RESULTADOS) }
                 }
             }
-
             item {
-                Text(
-                    text = "Especialidades destacadas",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            item {
-                // Permite explorar las especialidades horizontalmente.
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        items = destacadas,
-                        key = { it.id }
-                    ) { especialidad ->
-                        Card(
-                            modifier = Modifier.width(180.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            onClick = {
-                                navController.navigate(
-                                    Rutas.medicos(especialidad.id)
-                                ) {
-                                    launchSingleTop = true
-                                }
-                            }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Especialidades destacadas", Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { navController.navigate(Rutas.ESPECIALIDADES) }) {
+                        Text("Ver todas", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(destacadas, key = { it.id }) { especialidad ->
+                        OutlinedCard(
+                            onClick = { navController.navigate(Rutas.medicos(especialidad.id)) },
+                            modifier = Modifier.width(108.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFECF0F5)),
+                            colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.MedicalServices,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-
-                                Text(
-                                    text = especialidad.nombre,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                Text(
-                                    text = especialidad.descripcion,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            Column(Modifier.fillMaxWidth().padding(10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconoEspecialidad(especialidad.id)
+                                Text(especialidad.nombre, style = MaterialTheme.typography.labelMedium,
+                                    textAlign = TextAlign.Center, minLines = 2)
                             }
                         }
                     }
-                }
-            }
-
-            item {
-                TextButton(
-                    onClick = {
-                        navController.navigate(Rutas.ESPECIALIDADES) {
-                            launchSingleTop = true
-                        }
-                    }
-                ) {
-                    Text("Ver todas las especialidades")
                 }
             }
         }
     }
 }
 
-// Reutiliza una tarjeta para los accesos principales.
+// Construye una tarjeta pastel con icono y título centrados.
 @Composable
-private fun AccesoInicio(
-    titulo: String,
-    descripcion: String,
-    icono: ImageVector,
-    fondo: Color,
-    color: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+private fun AccesoReferencia(
+    titulo: String, icono: ImageVector, fondo: Color, color: Color,
+    modifier: Modifier = Modifier, accion: () -> Unit
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = fondo
-        ),
-        onClick = onClick
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = icono,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = color
-            )
-
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-
-            Text(
-                text = descripcion,
-                style = MaterialTheme.typography.bodySmall,
-                color = color
-            )
+    Card(onClick = accion, modifier = modifier, shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = fondo)) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 18.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(icono, null, Modifier.size(36.dp), tint = color)
+            Text(titulo, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = color)
         }
     }
 }

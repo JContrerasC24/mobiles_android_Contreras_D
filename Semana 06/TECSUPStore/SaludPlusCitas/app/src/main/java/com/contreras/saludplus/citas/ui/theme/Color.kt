@@ -14,8 +14,8 @@ val Pink40 = Color(0xFF7D5260)
 // Define la identidad visual de SaludPlus.
 val AzulSaludPlus = Color(0xFF2563EB)
 val AzulClaroSaludPlus = Color(0xFFEAF1FF)
-val FondoSaludPlus = Color(0xFFF6F8FC)
-val TextoSaludPlus = Color(0xFF172554)
+val FondoSaludPlus = Color(0xFFFFFFFF)
+val TextoSaludPlus = Color(0xFF20283D)
 val TextoSecundarioSaludPlus = Color(0xFF64748B)
 val BordeSaludPlus = Color(0xFFDCE3EE)
 

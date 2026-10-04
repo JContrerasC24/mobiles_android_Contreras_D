@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Description
@@ -68,6 +70,7 @@ fun PantallaPrincipal(
 
         bottomBar = {
             NavigationBar(
+                modifier = Modifier.heightIn(min = 64.dp),
                 containerColor = MaterialTheme.colorScheme.surface,
                 windowInsets = WindowInsets(0, 0, 0, 0)
             ) {
@@ -114,12 +117,12 @@ fun PantallaPrincipal(
                             )
                         },
                         label = {
-                            Text(destino.titulo)
+                            Text(destino.titulo, style = MaterialTheme.typography.labelSmall)
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            indicatorColor = MaterialTheme.colorScheme.surface,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
