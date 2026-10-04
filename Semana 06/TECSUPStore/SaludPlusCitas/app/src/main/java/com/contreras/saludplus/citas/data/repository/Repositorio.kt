@@ -356,13 +356,51 @@ object Repositorio {
     }
 
     // TODO: Validar disponibilidad y guardar la cita durante el commit seis.
+    // Valida la reserva y guarda la cita en memoria.
     fun agendarCita(
         medicoId: Int,
         fecha: String,
         hora: String,
         motivo: String = ""
     ): Cita? {
-        return null
+        val usuario = usuarioActual ?: return null
+
+        // Comprueba que el médico exista.
+        if (obtenerMedico(medicoId) == null) {
+            return null
+        }
+
+        // Evita reservar horarios ocupados o pasados.
+        if (hora !in horariosDisponibles(medicoId, fecha)) {
+            return null
+        }
+
+        // Comprueba que ninguna cita ocupe ese horario.
+        val horarioOcupado = citas.any {
+            it.medicoId == medicoId &&
+                    it.fecha == fecha &&
+                    it.hora == hora
+        }
+
+        if (horarioOcupado) {
+            return null
+        }
+
+        // Genera un identificador para la nueva cita.
+        val nuevoId = (citas.maxOfOrNull { it.id } ?: 0) + 1
+
+        val nuevaCita = Cita(
+            id = nuevoId,
+            usuarioId = usuario.id,
+            medicoId = medicoId,
+            fecha = fecha,
+            hora = hora,
+            motivo = motivo.trim()
+        )
+
+        citas.add(nuevaCita)
+
+        return nuevaCita
     }
 
     // TODO: Filtrar y ordenar las citas del usuario durante el commit siete.
@@ -370,11 +408,15 @@ object Repositorio {
         return emptyList()
     }
 
-    // TODO: Buscar una cita mediante su identificador.
+    // Busca una cita perteneciente al usuario actual.
     fun obtenerCita(
         citaId: Int
     ): Cita? {
-        return null
+        val usuario = usuarioActual ?: return null
+
+        return citas.find {
+            it.id == citaId && it.usuarioId == usuario.id
+        }
     }
 
     // TODO: Eliminar una cita perteneciente al usuario actual.
