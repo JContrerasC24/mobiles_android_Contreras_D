@@ -203,47 +203,67 @@ object Repositorio {
         usuarioActual = null
     }
 
-    // TODO: Filtrar especialidades ignorando mayúsculas y minúsculas.
+    // Filtra especialidades por nombre o descripción.
     fun buscarEspecialidades(
         consulta: String
     ): List<Especialidad> {
-        return emptyList()
+        val texto = consulta.trim()
+
+        return especialidades.filter {
+            it.nombre.contains(texto, ignoreCase = true) ||
+                    it.descripcion.contains(texto, ignoreCase = true)
+        }
     }
 
-    // TODO: Obtener las primeras especialidades mediante take.
+    // Obtiene una cantidad limitada de especialidades destacadas.
     fun especialidadesDestacadas(
         cantidad: Int = 3
     ): List<Especialidad> {
-        return emptyList()
+        return especialidades.take(cantidad.coerceAtLeast(0))
     }
 
-    // TODO: Buscar una especialidad mediante su identificador.
+    // Busca la especialidad correspondiente al identificador recibido.
     fun obtenerEspecialidad(
         especialidadId: Int
     ): Especialidad? {
-        return null
+        return especialidades.find {
+            it.id == especialidadId
+        }
     }
 
-    // TODO: Buscar un médico mediante su identificador.
+    // Busca el médico correspondiente al identificador recibido.
     fun obtenerMedico(
         medicoId: Int
     ): Medico? {
-        return null
+        return medicos.find {
+            it.id == medicoId
+        }
     }
 
-    // TODO: Filtrar médicos y ordenar por calificación descendente.
+    // Filtra médicos por especialidad y ordena sus valoraciones.
     fun medicosPorEspecialidad(
         especialidadId: Int
     ): List<Medico> {
-        return emptyList()
+        return medicos
+            .filter {
+                it.especialidadId == especialidadId
+            }
+            .sortedByDescending {
+                it.calificacion
+            }
     }
 
-    // TODO: Buscar médicos dentro de la especialidad seleccionada.
+    // Busca médicos dentro de la especialidad seleccionada.
     fun buscarMedicos(
         especialidadId: Int,
         consulta: String
     ): List<Medico> {
-        return emptyList()
+        val texto = consulta.trim()
+
+        return medicosPorEspecialidad(especialidadId).filter {
+            it.nombre.contains(texto, ignoreCase = true) ||
+                    it.descripcion.contains(texto, ignoreCase = true)
+        }
     }
 
     // TODO: Excluir horarios ocupados para el médico y fecha seleccionados.
