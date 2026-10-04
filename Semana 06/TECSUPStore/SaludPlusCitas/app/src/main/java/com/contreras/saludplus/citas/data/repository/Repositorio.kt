@@ -9,19 +9,24 @@ import com.contreras.saludplus.citas.data.model.Cita
 import com.contreras.saludplus.citas.data.model.Especialidad
 import com.contreras.saludplus.citas.data.model.Medico
 import com.contreras.saludplus.citas.data.model.Usuario
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-// Centraliza los datos compartidos durante la ejecución.
+// Centraliza los datos de la aplicación en memoria.
 object Repositorio {
 
-    // Almacena pacientes y citas únicamente en memoria.
+    // Almacena los usuarios registrados durante la ejecución.
     private val usuarios = mutableStateListOf<Usuario>()
+
+    // Almacena las citas durante la ejecución.
     private val citas = mutableStateListOf<Cita>()
 
-    // Permite observar cambios en la sesión desde Compose.
+    // Mantiene la sesión y actualiza las pantallas automáticamente.
     var usuarioActual by mutableStateOf<Usuario?>(null)
         private set
 
-    // Contiene las especialidades ficticias de la clínica.
+    // Define las especialidades disponibles de la clínica.
     private val especialidades = listOf(
         Especialidad(
             id = 1,
@@ -60,7 +65,7 @@ object Repositorio {
         )
     )
 
-    // Relaciona cada médico con su especialidad mediante especialidadId.
+    // Relaciona cada médico con su especialidad.
     private val medicos = listOf(
         Medico(
             id = 1,
@@ -128,63 +133,83 @@ object Repositorio {
         )
     )
 
-    // Define los horarios iniciales antes de descontar reservas.
+    // Define los horarios habituales de atención.
     private val horariosBase = listOf(
-        "08:00", "08:30", "09:00", "09:30",
-        "10:00", "10:30", "11:00", "11:30",
-        "14:00", "14:30", "15:00", "15:30"
+        "08:00",
+        "08:30",
+        "09:00",
+        "09:30",
+        "10:00",
+        "10:30",
+        "11:00",
+        "11:30",
+        "14:00",
+        "14:30",
+        "15:00",
+        "15:30"
     )
 
-    // Valida los datos y registra pacientes sin correos duplicados.
+    // Valida los datos, registra al usuario e inicia su sesión.
     fun registrarUsuario(
         nombres: String,
         correo: String,
         telefono: String,
         contrasena: String
     ): Boolean {
-        // Limpia espacios sin modificar la contraseña.
-        val nombreLimpio = nombres.trim()
+        val nombresLimpios = nombres.trim()
         val correoLimpio = correo.trim()
         val telefonoLimpio = telefono.trim()
 
-        // Rechaza nombres vacíos y correos inválidos.
-        if (nombreLimpio.isBlank()) return false
+        // Rechaza nombres vacíos.
+        if (nombresLimpios.isBlank()) {
+            return false
+        }
 
+        // Comprueba el formato del correo.
         if (!Patterns.EMAIL_ADDRESS.matcher(correoLimpio).matches()) {
             return false
         }
 
-        // Requiere nueve dígitos y una contraseña mínima.
-        if (telefonoLimpio.length != 9) return false
-        if (!telefonoLimpio.all { it.isDigit() }) return false
-        if (contrasena.length < 6 || contrasena.isBlank()) return false
+        // Solicita un teléfono de nueve dígitos.
+        if (
+            telefonoLimpio.length != 9 ||
+            !telefonoLimpio.all { it.isDigit() }
+        ) {
+            return false
+        }
 
-        // Busca correos duplicados ignorando mayúsculas y minúsculas.
-        val correoExiste = usuarios.any {
+        // Solicita una contraseña de al menos seis caracteres.
+        if (contrasena.isBlank() || contrasena.length < 6) {
+            return false
+        }
+
+        // Evita registrar dos usuarios con el mismo correo.
+        val correoRegistrado = usuarios.any {
             it.correo.equals(correoLimpio, ignoreCase = true)
         }
 
-        if (correoExiste) return false
+        if (correoRegistrado) {
+            return false
+        }
 
-        // Calcula un identificador disponible para el paciente.
+        // Genera un identificador para el nuevo usuario.
         val nuevoId = (usuarios.maxOfOrNull { it.id } ?: 0) + 1
 
         val nuevoUsuario = Usuario(
             id = nuevoId,
-            nombres = nombreLimpio,
+            nombres = nombresLimpios,
             correo = correoLimpio,
             telefono = telefonoLimpio,
             contrasena = contrasena
         )
 
-        // Guarda al paciente e inicia su sesión.
         usuarios.add(nuevoUsuario)
         usuarioActual = nuevoUsuario
 
         return true
     }
 
-    // Busca credenciales y establece la sesión cuando coinciden.
+    // Busca un usuario cuyas credenciales coincidan.
     fun iniciarSesion(
         correo: String,
         contrasena: String
@@ -195,10 +220,11 @@ object Repositorio {
         } ?: return false
 
         usuarioActual = usuarioEncontrado
+
         return true
     }
 
-    // Finaliza la sesión sin eliminar usuarios ni citas.
+    // Elimina la sesión actual.
     fun cerrarSesion() {
         usuarioActual = null
     }
@@ -215,14 +241,14 @@ object Repositorio {
         }
     }
 
-    // Obtiene una cantidad limitada de especialidades destacadas.
+    // Devuelve las primeras especialidades para mostrarlas en Inicio.
     fun especialidadesDestacadas(
         cantidad: Int = 3
     ): List<Especialidad> {
         return especialidades.take(cantidad.coerceAtLeast(0))
     }
 
-    // Busca la especialidad correspondiente al identificador recibido.
+    // Busca una especialidad mediante su identificador.
     fun obtenerEspecialidad(
         especialidadId: Int
     ): Especialidad? {
@@ -231,7 +257,7 @@ object Repositorio {
         }
     }
 
-    // Busca el médico correspondiente al identificador recibido.
+    // Busca un médico mediante su identificador.
     fun obtenerMedico(
         medicoId: Int
     ): Medico? {
@@ -240,7 +266,7 @@ object Repositorio {
         }
     }
 
-    // Filtra médicos por especialidad y ordena sus valoraciones.
+    // Filtra médicos por especialidad y ordena sus calificaciones.
     fun medicosPorEspecialidad(
         especialidadId: Int
     ): List<Medico> {
@@ -266,15 +292,70 @@ object Repositorio {
         }
     }
 
-    // TODO: Excluir horarios ocupados para el médico y fecha seleccionados.
+    // Devuelve horarios futuros que todavía no están reservados.
     fun horariosDisponibles(
         medicoId: Int,
         fecha: String
     ): List<String> {
-        return emptyList()
+
+        // Comprueba que el médico exista.
+        if (obtenerMedico(medicoId) == null) {
+            return emptyList()
+        }
+
+        // Exige fechas con formato año, mes y día.
+        if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(fecha)) {
+            return emptyList()
+        }
+
+        val formatoFecha = SimpleDateFormat(
+            "yyyy-MM-dd",
+            Locale.US
+        ).apply {
+            isLenient = false
+        }
+
+        // Rechaza fechas inexistentes o formatos incorrectos.
+        try {
+            val fechaInterpretada = formatoFecha.parse(fecha)
+                ?: return emptyList()
+
+            if (formatoFecha.format(fechaInterpretada) != fecha) {
+                return emptyList()
+            }
+        } catch (_: ParseException) {
+            return emptyList()
+        }
+
+        // Identifica las horas reservadas para ese médico y fecha.
+        val horasOcupadas = citas
+            .filter {
+                it.medicoId == medicoId && it.fecha == fecha
+            }
+            .map {
+                it.hora
+            }
+
+        val formatoHorario = SimpleDateFormat(
+            "yyyy-MM-dd HH:mm",
+            Locale.US
+        ).apply {
+            isLenient = false
+        }
+
+        val ahora = System.currentTimeMillis()
+
+        // Excluye horarios ocupados y horas que ya pasaron.
+        return horariosBase.filter { hora ->
+            val momento = formatoHorario.parse("$fecha $hora")
+
+            hora !in horasOcupadas &&
+                    momento != null &&
+                    momento.time > ahora
+        }
     }
 
-    // TODO: Validar sesión y disponibilidad antes de guardar la cita.
+    // TODO: Validar disponibilidad y guardar la cita durante el commit seis.
     fun agendarCita(
         medicoId: Int,
         fecha: String,
@@ -284,19 +365,19 @@ object Repositorio {
         return null
     }
 
-    // TODO: Filtrar citas del usuario actual y ordenar cronológicamente.
+    // TODO: Filtrar y ordenar las citas del usuario durante el commit siete.
     fun citasDelUsuario(): List<Cita> {
         return emptyList()
     }
 
-    // TODO: Buscar una cita perteneciente al usuario actual.
+    // TODO: Buscar una cita mediante su identificador.
     fun obtenerCita(
         citaId: Int
     ): Cita? {
         return null
     }
 
-    // TODO: Eliminar únicamente una cita perteneciente al usuario actual.
+    // TODO: Eliminar una cita perteneciente al usuario actual.
     fun cancelarCita(
         citaId: Int
     ): Boolean {
