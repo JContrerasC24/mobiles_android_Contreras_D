@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import com.contreras.saludplus.citas.navigation.Rutas
 import com.contreras.saludplus.citas.ui.components.PantallaEnConstruccion
-
+import com.contreras.saludplus.citas.data.repository.Repositorio
 // Será la pantalla de datos del paciente conectado.
 @Composable
 fun PerfilScreen(navController: NavHostController) {
@@ -14,9 +14,11 @@ fun PerfilScreen(navController: NavHostController) {
         descripcion = "Datos del paciente pendientes",
         acciones = listOf(
             // Prueba el regreso a Splash sin una sesión real.
-            "Probar salida" to {
+            // Cierra la sesión y elimina el historial privado.
+            "Cerrar sesión" to {
+                Repositorio.cerrarSesion()
+
                 navController.navigate(Rutas.SPLASH) {
-                    // Elimina Inicio y las pantallas abiertas posteriormente.
                     popUpTo(Rutas.INICIO) {
                         inclusive = true
                     }
