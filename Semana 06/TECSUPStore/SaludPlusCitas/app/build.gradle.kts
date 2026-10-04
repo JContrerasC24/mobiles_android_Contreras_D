@@ -52,4 +52,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.navigation.compose)
+    // Habilita la navegación entre pantallas Compose.
+    implementation(libs.androidx.navigation.compose)
+    // Añade iconos para los accesos y la navegación.
+    implementation("androidx.compose.material:material-icons-extended")
 }

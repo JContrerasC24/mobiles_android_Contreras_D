@@ -1,87 +1,137 @@
 package com.contreras.saludplus.citas.ui.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import com.contreras.saludplus.citas.navigation.Rutas
 
-// Comparte el menú inferior entre las cuatro pantallas principales.
+// Describe cada destino del menú inferior.
+private data class DestinoPrincipal(
+    val titulo: String,
+    val ruta: String,
+    val icono: ImageVector
+)
+
+// Comparte el menú entre las cuatro pantallas principales.
 @Composable
 fun PantallaPrincipal(
     navController: NavHostController,
     destinoActual: String,
     contenido: @Composable () -> Unit
 ) {
-    // Define nombre, ruta y símbolo de cada destino.
     val destinos = listOf(
-        Triple("Inicio", Rutas.INICIO, "⌂"),
-        Triple("Citas", Rutas.MIS_CITAS, "▦"),
-        Triple("Resultados", Rutas.RESULTADOS, "≡"),
-        Triple("Perfil", Rutas.PERFIL, "●")
+        DestinoPrincipal(
+            titulo = "Inicio",
+            ruta = Rutas.INICIO,
+            icono = Icons.Outlined.Home
+        ),
+        DestinoPrincipal(
+            titulo = "Citas",
+            ruta = Rutas.MIS_CITAS,
+            icono = Icons.Outlined.CalendarMonth
+        ),
+        DestinoPrincipal(
+            titulo = "Resultados",
+            ruta = Rutas.RESULTADOS,
+            icono = Icons.Outlined.Description
+        ),
+        DestinoPrincipal(
+            titulo = "Perfil",
+            ruta = Rutas.PERFIL,
+            icono = Icons.Outlined.Person
+        )
     )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
 
-        // MainActivity ya proporciona los márgenes del sistema.
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(
-            left = 0,
-            top = 0,
-            right = 0,
-            bottom = 0
-        ),
+        // Evita duplicar los espacios gestionados por MainActivity.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
 
         bottomBar = {
             NavigationBar(
-                // Evita repetir los márgenes aplicados por MainActivity.
-                windowInsets = androidx.compose.foundation.layout.WindowInsets(
-                    left = 0,
-                    top = 0,
-                    right = 0,
-                    bottom = 0
-                )
+                containerColor = MaterialTheme.colorScheme.surface,
+                windowInsets = WindowInsets(0, 0, 0, 0)
             ) {
-                destinos.forEach { (nombre, ruta, simbolo) ->
+                destinos.forEach { destino ->
                     NavigationBarItem(
-                        selected = destinoActual == ruta,
+                        selected = destinoActual == destino.ruta,
                         onClick = {
-                            // Evita navegar nuevamente al destino activo.
-                            if (destinoActual != ruta) {
-                                navController.navigate(ruta) {
-                                    // Mantiene Inicio como base del historial.
-                                    popUpTo(Rutas.INICIO) {
-                                        saveState = true
+                            if (destinoActual != destino.ruta) {
+                                if (destino.ruta == Rutas.INICIO) {
+
+                                    // Regresa al Inicio existente y elimina las pantallas superiores.
+                                    val regreso = navController.popBackStack(
+                                        route = Rutas.INICIO,
+                                        inclusive = false
+                                    )
+
+                                    // Abre Inicio cuando no existe en el historial.
+                                    if (!regreso) {
+                                        navController.navigate(Rutas.INICIO) {
+                                            popUpTo(navController.graph.id) {
+                                                inclusive = true
+                                            }
+
+                                            launchSingleTop = true
+                                        }
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                } else {
+
+                                    // Cambia de sección conservando Inicio como pantalla base.
+                                    navController.navigate(destino.ruta) {
+                                        popUpTo(Rutas.INICIO) {
+                                            inclusive = false
+                                        }
+
+                                        launchSingleTop = true
+                                    }
                                 }
                             }
                         },
                         icon = {
-                            Text(simbolo)
+                            Icon(
+                                imageVector = destino.icono,
+                                contentDescription = null
+                            )
                         },
                         label = {
-                            Text(nombre)
-                        }
+                            Text(destino.titulo)
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
         }
-    ) { padding ->
-        // Reserva espacio para que el menú no cubra el contenido.
+    ) { espacioInterior ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(espacioInterior)
         ) {
             contenido()
         }
