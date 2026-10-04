@@ -19,10 +19,10 @@ object Repositorio {
     // Almacena los usuarios registrados durante la ejecución.
     private val usuarios = mutableStateListOf<Usuario>()
 
-    // Almacena las citas durante la ejecución.
+    // Almacena las reservas y permite actualizar las pantallas.
     private val citas = mutableStateListOf<Cita>()
 
-    // Mantiene la sesión y actualiza las pantallas automáticamente.
+    // Mantiene la sesión del paciente actual.
     var usuarioActual by mutableStateOf<Usuario?>(null)
         private set
 
@@ -149,6 +149,9 @@ object Repositorio {
         "15:30"
     )
 
+    // Conserva identificadores únicos aunque se cancelen citas.
+    private var siguienteCitaId = 1
+
     // Valida los datos, registra al usuario e inicia su sesión.
     fun registrarUsuario(
         nombres: String,
@@ -183,7 +186,7 @@ object Repositorio {
             return false
         }
 
-        // Evita registrar dos usuarios con el mismo correo.
+        // Evita registrar correos duplicados.
         val correoRegistrado = usuarios.any {
             it.correo.equals(correoLimpio, ignoreCase = true)
         }
@@ -224,7 +227,7 @@ object Repositorio {
         return true
     }
 
-    // Elimina la sesión actual.
+    // Elimina la sesión sin borrar los usuarios registrados.
     fun cerrarSesion() {
         usuarioActual = null
     }
@@ -355,7 +358,6 @@ object Repositorio {
         }
     }
 
-    // TODO: Validar disponibilidad y guardar la cita durante el commit seis.
     // Valida la reserva y guarda la cita en memoria.
     fun agendarCita(
         medicoId: Int,
@@ -386,11 +388,8 @@ object Repositorio {
             return null
         }
 
-        // Genera un identificador para la nueva cita.
-        val nuevoId = (citas.maxOfOrNull { it.id } ?: 0) + 1
-
         val nuevaCita = Cita(
-            id = nuevoId,
+            id = siguienteCitaId,
             usuarioId = usuario.id,
             medicoId = medicoId,
             fecha = fecha,
@@ -399,13 +398,23 @@ object Repositorio {
         )
 
         citas.add(nuevaCita)
+        siguienteCitaId += 1
 
         return nuevaCita
     }
 
-    // TODO: Filtrar y ordenar las citas del usuario durante el commit siete.
+    // Filtra las citas del paciente y ordena por fecha y hora.
     fun citasDelUsuario(): List<Cita> {
-        return emptyList()
+        val usuario = usuarioActual ?: return emptyList()
+
+        return citas
+            .filter {
+                it.usuarioId == usuario.id
+            }
+            .sortedWith(
+                compareBy<Cita> { it.fecha }
+                    .thenBy { it.hora }
+            )
     }
 
     // Busca una cita perteneciente al usuario actual.
@@ -419,10 +428,14 @@ object Repositorio {
         }
     }
 
-    // TODO: Eliminar una cita perteneciente al usuario actual.
+    // Elimina únicamente una cita perteneciente al paciente actual.
     fun cancelarCita(
         citaId: Int
     ): Boolean {
-        return false
+        val usuario = usuarioActual ?: return false
+
+        return citas.removeAll {
+            it.id == citaId && it.usuarioId == usuario.id
+        }
     }
 }
