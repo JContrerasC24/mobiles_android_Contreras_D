@@ -128,4 +128,25 @@ class SesionViewModel(
             }
         }
     }
+
+    // Cambio entre las cuentas locales de demostración exigido por el laboratorio.
+    fun cambiarPerfil() {
+        if (_ocupado.value) return
+        val actual = _usuarioActual.value ?: return
+        val otro = if (actual.rol == Rol.ADMIN.name) Rol.CLIENTE else Rol.ADMIN
+        _ocupado.value = true
+        viewModelScope.launch {
+            try {
+                val destino = checkNotNull(repo.obtenerUsuarioPorRol(otro.name)) {
+                    "No hay una cuenta disponible para ese perfil."
+                }
+                preferencias.guardarSesion(otro, destino.id)
+                _rolSeleccionado.value = otro
+                _usuarioActual.value = destino
+                _error.value = null
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { _error.value = "No se pudo cambiar de perfil." }
+            finally { _ocupado.value = false }
+        }
+    }
 }

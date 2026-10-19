@@ -14,6 +14,9 @@ object Rutas {
     const val FICHA_PACIENTE = "paciente/{mascotaId}"
     const val AGENDA = "agenda"
     const val ATENDER_CITA = "atender/{citaId}"
+    const val PERFIL = "perfil"
+    const val AJUSTES = "ajustes"
+    const val FORMULARIO_SERVICIO = "servicio/{servicioId}"
     const val PANEL = "panel"
     const val SERVICIOS = "servicios"
 }

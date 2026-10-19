@@ -28,4 +28,7 @@ interface UsuarioDao {
 
     @Query("SELECT COUNT(*) FROM usuarios")
     suspend fun contar(): Int
+
+    @Query("SELECT * FROM usuarios WHERE rol = :rol ORDER BY id LIMIT 1")
+    suspend fun obtenerPorRol(rol: String): com.contreras.huellitasvet.data.local.entity.Usuario?
 }

@@ -18,8 +18,10 @@ data class Disponibilidad(val fecha: LocalDate, val horas: List<String>? = null)
 @OptIn(ExperimentalCoroutinesApi::class)
 class PedirCitaViewModel(
     private val repo: VetRepository, private val dueno: Usuario,
+    private val preferencias: com.contreras.huellitasvet.data.prefs.PreferenciasStore,
     mascotaInicial: Int? = null
 ) : ViewModel() {
+    val aceptarCitas = preferencias.aceptarCitas.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val mascota = MutableStateFlow(mascotaInicial)
     val servicio = MutableStateFlow<Int?>(null)
     val fecha = MutableStateFlow(LocalDate.now())
@@ -58,6 +60,7 @@ class PedirCitaViewModel(
 
     fun confirmar() {
         if (_ocupado.value || _creada.value != null) return
+        if (!aceptarCitas.value) { _error.value = "La clínica no está recibiendo citas"; return }
         val mascotaId = mascota.value
         val servicioId = servicio.value
         val dia = fecha.value
@@ -85,6 +88,7 @@ class PedirCitaViewModel(
                 check(Horarios.disponible(dia, turno, actuales, LocalDateTime.now())) {
                     "El horario ya no está disponible. Elige otro."
                 }
+                check(preferencias.aceptarCitas.first()) { "La clínica no está recibiendo citas" }
                 _creada.value = repo.crearCita(mascotaId, servicioId, dia.toString(), turno, nota.value.trim())
             } catch (e: CancellationException) {
                 throw e

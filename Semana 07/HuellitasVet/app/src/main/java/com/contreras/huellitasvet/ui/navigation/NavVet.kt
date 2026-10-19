@@ -34,6 +34,10 @@ import com.contreras.huellitasvet.ui.veterinario.PacientesScreen
 import com.contreras.huellitasvet.ui.veterinario.FichaPacienteScreen
 import com.contreras.huellitasvet.viewmodel.AtenderCitaViewModel
 import com.contreras.huellitasvet.viewmodel.PacientesViewModel
+import com.contreras.huellitasvet.viewmodel.PreferenciasViewModel
+import com.contreras.huellitasvet.ui.dueno.PerfilScreen
+import com.contreras.huellitasvet.ui.veterinario.AjustesScreen
+import com.contreras.huellitasvet.ui.veterinario.FormularioServicioScreen
 import com.contreras.huellitasvet.viewmodel.PanelViewModel
 import com.contreras.huellitasvet.viewmodel.AgendaViewModel
 import com.contreras.huellitasvet.viewmodel.MisCitasViewModel
@@ -65,7 +69,7 @@ fun NavVet(
     val usuario by sesion.usuarioActual.collectAsStateWithLifecycle()
     val ocupado by sesion.ocupado.collectAsStateWithLifecycle()
     val error by sesion.error.collectAsStateWithLifecycle()
-    var avisoEdicion by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(inicializando, usuario?.id) {
         if (!inicializando) {
@@ -102,6 +106,7 @@ fun NavVet(
                     onPedirCita = { navController.navigate("cita/nueva") },
                     onVerMascotas = { navController.navigate(Rutas.MASCOTAS) },
                     onMisCitas = { navController.navigate(Rutas.MIS_CITAS) },
+                    onPerfil = { navController.navigate(Rutas.PERFIL) },
                     onCerrarSesion = sesion::cerrarSesion,
                     cerrandoSesion = ocupado,
                     errorSesion = error
@@ -187,6 +192,7 @@ fun NavVet(
                 val vm: PanelViewModel = viewModel(factory = inicioFactory(veterinario))
                 PanelScreen(vm = vm, nombre = veterinario.nombre,
                     onAgenda = { navController.navigate(Rutas.AGENDA) },
+                    onAjustes = { navController.navigate(Rutas.AJUSTES) },
                     onPacientes = { navController.navigate(Rutas.PACIENTES) },
                     onServicios = { navController.navigate(Rutas.SERVICIOS) },
                     onCerrarSesion = sesion::cerrarSesion,
@@ -226,6 +232,29 @@ fun NavVet(
                 FichaPacienteScreen(vm, onVolver = { navController.popBackStack() })
             }
         }
+        composable(Rutas.PERFIL) {
+            val actual = usuario
+            if (actual?.rol == Rol.CLIENTE.name) {
+                val vm: PreferenciasViewModel = viewModel(factory = inicioFactory(actual))
+                PerfilScreen(vm, { navController.popBackStack() }, sesion::cambiarPerfil,
+                    sesion::cerrarSesion, ocupado, error)
+            }
+        }
+        composable(Rutas.AJUSTES) {
+            val actual = usuario
+            if (actual?.rol == Rol.ADMIN.name) {
+                val vm: PreferenciasViewModel = viewModel(factory = inicioFactory(actual))
+                AjustesScreen(vm, { navController.popBackStack() }, sesion::cambiarPerfil,
+                    sesion::cerrarSesion, ocupado, error)
+            }
+        }
+        composable(Rutas.FORMULARIO_SERVICIO,
+            arguments = listOf(navArgument("servicioId") { type = NavType.IntType })) { entrada ->
+            if (usuario?.rol == Rol.ADMIN.name) {
+                val id = entrada.arguments?.getInt("servicioId")?.takeIf { it > 0 }
+                FormularioServicioScreen(servicios, id) { navController.popBackStack() }
+            }
+        }
         composable(Rutas.SERVICIOS) {
             if (usuario?.rol == Rol.ADMIN.name) {
                 Column(Modifier.fillMaxSize()) {
@@ -234,22 +263,11 @@ fun NavVet(
                     }
                     ServiciosScreen(
                         vm = servicios,
-                        onEditar = { avisoEdicion = true },
+                        onEditar = { id -> servicios.prepararFormulario(); navController.navigate("servicio/$id") },
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
-    }
-
-    if (avisoEdicion) {
-        AlertDialog(
-            onDismissRequest = { avisoEdicion = false },
-            title = { Text("Editar servicio") },
-            text = { Text("El formulario estará disponible en una próxima etapa.") },
-            confirmButton = {
-                TextButton(onClick = { avisoEdicion = false }) { Text("Aceptar") }
-            }
-        )
     }
 }

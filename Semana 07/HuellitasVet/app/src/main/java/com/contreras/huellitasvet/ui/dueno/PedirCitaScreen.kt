@@ -17,6 +17,7 @@ import java.util.Locale
 
 @Composable
 fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -> Unit) {
+    val aceptar by vm.aceptarCitas.collectAsStateWithLifecycle()
     val mascotas by vm.mascotas.collectAsStateWithLifecycle()
     val servicios by vm.servicios.collectAsStateWithLifecycle()
     val mascotaId by vm.mascota.collectAsStateWithLifecycle()
@@ -33,7 +34,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
     val servicio = servicios.firstOrNull { it.id == servicioId }
     val horas = disponibilidad.horas
     val listo = disponibilidad.fecha == fecha && horas != null
-    val valido = mascota != null && servicio != null && hora != null &&
+    val valido = aceptar && mascota != null && servicio != null && hora != null &&
         listo && Horarios.disponible(fecha, hora!!, horas.orEmpty(), ahora)
     LaunchedEffect(creada) { if (creada != null) onCreada() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
@@ -42,6 +43,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
             TextButton(onClick = onVolver, enabled = !ocupado) { Text("Volver") }
             Text("Pedir una cita", style = MaterialTheme.typography.headlineMedium)
         }
+        if (!aceptar) item { Text("La clínica no está recibiendo citas", color = MaterialTheme.colorScheme.error) }
         item { Text("Mascota", style = MaterialTheme.typography.titleLarge) }
         if (mascotas.isEmpty()) item { Text("Primero registra una mascota para pedir una cita.") }
         item {

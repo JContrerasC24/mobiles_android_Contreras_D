@@ -18,10 +18,11 @@ class VetViewModelFactory(
         val vm: ViewModel = when (modelClass) {
             AtenderCitaViewModel::class.java -> AtenderCitaViewModel(repository, requireNotNull(citaId))
             PacientesViewModel::class.java -> PacientesViewModel(repository, mascotaId)
+            PreferenciasViewModel::class.java -> PreferenciasViewModel(repository, preferencias, requireNotNull(dueno))
             PanelViewModel::class.java -> PanelViewModel(repository)
             AgendaViewModel::class.java -> AgendaViewModel(repository)
             MisCitasViewModel::class.java -> MisCitasViewModel(repository, requireNotNull(dueno))
-            PedirCitaViewModel::class.java -> PedirCitaViewModel(repository, requireNotNull(dueno), mascotaId)
+            PedirCitaViewModel::class.java -> PedirCitaViewModel(repository, requireNotNull(dueno), preferencias, mascotaId)
             MascotaViewModel::class.java -> MascotaViewModel(repository, requireNotNull(dueno), mascotaId)
             InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno))
             ServiciosViewModel::class.java -> ServiciosViewModel(repository)

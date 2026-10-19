@@ -14,7 +14,7 @@ import java.util.Locale
 
 @Composable
 fun PanelScreen(vm: PanelViewModel, nombre: String, onAgenda: () -> Unit,
-    onPacientes: () -> Unit, onServicios: () -> Unit, onCerrarSesion: () -> Unit, ocupado: Boolean, errorSesion: String?) {
+    onAjustes: () -> Unit, onPacientes: () -> Unit, onServicios: () -> Unit, onCerrarSesion: () -> Unit, ocupado: Boolean, errorSesion: String?) {
     val hoy by vm.citasHoy.collectAsStateWithLifecycle()
     val pendientes by vm.pendientes.collectAsStateWithLifecycle()
     val atendidas by vm.atendidas.collectAsStateWithLifecycle()
@@ -66,6 +66,7 @@ fun PanelScreen(vm: PanelViewModel, nombre: String, onAgenda: () -> Unit,
         error?.let { item { Text(it, color = colores.error) } }
         errorSesion?.let { item { Text(it, color = colores.error) } }
         item {
+            TextButton(onClick = onAjustes) { Text("Ajustes") }
             TextButton(onClick = onPacientes) { Text("Pacientes") }
             TextButton(onClick = onServicios) { Text("Servicios") }
             TextButton(onClick = onCerrarSesion, enabled = !ocupado) { Text("Cerrar sesión") }

@@ -14,6 +14,8 @@ class VetRepositoryRoom(
     private val db: VetDatabase
 ) : VetRepository {
 
+    override suspend fun obtenerUsuarioPorRol(rol: String) = db.usuarioDao().obtenerPorRol(rol)
+
     override suspend fun obtenerUsuario(id: Int) = db.usuarioDao().obtener(id)
 
     override suspend fun login(correo: String, clave: String) =
@@ -29,7 +31,12 @@ class VetRepositoryRoom(
     }
 
     override suspend fun eliminarServicio(s: Servicio) {
-        db.servicioDao().eliminar(s)
+        db.withTransaction {
+            check(db.citaDao().contarPorServicioId(s.id) == 0) {
+                "El servicio tiene citas y no se puede eliminar. Puedes desactivarlo."
+            }
+            db.servicioDao().eliminar(s)
+        }
     }
 
     override suspend fun cambiarActivo(id: Int, activo: Boolean) {
