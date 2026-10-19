@@ -4,6 +4,10 @@ object Rutas {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val INICIO = "inicio"
+    const val MASCOTAS = "mascotas"
+    const val FICHA_MASCOTA = "mascota/{mascotaId}"
+    const val AGREGAR_MASCOTA = "mascota/nueva"
+    const val PEDIR_CITA = "cita/nueva"
     const val PANEL = "panel"
     const val SERVICIOS = "servicios"
 }

@@ -9,10 +9,12 @@ import kotlinx.coroutines.Deferred
 class VetViewModelFactory(
     private val repository: VetRepository,
     private val preferencias: PreferenciasStore,
-    private val inicializacion: Deferred<Unit>
+    private val inicializacion: Deferred<Unit>,
+    private val dueno: com.contreras.huellitasvet.data.local.entity.Usuario? = null
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm: ViewModel = when (modelClass) {
+            InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno))
             ServiciosViewModel::class.java -> ServiciosViewModel(repository)
             SesionViewModel::class.java ->
                 SesionViewModel(repository, preferencias, inicializacion)

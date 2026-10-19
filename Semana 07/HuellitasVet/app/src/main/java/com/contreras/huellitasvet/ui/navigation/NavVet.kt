@@ -16,6 +16,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.contreras.huellitasvet.data.local.entity.Usuario
+import com.contreras.huellitasvet.ui.dueno.InicioScreen
+import com.contreras.huellitasvet.ui.dueno.MascotasScreen
+import com.contreras.huellitasvet.viewmodel.InicioViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,6 +40,7 @@ import com.contreras.huellitasvet.viewmodel.SesionViewModel
 fun NavVet(
     sesion: SesionViewModel,
     servicios: ServiciosViewModel,
+    inicioFactory: (Usuario) -> ViewModelProvider.Factory,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -63,17 +72,60 @@ fun NavVet(
         composable(Rutas.SPLASH) { SplashScreen() }
         composable(Rutas.LOGIN) { LoginScreen(sesion) }
 
-        // B7 reemplazará este destino por el inicio completo del dueño.
         composable(Rutas.INICIO) {
-            if (usuario?.rol == Rol.CLIENTE.name) {
-                DestinoInicial(
-                    titulo = "Inicio",
-                    nombre = usuario?.nombre.orEmpty(),
-                    descripcion = "Aquí encontrarás tus mascotas y próximas citas.",
-                    ocupado = ocupado,
-                    error = error,
-                    onCerrarSesion = sesion::cerrarSesion
+            val dueno = usuario
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val inicio: InicioViewModel = viewModel(
+                    key = "inicio-${dueno.id}", factory = inicioFactory(dueno)
                 )
+                InicioScreen(
+                    vm = inicio,
+                    onMascota = { navController.navigate("mascota/$it") },
+                    onAgregar = { navController.navigate(Rutas.AGREGAR_MASCOTA) },
+                    onPedirCita = { navController.navigate(Rutas.PEDIR_CITA) },
+                    onVerMascotas = { navController.navigate(Rutas.MASCOTAS) },
+                    onCerrarSesion = sesion::cerrarSesion,
+                    cerrandoSesion = ocupado,
+                    errorSesion = error
+                )
+            }
+        }
+        composable(Rutas.MASCOTAS) {
+            val dueno = usuario
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val inicio: InicioViewModel = viewModel(
+                    key = "mascotas-${dueno.id}", factory = inicioFactory(dueno)
+                )
+                MascotasScreen(
+                    vm = inicio,
+                    onMascota = { navController.navigate("mascota/$it") },
+                    onAgregar = { navController.navigate(Rutas.AGREGAR_MASCOTA) },
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+        }
+        composable(Rutas.AGREGAR_MASCOTA) {
+            if (usuario?.rol == Rol.CLIENTE.name) {
+                DestinoPendiente("Agregar mascota", "El formulario estará disponible próximamente.") {
+                    navController.popBackStack()
+                }
+            }
+        }
+        composable(
+            Rutas.FICHA_MASCOTA,
+            arguments = listOf(navArgument("mascotaId") { type = NavType.IntType })
+        ) {
+            if (usuario?.rol == Rol.CLIENTE.name) {
+                DestinoPendiente("Ficha de mascota", "La ficha clínica estará disponible próximamente.") {
+                    navController.popBackStack()
+                }
+            }
+        }
+        composable(Rutas.PEDIR_CITA) {
+            if (usuario?.rol == Rol.CLIENTE.name) {
+                DestinoPendiente("Pedir una cita", "La reserva de citas estará disponible próximamente.") {
+                    navController.popBackStack()
+                }
             }
         }
         // El paso 11 incorporará los contadores, ingresos y gráficos.
@@ -144,5 +196,14 @@ private fun DestinoInicial(
             onClick = onCerrarSesion,
             enabled = !ocupado
         )
+    }
+}
+
+@Composable
+private fun DestinoPendiente(titulo: String, mensaje: String, onVolver: () -> Unit) {
+    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(titulo, style = MaterialTheme.typography.headlineMedium)
+        Text(mensaje)
+        TextButton(onClick = onVolver) { Text("Volver") }
     }
 }

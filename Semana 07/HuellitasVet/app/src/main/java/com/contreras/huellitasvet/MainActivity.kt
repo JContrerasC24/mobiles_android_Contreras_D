@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
                     NavVet(
                         sesion = sesion,
                         servicios = servicios,
+                        inicioFactory = { dueno ->
+                            VetViewModelFactory(app.repository, app.preferencias, app.inicializacion, dueno)
+                        },
                         modifier = Modifier.fillMaxSize().padding(padding)
                     )
                 }
