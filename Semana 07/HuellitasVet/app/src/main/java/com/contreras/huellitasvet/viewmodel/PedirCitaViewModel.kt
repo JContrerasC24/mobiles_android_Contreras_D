@@ -37,9 +37,6 @@ class PedirCitaViewModel(
     val servicios = repo.observarServiciosActivos()
         .catch { _error.value = "No se pudieron cargar los servicios." }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val citas = repo.observarCitasDeDueno(dueno.id)
-        .catch { _error.value = "No se pudieron cargar tus citas." }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val disponibilidad = fecha.flatMapLatest { dia ->
         repo.observarHorasOcupadas(dia.toString())
             .map { Disponibilidad(dia, it) }

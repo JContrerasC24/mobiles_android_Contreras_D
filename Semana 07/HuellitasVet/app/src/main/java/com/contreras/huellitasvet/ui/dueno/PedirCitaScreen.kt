@@ -110,31 +110,3 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
         }
     }
 }
-
-// El paso 10 añadirá las pestañas y la cancelación con su regla de dos horas.
-@Composable
-fun MisCitasScreen(vm: PedirCitaViewModel, onInicio: () -> Unit, onPedir: () -> Unit) {
-    val citas by vm.citas.collectAsStateWithLifecycle()
-    val error by vm.error.collectAsStateWithLifecycle()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item {
-            TextButton(onClick = onInicio) { Text("Volver al inicio") }
-            Text("Mis citas", style = MaterialTheme.typography.headlineMedium)
-            Button(onClick = onPedir) { Text("Pedir otra cita") }
-        }
-        error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
-        if (citas.isEmpty()) item { Text("Aún no tienes citas") }
-        items(citas.sortedByDescending { it.cita.fechaCreacion }, key = { it.cita.id }) { detalle ->
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(detalle.mascota.mascota.nombre, style = MaterialTheme.typography.titleMedium)
-                    Text(detalle.servicio.nombre)
-                    Text("${detalle.cita.fecha} · ${detalle.cita.hora}")
-                    Text(detalle.cita.estado)
-                    Text("S/ ${String.format(Locale.US, "%.2f", detalle.cita.precio)}")
-                }
-            }
-        }
-    }
-}

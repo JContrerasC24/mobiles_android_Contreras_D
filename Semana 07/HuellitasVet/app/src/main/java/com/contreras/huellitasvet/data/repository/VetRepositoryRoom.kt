@@ -1,6 +1,9 @@
 package com.contreras.huellitasvet.data.repository
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.flow.first
+import com.contreras.huellitasvet.model.ReglasCitas
+import java.time.LocalDateTime
 import com.contreras.huellitasvet.data.local.VetDatabase
 import com.contreras.huellitasvet.data.local.entity.Cita
 import com.contreras.huellitasvet.data.local.entity.Mascota
@@ -105,6 +108,18 @@ class VetRepositoryRoom(
 
     override fun observarHistorial(mascotaId: Int) =
         db.citaDao().observarHistorial(mascotaId)
+
+    override suspend fun cancelarCitaDeDueno(id: Int, duenoId: Int) {
+        db.withTransaction {
+            val cita = checkNotNull(db.citaDao().obtener(id)) { "La cita ya no existe." }
+            val mascota = db.mascotaDao().observarUna(cita.mascotaId).first()
+            check(mascota?.duenoId == duenoId) { "No puedes cancelar esta cita." }
+            check(ReglasCitas.puedeCancelar(cita, LocalDateTime.now())) {
+                "Ya no puedes cancelar esta cita"
+            }
+            db.citaDao().actualizarEstado(id, EstadoCita.CANCELADA.name)
+        }
+    }
 
     override suspend fun cambiarEstadoCita(id: Int, estado: EstadoCita) {
         db.citaDao().actualizarEstado(id, estado.name)

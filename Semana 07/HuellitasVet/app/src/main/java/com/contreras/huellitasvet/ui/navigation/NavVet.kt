@@ -27,6 +27,7 @@ import com.contreras.huellitasvet.ui.dueno.FormularioMascotaScreen
 import com.contreras.huellitasvet.ui.dueno.FichaMascotaScreen
 import com.contreras.huellitasvet.ui.dueno.PedirCitaScreen
 import com.contreras.huellitasvet.ui.dueno.MisCitasScreen
+import com.contreras.huellitasvet.viewmodel.MisCitasViewModel
 import com.contreras.huellitasvet.viewmodel.PedirCitaViewModel
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import com.contreras.huellitasvet.viewmodel.InicioViewModel
@@ -165,7 +166,7 @@ fun NavVet(
         composable(Rutas.MIS_CITAS) {
             val dueno = usuario
             if (dueno?.rol == Rol.CLIENTE.name) {
-                val vm: PedirCitaViewModel = viewModel(factory = mascotaFactory(dueno, null))
+                val vm: MisCitasViewModel = viewModel(factory = mascotaFactory(dueno, null))
                 MisCitasScreen(vm,
                     onInicio = { navController.popBackStack(Rutas.INICIO, false) },
                     onPedir = { navController.navigate("cita/nueva") })
