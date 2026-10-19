@@ -11,6 +11,8 @@ class VetRepositoryRoom(
     private val db: VetDatabase
 ) : VetRepository {
 
+    override suspend fun obtenerUsuario(id: Int) = db.usuarioDao().obtener(id)
+
     override suspend fun login(correo: String, clave: String) =
         db.usuarioDao().login(correo, clave)
 

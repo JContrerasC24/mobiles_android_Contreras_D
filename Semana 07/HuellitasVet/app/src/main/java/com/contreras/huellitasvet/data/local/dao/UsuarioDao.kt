@@ -8,6 +8,9 @@ import com.contreras.huellitasvet.data.local.entity.Usuario
 @Dao
 interface UsuarioDao {
 
+    @Query("SELECT * FROM usuarios WHERE id = :id")
+    suspend fun obtener(id: Int): Usuario?
+
     @Query(
         """
         SELECT * FROM usuarios

@@ -1,77 +1,50 @@
 package com.contreras.huellitasvet
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
-import com.contreras.huellitasvet.ui.dueno.SplashScreen
-import com.contreras.huellitasvet.ui.theme.HuellitasVetTheme
-import com.contreras.huellitasvet.ui.veterinario.ServiciosScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.contreras.huellitasvet.model.Rol
+import com.contreras.huellitasvet.ui.navigation.NavVet
+import com.contreras.huellitasvet.ui.theme.VetTheme
 import com.contreras.huellitasvet.viewmodel.ServiciosViewModel
+import com.contreras.huellitasvet.viewmodel.SesionViewModel
 import com.contreras.huellitasvet.viewmodel.VetViewModelFactory
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         val app = application as VetApp
-
-        val serviciosViewModel = ViewModelProvider(
+        val provider = ViewModelProvider(
             this,
-            VetViewModelFactory(app.repository)
-        )[ServiciosViewModel::class.java]
+            VetViewModelFactory(app.repository, app.preferencias, app.inicializacion)
+        )
+        val sesion = provider[SesionViewModel::class.java]
+        val servicios = provider[ServiciosViewModel::class.java]
 
         setContent {
-            var mostrarSplash by rememberSaveable {
-                mutableStateOf(true)
-            }
+            val usuario by sesion.usuarioActual.collectAsStateWithLifecycle()
+            val seleccionado by sesion.rolSeleccionado.collectAsStateWithLifecycle()
+            val oscuro by sesion.modoOscuro.collectAsStateWithLifecycle()
+            val rol = usuario?.rol?.let { nombre ->
+                Rol.entries.firstOrNull { it.name == nombre }
+            } ?: seleccionado
 
-            LaunchedEffect(mostrarSplash) {
-                if (mostrarSplash) {
-                    delay(1500)
-                    mostrarSplash = false
-                }
-            }
-
-            HuellitasVetTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                    val contenidoModifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-
-                    if (mostrarSplash) {
-                        SplashScreen(
-                            modifier = contenidoModifier
-                        )
-                    } else {
-                        ServiciosScreen(
-                            vm = serviciosViewModel,
-                            onEditar = {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "El formulario se implementará en el paso 13",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            },
-                            modifier = contenidoModifier
-                        )
-                    }
+            VetTheme(rol = rol, darkTheme = oscuro) {
+                Scaffold(Modifier.fillMaxSize()) { padding ->
+                    NavVet(
+                        sesion = sesion,
+                        servicios = servicios,
+                        modifier = Modifier.fillMaxSize().padding(padding)
+                    )
                 }
             }
         }

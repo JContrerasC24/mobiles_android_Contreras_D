@@ -10,6 +10,7 @@ import com.contreras.huellitasvet.model.EstadoCita
 import kotlinx.coroutines.flow.Flow
 
 interface VetRepository {
+    suspend fun obtenerUsuario(id: Int): Usuario?
     suspend fun login(correo: String, clave: String): Usuario?
 
     fun observarServicios(): Flow<List<Servicio>>
