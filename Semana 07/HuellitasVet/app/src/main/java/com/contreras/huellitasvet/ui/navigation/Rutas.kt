@@ -6,6 +6,7 @@ object Rutas {
     const val INICIO = "inicio"
     const val MASCOTAS = "mascotas"
     const val FICHA_MASCOTA = "mascota/{mascotaId}"
+    const val EDITAR_MASCOTA = "mascota/{mascotaId}/editar"
     const val AGREGAR_MASCOTA = "mascota/nueva"
     const val PEDIR_CITA = "cita/nueva"
     const val PANEL = "panel"

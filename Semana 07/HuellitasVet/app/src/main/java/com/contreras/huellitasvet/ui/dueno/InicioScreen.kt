@@ -74,7 +74,7 @@ fun InicioScreen(
                     items(mascotas, key = { it.id }) { mascota ->
                         Card(onClick = { onMascota(mascota.id) }, modifier = Modifier.width(156.dp)) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                MascotaAvatar()
+                                MascotaAvatar(especie = mascota.especie)
                                 Text(mascota.nombre, style = MaterialTheme.typography.titleMedium)
                                 Text(mascota.especie.lowercase().replaceFirstChar { it.titlecase() })
                             }

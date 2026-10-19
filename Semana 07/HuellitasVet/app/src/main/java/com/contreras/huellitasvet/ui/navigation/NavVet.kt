@@ -23,6 +23,9 @@ import androidx.navigation.navArgument
 import com.contreras.huellitasvet.data.local.entity.Usuario
 import com.contreras.huellitasvet.ui.dueno.InicioScreen
 import com.contreras.huellitasvet.ui.dueno.MascotasScreen
+import com.contreras.huellitasvet.ui.dueno.FormularioMascotaScreen
+import com.contreras.huellitasvet.ui.dueno.FichaMascotaScreen
+import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import com.contreras.huellitasvet.viewmodel.InicioViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -41,6 +44,7 @@ fun NavVet(
     sesion: SesionViewModel,
     servicios: ServiciosViewModel,
     inicioFactory: (Usuario) -> ViewModelProvider.Factory,
+    mascotaFactory: (Usuario, Int?) -> ViewModelProvider.Factory,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -105,20 +109,37 @@ fun NavVet(
             }
         }
         composable(Rutas.AGREGAR_MASCOTA) {
-            if (usuario?.rol == Rol.CLIENTE.name) {
-                DestinoPendiente("Agregar mascota", "El formulario estará disponible próximamente.") {
-                    navController.popBackStack()
-                }
+            val dueno = usuario
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val vm: MascotaViewModel = viewModel(factory = mascotaFactory(dueno, null))
+                FormularioMascotaScreen(vm = vm, onVolver = { navController.popBackStack() })
             }
         }
         composable(
             Rutas.FICHA_MASCOTA,
             arguments = listOf(navArgument("mascotaId") { type = NavType.IntType })
-        ) {
-            if (usuario?.rol == Rol.CLIENTE.name) {
-                DestinoPendiente("Ficha de mascota", "La ficha clínica estará disponible próximamente.") {
-                    navController.popBackStack()
-                }
+        ) { entrada ->
+            val dueno = usuario
+            val id = entrada.arguments?.getInt("mascotaId") ?: return@composable
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val vm: MascotaViewModel = viewModel(factory = mascotaFactory(dueno, id))
+                FichaMascotaScreen(
+                    vm = vm, mascotaId = id,
+                    onVolver = { navController.popBackStack() },
+                    onEditar = { navController.navigate("mascota/$id/editar") },
+                    onPedirCita = { navController.navigate(Rutas.PEDIR_CITA) }
+                )
+            }
+        }
+        composable(
+            Rutas.EDITAR_MASCOTA,
+            arguments = listOf(navArgument("mascotaId") { type = NavType.IntType })
+        ) { entrada ->
+            val dueno = usuario
+            val id = entrada.arguments?.getInt("mascotaId") ?: return@composable
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val vm: MascotaViewModel = viewModel(factory = mascotaFactory(dueno, id))
+                FormularioMascotaScreen(vm = vm, id = id, onVolver = { navController.popBackStack() })
             }
         }
         composable(Rutas.PEDIR_CITA) {

@@ -10,10 +10,12 @@ class VetViewModelFactory(
     private val repository: VetRepository,
     private val preferencias: PreferenciasStore,
     private val inicializacion: Deferred<Unit>,
-    private val dueno: com.contreras.huellitasvet.data.local.entity.Usuario? = null
+    private val dueno: com.contreras.huellitasvet.data.local.entity.Usuario? = null,
+    private val mascotaId: Int? = null
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm: ViewModel = when (modelClass) {
+            MascotaViewModel::class.java -> MascotaViewModel(repository, requireNotNull(dueno), mascotaId)
             InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno))
             ServiciosViewModel::class.java -> ServiciosViewModel(repository)
             SesionViewModel::class.java ->

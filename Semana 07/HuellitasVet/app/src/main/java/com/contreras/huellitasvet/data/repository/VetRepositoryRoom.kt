@@ -49,7 +49,12 @@ class VetRepositoryRoom(
     }
 
     override suspend fun eliminarMascota(m: Mascota) {
-        db.mascotaDao().eliminar(m)
+        db.withTransaction {
+            check(db.mascotaDao().contarCitas(m.id) == 0) {
+                "No se puede eliminar: la mascota tiene citas registradas."
+            }
+            db.mascotaDao().eliminar(m)
+        }
     }
 
     override suspend fun mascotaTieneCitas(id: Int) =

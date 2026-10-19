@@ -52,7 +52,7 @@ fun MascotasScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        MascotaAvatar()
+                        MascotaAvatar(especie = mascota.especie)
                         Column(Modifier.weight(1f)) {
                             Text(mascota.nombre, style = MaterialTheme.typography.titleMedium)
                             Text("${mascota.especie.lowercase().replaceFirstChar { it.titlecase() }} · ${mascota.raza}")
