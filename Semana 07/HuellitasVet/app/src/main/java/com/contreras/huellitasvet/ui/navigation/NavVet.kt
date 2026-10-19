@@ -27,6 +27,10 @@ import com.contreras.huellitasvet.ui.dueno.FormularioMascotaScreen
 import com.contreras.huellitasvet.ui.dueno.FichaMascotaScreen
 import com.contreras.huellitasvet.ui.dueno.PedirCitaScreen
 import com.contreras.huellitasvet.ui.dueno.MisCitasScreen
+import com.contreras.huellitasvet.ui.veterinario.PanelScreen
+import com.contreras.huellitasvet.ui.veterinario.AgendaScreen
+import com.contreras.huellitasvet.viewmodel.PanelViewModel
+import com.contreras.huellitasvet.viewmodel.AgendaViewModel
 import com.contreras.huellitasvet.viewmodel.MisCitasViewModel
 import com.contreras.huellitasvet.viewmodel.PedirCitaViewModel
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
@@ -36,7 +40,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.contreras.huellitasvet.model.Rol
-import com.contreras.huellitasvet.ui.components.VetButton
 import com.contreras.huellitasvet.ui.dueno.LoginScreen
 import com.contreras.huellitasvet.ui.dueno.SplashScreen
 import com.contreras.huellitasvet.ui.veterinario.ServiciosScreen
@@ -172,18 +175,31 @@ fun NavVet(
                     onPedir = { navController.navigate("cita/nueva") })
             }
         }
-        // El paso 11 incorporará los contadores, ingresos y gráficos.
         composable(Rutas.PANEL) {
-            if (usuario?.rol == Rol.ADMIN.name) {
-                DestinoInicial(
-                    titulo = "Panel de la clínica",
-                    nombre = usuario?.nombre.orEmpty(),
-                    descripcion = "Administra la atención de tus pacientes.",
-                    ocupado = ocupado,
-                    error = error,
+            val veterinario = usuario
+            if (veterinario?.rol == Rol.ADMIN.name) {
+                val vm: PanelViewModel = viewModel(factory = inicioFactory(veterinario))
+                PanelScreen(vm = vm, nombre = veterinario.nombre,
+                    onAgenda = { navController.navigate(Rutas.AGENDA) },
+                    onServicios = { navController.navigate(Rutas.SERVICIOS) },
                     onCerrarSesion = sesion::cerrarSesion,
-                    onServicios = { navController.navigate(Rutas.SERVICIOS) }
-                )
+                    ocupado = ocupado, errorSesion = error)
+            }
+        }
+        composable(Rutas.AGENDA) {
+            val veterinario = usuario
+            if (veterinario?.rol == Rol.ADMIN.name) {
+                val vm: AgendaViewModel = viewModel(factory = inicioFactory(veterinario))
+                AgendaScreen(vm, onVolver = { navController.popBackStack() },
+                    onAtender = { navController.navigate("atender/$it") })
+            }
+        }
+        composable(Rutas.ATENDER_CITA,
+            arguments = listOf(navArgument("citaId") { type = NavType.IntType })) {
+            if (usuario?.rol == Rol.ADMIN.name) {
+                DestinoPendiente("Atender cita", "El formulario de atención estará disponible próximamente.") {
+                    navController.popBackStack()
+                }
             }
         }
         composable(Rutas.SERVICIOS) {
@@ -210,35 +226,6 @@ fun NavVet(
             confirmButton = {
                 TextButton(onClick = { avisoEdicion = false }) { Text("Aceptar") }
             }
-        )
-    }
-}
-
-@Composable
-private fun DestinoInicial(
-    titulo: String,
-    nombre: String,
-    descripcion: String,
-    ocupado: Boolean,
-    error: String?,
-    onCerrarSesion: () -> Unit,
-    onServicios: (() -> Unit)? = null
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(titulo, style = MaterialTheme.typography.headlineMedium)
-        Text("Hola, $nombre", style = MaterialTheme.typography.titleLarge)
-        Text(descripcion)
-        onServicios?.let {
-            VetButton(text = "Ver servicios", onClick = it)
-        }
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        VetButton(
-            text = "Cerrar sesión",
-            onClick = onCerrarSesion,
-            enabled = !ocupado
         )
     }
 }

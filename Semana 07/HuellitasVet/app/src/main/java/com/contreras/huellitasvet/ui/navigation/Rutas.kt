@@ -10,6 +10,8 @@ object Rutas {
     const val AGREGAR_MASCOTA = "mascota/nueva"
     const val PEDIR_CITA = "cita/nueva?mascotaId={mascotaId}"
     const val MIS_CITAS = "mis-citas"
+    const val AGENDA = "agenda"
+    const val ATENDER_CITA = "atender/{citaId}"
     const val PANEL = "panel"
     const val SERVICIOS = "servicios"
 }

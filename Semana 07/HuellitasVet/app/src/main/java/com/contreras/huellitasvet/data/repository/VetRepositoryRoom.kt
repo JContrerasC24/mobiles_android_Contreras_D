@@ -122,7 +122,13 @@ class VetRepositoryRoom(
     }
 
     override suspend fun cambiarEstadoCita(id: Int, estado: EstadoCita) {
-        db.citaDao().actualizarEstado(id, estado.name)
+        db.withTransaction {
+            val cita = checkNotNull(db.citaDao().obtener(id)) { "La cita ya no existe." }
+            check(com.contreras.huellitasvet.model.ReglasAgenda.permite(cita.estado, estado)) {
+                "La cita ya no permite esta acción."
+            }
+            db.citaDao().actualizarEstado(id, estado.name)
+        }
     }
 
     override suspend fun registrarAtencion(
