@@ -11,10 +11,13 @@ class VetViewModelFactory(
     private val preferencias: PreferenciasStore,
     private val inicializacion: Deferred<Unit>,
     private val dueno: com.contreras.huellitasvet.data.local.entity.Usuario? = null,
-    private val mascotaId: Int? = null
+    private val mascotaId: Int? = null,
+    private val citaId: Int? = null
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm: ViewModel = when (modelClass) {
+            AtenderCitaViewModel::class.java -> AtenderCitaViewModel(repository, requireNotNull(citaId))
+            PacientesViewModel::class.java -> PacientesViewModel(repository, mascotaId)
             PanelViewModel::class.java -> PanelViewModel(repository)
             AgendaViewModel::class.java -> AgendaViewModel(repository)
             MisCitasViewModel::class.java -> MisCitasViewModel(repository, requireNotNull(dueno))

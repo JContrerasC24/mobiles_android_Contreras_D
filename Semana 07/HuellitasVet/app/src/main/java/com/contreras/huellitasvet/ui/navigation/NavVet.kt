@@ -29,6 +29,11 @@ import com.contreras.huellitasvet.ui.dueno.PedirCitaScreen
 import com.contreras.huellitasvet.ui.dueno.MisCitasScreen
 import com.contreras.huellitasvet.ui.veterinario.PanelScreen
 import com.contreras.huellitasvet.ui.veterinario.AgendaScreen
+import com.contreras.huellitasvet.ui.veterinario.AtenderCitaScreen
+import com.contreras.huellitasvet.ui.veterinario.PacientesScreen
+import com.contreras.huellitasvet.ui.veterinario.FichaPacienteScreen
+import com.contreras.huellitasvet.viewmodel.AtenderCitaViewModel
+import com.contreras.huellitasvet.viewmodel.PacientesViewModel
 import com.contreras.huellitasvet.viewmodel.PanelViewModel
 import com.contreras.huellitasvet.viewmodel.AgendaViewModel
 import com.contreras.huellitasvet.viewmodel.MisCitasViewModel
@@ -52,6 +57,7 @@ fun NavVet(
     servicios: ServiciosViewModel,
     inicioFactory: (Usuario) -> ViewModelProvider.Factory,
     mascotaFactory: (Usuario, Int?) -> ViewModelProvider.Factory,
+    atencionFactory: (Int) -> ViewModelProvider.Factory,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -181,6 +187,7 @@ fun NavVet(
                 val vm: PanelViewModel = viewModel(factory = inicioFactory(veterinario))
                 PanelScreen(vm = vm, nombre = veterinario.nombre,
                     onAgenda = { navController.navigate(Rutas.AGENDA) },
+                    onPacientes = { navController.navigate(Rutas.PACIENTES) },
                     onServicios = { navController.navigate(Rutas.SERVICIOS) },
                     onCerrarSesion = sesion::cerrarSesion,
                     ocupado = ocupado, errorSesion = error)
@@ -195,11 +202,28 @@ fun NavVet(
             }
         }
         composable(Rutas.ATENDER_CITA,
-            arguments = listOf(navArgument("citaId") { type = NavType.IntType })) {
+            arguments = listOf(navArgument("citaId") { type = NavType.IntType })) { entrada ->
             if (usuario?.rol == Rol.ADMIN.name) {
-                DestinoPendiente("Atender cita", "El formulario de atención estará disponible próximamente.") {
-                    navController.popBackStack()
-                }
+                val id = entrada.arguments?.getInt("citaId") ?: return@composable
+                val vm: AtenderCitaViewModel = viewModel(factory = atencionFactory(id))
+                AtenderCitaScreen(vm, onVolver = { navController.popBackStack() })
+            }
+        }
+        composable(Rutas.PACIENTES) {
+            val veterinario = usuario
+            if (veterinario?.rol == Rol.ADMIN.name) {
+                val vm: PacientesViewModel = viewModel(factory = mascotaFactory(veterinario, null))
+                PacientesScreen(vm, onVolver = { navController.popBackStack() },
+                    onFicha = { navController.navigate("paciente/$it") })
+            }
+        }
+        composable(Rutas.FICHA_PACIENTE,
+            arguments = listOf(navArgument("mascotaId") { type = NavType.IntType })) { entrada ->
+            val veterinario = usuario
+            if (veterinario?.rol == Rol.ADMIN.name) {
+                val id = entrada.arguments?.getInt("mascotaId") ?: return@composable
+                val vm: PacientesViewModel = viewModel(factory = mascotaFactory(veterinario, id))
+                FichaPacienteScreen(vm, onVolver = { navController.popBackStack() })
             }
         }
         composable(Rutas.SERVICIOS) {
@@ -227,14 +251,5 @@ fun NavVet(
                 TextButton(onClick = { avisoEdicion = false }) { Text("Aceptar") }
             }
         )
-    }
-}
-
-@Composable
-private fun DestinoPendiente(titulo: String, mensaje: String, onVolver: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(titulo, style = MaterialTheme.typography.headlineMedium)
-        Text(mensaje)
-        TextButton(onClick = onVolver) { Text("Volver") }
     }
 }

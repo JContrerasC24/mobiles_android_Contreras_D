@@ -49,6 +49,9 @@ class MainActivity : ComponentActivity() {
                         mascotaFactory = { dueno, id ->
                             VetViewModelFactory(app.repository, app.preferencias, app.inicializacion, dueno, id)
                         },
+                        atencionFactory = { id ->
+                            VetViewModelFactory(app.repository, app.preferencias, app.inicializacion, citaId = id)
+                        },
                         modifier = Modifier.fillMaxSize().padding(padding)
                     )
                 }

@@ -141,7 +141,11 @@ class VetRepositoryRoom(
             val cita = checkNotNull(db.citaDao().obtener(citaId)) {
                 "La cita no existe"
             }
-            db.citaDao().registrarAtencion(citaId, diagnostico, tratamiento, peso)
+            check(ReglasCitas.activa(cita)) { "La cita ya no permite registrar atención." }
+            check(com.contreras.huellitasvet.model.validarAtencion(diagnostico, peso).isEmpty()) {
+                "Revisa el diagnóstico y el peso."
+            }
+            db.citaDao().registrarAtencion(citaId, diagnostico.trim(), tratamiento.trim(), peso)
             db.mascotaDao().actualizarPeso(cita.mascotaId, peso)
         }
     }
