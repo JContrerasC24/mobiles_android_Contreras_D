@@ -21,6 +21,7 @@ fun InicioScreen(
     onAgregar: () -> Unit,
     onPedirCita: () -> Unit,
     onVerMascotas: () -> Unit,
+    onMisCitas: () -> Unit,
     onCerrarSesion: () -> Unit,
     cerrandoSesion: Boolean,
     errorSesion: String?
@@ -84,6 +85,7 @@ fun InicioScreen(
             }
         }
         item { TextButton(onClick = onVerMascotas) { Text("Ver todas mis mascotas") } }
+        item { TextButton(onClick = onMisCitas) { Text("Mis citas") } }
         item { VetButton("Pedir una cita", onPedirCita, Modifier.fillMaxWidth()) }
         error?.let { mensaje -> item { Text(mensaje, color = MaterialTheme.colorScheme.error) } }
         errorSesion?.let { mensaje -> item { Text(mensaje, color = MaterialTheme.colorScheme.error) } }

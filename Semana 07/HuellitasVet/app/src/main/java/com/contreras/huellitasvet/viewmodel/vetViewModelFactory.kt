@@ -15,6 +15,7 @@ class VetViewModelFactory(
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm: ViewModel = when (modelClass) {
+            PedirCitaViewModel::class.java -> PedirCitaViewModel(repository, requireNotNull(dueno), mascotaId)
             MascotaViewModel::class.java -> MascotaViewModel(repository, requireNotNull(dueno), mascotaId)
             InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno))
             ServiciosViewModel::class.java -> ServiciosViewModel(repository)

@@ -25,6 +25,9 @@ import com.contreras.huellitasvet.ui.dueno.InicioScreen
 import com.contreras.huellitasvet.ui.dueno.MascotasScreen
 import com.contreras.huellitasvet.ui.dueno.FormularioMascotaScreen
 import com.contreras.huellitasvet.ui.dueno.FichaMascotaScreen
+import com.contreras.huellitasvet.ui.dueno.PedirCitaScreen
+import com.contreras.huellitasvet.ui.dueno.MisCitasScreen
+import com.contreras.huellitasvet.viewmodel.PedirCitaViewModel
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import com.contreras.huellitasvet.viewmodel.InicioViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,8 +89,9 @@ fun NavVet(
                     vm = inicio,
                     onMascota = { navController.navigate("mascota/$it") },
                     onAgregar = { navController.navigate(Rutas.AGREGAR_MASCOTA) },
-                    onPedirCita = { navController.navigate(Rutas.PEDIR_CITA) },
+                    onPedirCita = { navController.navigate("cita/nueva") },
                     onVerMascotas = { navController.navigate(Rutas.MASCOTAS) },
+                    onMisCitas = { navController.navigate(Rutas.MIS_CITAS) },
                     onCerrarSesion = sesion::cerrarSesion,
                     cerrandoSesion = ocupado,
                     errorSesion = error
@@ -127,7 +131,7 @@ fun NavVet(
                     vm = vm, mascotaId = id,
                     onVolver = { navController.popBackStack() },
                     onEditar = { navController.navigate("mascota/$id/editar") },
-                    onPedirCita = { navController.navigate(Rutas.PEDIR_CITA) }
+                    onPedirCita = { navController.navigate("cita/nueva?mascotaId=$id") }
                 )
             }
         }
@@ -142,11 +146,29 @@ fun NavVet(
                 FormularioMascotaScreen(vm = vm, id = id, onVolver = { navController.popBackStack() })
             }
         }
-        composable(Rutas.PEDIR_CITA) {
-            if (usuario?.rol == Rol.CLIENTE.name) {
-                DestinoPendiente("Pedir una cita", "La reserva de citas estará disponible próximamente.") {
-                    navController.popBackStack()
-                }
+        composable(
+            Rutas.PEDIR_CITA,
+            arguments = listOf(navArgument("mascotaId") { type = NavType.IntType; defaultValue = -1 })
+        ) { entrada ->
+            val dueno = usuario
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val id = entrada.arguments?.getInt("mascotaId")?.takeIf { it > 0 }
+                val vm: PedirCitaViewModel = viewModel(factory = mascotaFactory(dueno, id))
+                PedirCitaScreen(vm, onVolver = { navController.popBackStack() }, onCreada = {
+                    navController.navigate(Rutas.MIS_CITAS) {
+                        popUpTo(Rutas.INICIO)
+                        launchSingleTop = true
+                    }
+                })
+            }
+        }
+        composable(Rutas.MIS_CITAS) {
+            val dueno = usuario
+            if (dueno?.rol == Rol.CLIENTE.name) {
+                val vm: PedirCitaViewModel = viewModel(factory = mascotaFactory(dueno, null))
+                MisCitasScreen(vm,
+                    onInicio = { navController.popBackStack(Rutas.INICIO, false) },
+                    onPedir = { navController.navigate("cita/nueva") })
             }
         }
         // El paso 11 incorporará los contadores, ingresos y gráficos.

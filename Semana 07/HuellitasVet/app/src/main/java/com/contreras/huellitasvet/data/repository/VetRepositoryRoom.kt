@@ -73,6 +73,10 @@ class VetRepositoryRoom(
         val servicio = checkNotNull(db.servicioDao().obtener(servicioId)) {
             "El servicio no existe"
         }
+        check(servicio.activo) { "El servicio ya no está disponible." }
+        check(com.contreras.huellitasvet.model.Horarios.disponible(
+            java.time.LocalDate.parse(fecha), hora, emptyList(), java.time.LocalDateTime.now()
+        )) { "El horario ya no está disponible. Elige otro." }
         // La comprobacion y la insercion comparten transaccion para evitar duplicados.
         check(db.citaDao().contarOcupadas(fecha, hora) == 0) {
             "El horario ya esta ocupado"
