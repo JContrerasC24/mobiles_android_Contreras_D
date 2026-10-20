@@ -24,11 +24,11 @@ No se debe subir `local.properties`: contiene la ruta del SDK de cada equipo.
 
 | Perfil | Correo | Contraseña |
 |---|---|---|
-| Dueño: Ana | ana@correo.test | 1234 |
-| Dueño: Luis | luis@correo.test | 1234 |
-| Veterinario | vet@huellitas.test | admin |
+| Dueño: José | josec@gmail.com | 1234 |
+| Dueño: Luis | luis@gmail.com | 1234 |
+| Veterinario | vet@gmail.com | admin |
 
-Son datos ficticios para el laboratorio. La app funciona localmente y no utiliza un servidor. **Cambiar de perfil** alterna entre Ana y la cuenta veterinaria de demostración; no representa un sistema de autorización para producción.
+Son identificadores locales de ejemplo con formato Gmail; no se envían mensajes ni se accede a cuentas de Google. La app funciona localmente y no utiliza un servidor. **Cambiar de perfil** alterna entre José y la cuenta veterinaria de demostración; no representa un sistema de autorización para producción.
 
 La primera ejecución siembra 3 usuarios, 4 servicios, 4 mascotas y 10 citas. Las fechas se calculan respecto al día de la primera siembra y no se regeneran al abrir la app. Los cambios posteriores se conservan en Room.
 
@@ -123,7 +123,7 @@ Capturas del emulador Pixel 6, API 37.1, tomadas el 19 de octubre de 2026. Las p
 |---|---|---|
 | ![Panel veterinario](docs/capturas/04-veterinario-panel.png) | ![Agenda veterinaria](docs/capturas/05-veterinario-agenda.png) | ![Pacientes](docs/capturas/06-veterinario-pacientes.png) |
 
-Las capturas corresponden a distintos momentos de la prueba: se confirmó una cita después de capturar el panel, por lo que el contador de pendientes se redujo de 3 a 2.
+Las capturas son anteriores al cambio de Ana a José y a la actualización de correos; se conservan como evidencia de esa revisión. Las capturas corresponden a distintos momentos de la prueba: se confirmó una cita después de capturar el panel, por lo que el contador de pendientes se redujo de 3 a 2.
 
 ## Validación
 

@@ -31,4 +31,20 @@ interface UsuarioDao {
 
     @Query("SELECT * FROM usuarios WHERE rol = :rol ORDER BY id LIMIT 1")
     suspend fun obtenerPorRol(rol: String): com.contreras.huellitasvet.data.local.entity.Usuario?
+
+    // Actualización de datos; mantiene los IDs y sus relaciones.
+    @Query("""
+        UPDATE usuarios
+        SET nombre = CASE correo
+            WHEN 'ana@correo.test' THEN 'José'
+            WHEN 'vet@huellitas.test' THEN 'Veterinario'
+            ELSE nombre END,
+            correo = CASE correo
+                WHEN 'ana@correo.test' THEN 'josec@gmail.com'
+                WHEN 'luis@correo.test' THEN 'luis@gmail.com'
+                WHEN 'vet@huellitas.test' THEN 'vet@gmail.com'
+                ELSE correo END
+        WHERE correo IN ('ana@correo.test', 'luis@correo.test', 'vet@huellitas.test')
+    """)
+    suspend fun actualizarCuentasIniciales(): Int
 }

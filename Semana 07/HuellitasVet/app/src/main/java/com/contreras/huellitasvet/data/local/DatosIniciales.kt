@@ -16,6 +16,8 @@ object DatosIniciales {
 
     suspend fun sembrar(db: VetDatabase) {
         db.withTransaction {
+            // También actualiza instalaciones existentes sin volver a sembrar.
+            db.usuarioDao().actualizarCuentasIniciales()
             // Si ya existen usuarios, la siembra ya se realizó.
             if (db.usuarioDao().contar() > 0) {
                 return@withTransaction
@@ -64,20 +66,20 @@ object DatosIniciales {
             db.usuarioDao().insertarTodos(
                 listOf(
                     Usuario(
-                        nombre = "Ana Torres",
-                        correo = "ana@correo.test",
+                        nombre = "José",
+                        correo = "josec@gmail.com",
                         clave = "1234",
                         rol = Rol.CLIENTE.name
                     ),
                     Usuario(
                         nombre = "Luis Pérez",
-                        correo = "luis@correo.test",
+                        correo = "luis@gmail.com",
                         clave = "1234",
                         rol = Rol.CLIENTE.name
                     ),
                     Usuario(
-                        nombre = "Veterinario Demo",
-                        correo = "vet@huellitas.test",
+                        nombre = "Veterinario",
+                        correo = "vet@gmail.com",
                         clave = "admin",
                         rol = Rol.ADMIN.name
                     )
@@ -85,11 +87,11 @@ object DatosIniciales {
             )
 
             // Recuperamos los IDs generados, sin asumir su valor.
-            val ana = checkNotNull(
-                db.usuarioDao().login("ana@correo.test", "1234")
+            val jose = checkNotNull(
+                db.usuarioDao().login("josec@gmail.com", "1234")
             )
             val luis = checkNotNull(
-                db.usuarioDao().login("luis@correo.test", "1234")
+                db.usuarioDao().login("luis@gmail.com", "1234")
             )
 
             val servicios = db.servicioDao().observarTodos().first()
@@ -108,7 +110,7 @@ object DatosIniciales {
 
             val lunaId = db.mascotaDao().insertar(
                 Mascota(
-                    duenoId = ana.id,
+                    duenoId = jose.id,
                     nombre = "Luna",
                     especie = Especie.PERRO.name,
                     raza = "Mestiza",
@@ -120,7 +122,7 @@ object DatosIniciales {
 
             val maxId = db.mascotaDao().insertar(
                 Mascota(
-                    duenoId = ana.id,
+                    duenoId = jose.id,
                     nombre = "Max",
                     especie = Especie.PERRO.name,
                     raza = "Labrador",
