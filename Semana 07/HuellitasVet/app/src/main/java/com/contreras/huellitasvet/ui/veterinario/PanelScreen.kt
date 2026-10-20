@@ -1,20 +1,29 @@
 package com.contreras.huellitasvet.ui.veterinario
-
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.contreras.huellitasvet.ui.components.graficos.GraficoDona
-import com.contreras.huellitasvet.ui.components.graficos.GraficoBarras
-import com.contreras.huellitasvet.viewmodel.PanelViewModel
-import java.util.Locale
+import com.contreras.huellitasvet.ui.components.*
 
+import androidx.compose.ui.graphics.Color
+import com.contreras.huellitasvet.ui.components.graficos.*
+import com.contreras.huellitasvet.viewmodel.PanelViewModel
+import java.time.LocalDate
+import java.util.Locale
 @Composable
-fun PanelScreen(vm: PanelViewModel, nombre: String, onAgenda: () -> Unit,
-    onAjustes: () -> Unit, onPacientes: () -> Unit, onServicios: () -> Unit, onCerrarSesion: () -> Unit, ocupado: Boolean, errorSesion: String?) {
+fun PanelScreen(vm:PanelViewModel,nombre:String,onAgenda:()->Unit,onAjustes:()->Unit,
+    onPacientes:()->Unit,onServicios:()->Unit,onCerrarSesion:()->Unit,ocupado:Boolean,errorSesion:String?) {
     val hoy by vm.citasHoy.collectAsStateWithLifecycle()
     val pendientes by vm.pendientes.collectAsStateWithLifecycle()
     val atendidas by vm.atendidas.collectAsStateWithLifecycle()
@@ -22,54 +31,46 @@ fun PanelScreen(vm: PanelViewModel, nombre: String, onAgenda: () -> Unit,
     val estados by vm.porEstado.collectAsStateWithLifecycle()
     val servicios by vm.porServicio.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
-    val colores = MaterialTheme.colorScheme
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+        item { VetHeader("Panel de la clínica",subtitulo="Hoy · ${fechaCorta(LocalDate.now().toString())}",onAccion=onAgenda) }
         item {
-            Text("Panel de la clínica", style = MaterialTheme.typography.headlineMedium)
-            Text("Hola, $nombre")
-        }
-        item {
-            val contadores = listOf(Triple("Citas hoy", hoy, colores.primaryContainer),
-                Triple("Pendientes", pendientes, colores.tertiaryContainer),
-                Triple("Atendidas", atendidas, colores.secondaryContainer))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                contadores.forEach { (etiqueta, cantidad, color) ->
-                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = color)) {
-                        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(etiqueta); Text(cantidad.toString(), style = MaterialTheme.typography.titleLarge)
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                listOf(Triple("Citas hoy",hoy,Color(0xFFDBEAFE)),Triple("Pendientes",pendientes,Color(0xFFFEF3C7)),
+                    Triple("Atendidas",atendidas,Color(0xFFE2E8F0))).forEach { (label,count,color) ->
+                    Card(Modifier.weight(1f),colors=CardDefaults.cardColors(containerColor=color,contentColor=Color(0xFF243B64))) {
+                        Column(Modifier.fillMaxWidth().padding(vertical=14.dp,horizontal=4.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                            Text(count.toString(),style=MaterialTheme.typography.headlineMedium)
+                            Text(label,style=MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
             }
         }
         item {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-                containerColor = colores.primaryContainer, contentColor = colores.onPrimaryContainer)) {
-                Column(Modifier.padding(20.dp)) {
-                    Text("Ingresos del mes")
-                    Text("S/ ${String.format(Locale.US, "%.2f", ingresos)}", style = MaterialTheme.typography.headlineMedium)
+            Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.primary,contentColor=MaterialTheme.colorScheme.onPrimary)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+                    Text("Ingresos del mes",style=MaterialTheme.typography.bodySmall)
+                    Text("S/ ${String.format(Locale.US,"%,.2f",ingresos)}",style=MaterialTheme.typography.headlineSmall)
                 }
             }
         }
-        if (pendientes > 0) item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Tienes $pendientes citas pendientes")
-                    TextButton(onClick = onAgenda) { Text("Ver") }
+        item { Text("Citas por estado",style=MaterialTheme.typography.titleSmall) }
+        item { VetCard { GraficoDona(estados) } }
+        item { Text("Citas por servicio",style=MaterialTheme.typography.titleSmall) }
+        item { VetCard { GraficoBarras(servicios) } }
+        if(pendientes>0) item {
+            VetCard {
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Icon(Icons.Default.Warning,null,tint=MaterialTheme.colorScheme.tertiary)
+                    Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
+                        Text("$pendientes citas por confirmar",style=MaterialTheme.typography.titleSmall)
+                        Text("Revisa tu agenda",style=MaterialTheme.typography.bodySmall)
+                    }
+                    Button(onClick=onAgenda){Text("Ver")}
                 }
             }
         }
-        item { Button(onClick = onAgenda) { Text("Ver agenda") } }
-        item { Text("Citas por estado", style = MaterialTheme.typography.titleLarge); GraficoDona(estados) }
-        item { Text("Citas por servicio", style = MaterialTheme.typography.titleLarge); GraficoBarras(servicios) }
-        error?.let { item { Text(it, color = colores.error) } }
-        errorSesion?.let { item { Text(it, color = colores.error) } }
-        item {
-            TextButton(onClick = onAjustes) { Text("Ajustes") }
-            TextButton(onClick = onPacientes) { Text("Pacientes") }
-            TextButton(onClick = onServicios) { Text("Servicios") }
-            TextButton(onClick = onCerrarSesion, enabled = !ocupado) { Text("Cerrar sesión") }
-        }
+        error?.let { item{Text(it,color=MaterialTheme.colorScheme.error)} }
+        errorSesion?.let { item{Text(it,color=MaterialTheme.colorScheme.error)} }
     }
 }

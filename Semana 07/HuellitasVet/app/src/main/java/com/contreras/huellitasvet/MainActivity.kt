@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.SideEffect
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +41,13 @@ class MainActivity : ComponentActivity() {
             } ?: seleccionado
 
             VetTheme(rol = rol, darkTheme = oscuro) {
-                Scaffold(Modifier.fillMaxSize()) { padding ->
+                SideEffect {
+                    WindowCompat.getInsetsController(window,window.decorView).apply {
+                        isAppearanceLightStatusBars=!oscuro
+                        isAppearanceLightNavigationBars=!oscuro
+                    }
+                }
+                run {
                     NavVet(
                         sesion = sesion,
                         servicios = servicios,
@@ -52,7 +60,7 @@ class MainActivity : ComponentActivity() {
                         atencionFactory = { id ->
                             VetViewModelFactory(app.repository, app.preferencias, app.inicializacion, citaId = id)
                         },
-                        modifier = Modifier.fillMaxSize().padding(padding)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }

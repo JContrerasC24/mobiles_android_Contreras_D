@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.model.ReglasCitas
-import com.contreras.huellitasvet.ui.components.CitaCard
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.viewmodel.MisCitasViewModel
 
 @Composable
@@ -28,6 +28,7 @@ fun MisCitasScreen(vm: MisCitasViewModel, onInicio: () -> Unit, onPedir: () -> U
     val citas = if (pestana == 0) proximas else historial
 
     Scaffold(
+        contentWindowInsets=WindowInsets(0,0,0,0),
         floatingActionButton = {
             FloatingActionButton(onClick = onPedir) {
                 Icon(Icons.Default.Add, contentDescription = "Pedir una cita")
@@ -38,14 +39,12 @@ fun MisCitasScreen(vm: MisCitasViewModel, onInicio: () -> Unit, onPedir: () -> U
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                TextButton(onClick = onInicio) { Text("Volver al inicio") }
-                Text("Mis citas", style = MaterialTheme.typography.headlineMedium)
-                Text("Puedes cancelar hasta 2 horas antes")
+                VetHeader("Mis citas",subtitulo="Puedes cancelar con más de 2 horas de anticipación")
             }
             item {
-                TabRow(selectedTabIndex = pestana) {
-                    Tab(selected = pestana == 0, onClick = { pestana = 0 }, text = { Text("Próximas") })
-                    Tab(selected = pestana == 1, onClick = { pestana = 1 }, text = { Text("Historial") })
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    VetChoice("Próximas",pestana==0,{pestana=0},Modifier.weight(1f))
+                    VetChoice("Historial",pestana==1,{pestana=1},Modifier.weight(1f))
                 }
             }
             mensaje?.let { item { Text(it) } }

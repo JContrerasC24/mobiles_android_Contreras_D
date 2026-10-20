@@ -24,7 +24,7 @@ class VetViewModelFactory(
             MisCitasViewModel::class.java -> MisCitasViewModel(repository, requireNotNull(dueno))
             PedirCitaViewModel::class.java -> PedirCitaViewModel(repository, requireNotNull(dueno), preferencias, mascotaId)
             MascotaViewModel::class.java -> MascotaViewModel(repository, requireNotNull(dueno), mascotaId)
-            InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno))
+            InicioViewModel::class.java -> InicioViewModel(repository, requireNotNull(dueno), preferencias.notificaciones)
             ServiciosViewModel::class.java -> ServiciosViewModel(repository)
             SesionViewModel::class.java ->
                 SesionViewModel(repository, preferencias, inicializacion)

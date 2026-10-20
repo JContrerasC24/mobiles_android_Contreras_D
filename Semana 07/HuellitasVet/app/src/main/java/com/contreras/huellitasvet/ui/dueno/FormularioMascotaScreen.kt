@@ -1,27 +1,29 @@
 package com.contreras.huellitasvet.ui.dueno
-
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.contreras.huellitasvet.ui.components.*
+
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardType
 import com.contreras.huellitasvet.model.Especie
 import com.contreras.huellitasvet.model.Sexo
-import com.contreras.huellitasvet.ui.components.MascotaAvatar
-import com.contreras.huellitasvet.ui.components.VetButton
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
-
 @Composable
-fun FormularioMascotaScreen(
-    vm: MascotaViewModel,
-    id: Int? = null,
-    onVolver: () -> Unit
-) {
+fun FormularioMascotaScreen(vm:MascotaViewModel,id:Int?=null,onVolver:()->Unit) {
     val f by vm.formulario.collectAsStateWithLifecycle()
     val errores by vm.errores.collectAsStateWithLifecycle()
     val cargando by vm.cargando.collectAsStateWithLifecycle()
@@ -29,66 +31,32 @@ fun FormularioMascotaScreen(
     val finalizado by vm.finalizado.collectAsStateWithLifecycle()
     val mensaje by vm.mensaje.collectAsStateWithLifecycle()
     val mascota by vm.mascota.collectAsStateWithLifecycle()
-    LaunchedEffect(finalizado) { if (finalizado) onVolver() }
-    val habilitado = !ocupado && !cargando && !finalizado && (id == null || mascota != null)
-
-    Column(
-        Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        TextButton(onClick = onVolver, enabled = !ocupado) { Text("Volver") }
-        Text(if (id == null) "Agregar mascota" else "Editar mascota",
-            style = MaterialTheme.typography.headlineMedium)
-        if (cargando) LinearProgressIndicator(Modifier.fillMaxWidth())
-        MascotaAvatar(especie = f.especie)
-        CampoMascota("Nombre", f.nombre, errores["nombre"], habilitado) { vm.actualizar(f.copy(nombre = it)) }
-        Text("Especie", style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Especie.entries.forEach { especie ->
-                FilterChip(
-                    selected = f.especie == especie.name, enabled = habilitado,
-                    onClick = { vm.actualizar(f.copy(especie = especie.name)) },
-                    label = { Text(especie.name.lowercase().replaceFirstChar { it.titlecase() }) }
-                )
-            }
+    LaunchedEffect(finalizado){if(finalizado)onVolver()}
+    val enabled=!ocupado && !cargando && !finalizado && (id==null || mascota!=null)
+    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        VetHeader(if(id==null)"Nueva mascota" else "Editar mascota",onVolver={if(!ocupado)onVolver()})
+        Box(Modifier.fillMaxWidth(),contentAlignment=Alignment.Center) { MascotaAvatar(especie=f.especie,tamano=80.dp) }
+        VetField(f.nombre,{vm.actualizar(f.copy(nombre=it))},"Nombre",enabled=enabled,error=errores["nombre"])
+        Text("Especie",style=MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            Especie.entries.forEach { e -> VetChoice(tituloValor(e.name),f.especie==e.name,
+                {vm.actualizar(f.copy(especie=e.name))},Modifier.weight(1f),enabled) }
         }
-        errores["especie"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        CampoMascota("Raza", f.raza, null, habilitado) { vm.actualizar(f.copy(raza = it)) }
-        CampoMascota("Año de nacimiento", f.anio, errores["anio"], habilitado, KeyboardType.Number) {
-            vm.actualizar(f.copy(anio = it))
+        errores["especie"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
+        VetField(f.raza,{vm.actualizar(f.copy(raza=it))},"Raza",enabled=enabled)
+        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            VetField(f.anio,{vm.actualizar(f.copy(anio=it))},"Año de nacimiento",Modifier.weight(1f),enabled,errores["anio"],KeyboardType.Number)
+            VetField(f.peso,{vm.actualizar(f.copy(peso=it))},"Peso (kg)",Modifier.weight(1f),enabled,errores["peso"],KeyboardType.Decimal)
         }
-        CampoMascota("Peso (kg)", f.peso, errores["peso"], habilitado, KeyboardType.Decimal) {
-            vm.actualizar(f.copy(peso = it))
+        Text("Sexo",style=MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            Sexo.entries.forEach { s -> VetChoice(tituloValor(s.name),f.sexo==s.name,
+                {vm.actualizar(f.copy(sexo=s.name))},Modifier.weight(1f),enabled) }
         }
-        Text("Sexo", style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Sexo.entries.forEach { sexo ->
-                FilterChip(
-                    selected = f.sexo == sexo.name, enabled = habilitado,
-                    onClick = { vm.actualizar(f.copy(sexo = sexo.name)) },
-                    label = { Text(sexo.name.lowercase().replaceFirstChar { it.titlecase() }) }
-                )
-            }
-        }
-        errores["sexo"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        mensaje?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        VetButton(
-            text = if (ocupado) "Guardando…" else "Guardar mascota",
-            onClick = vm::guardarFormulario, modifier = Modifier.fillMaxWidth(),
-            enabled = habilitado
-        )
+        errores["sexo"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
+        mensaje?.let{Text(it,color=MaterialTheme.colorScheme.error)}
+        VetButton(if(ocupado)"Guardando…" else "Guardar mascota",vm::guardarFormulario,Modifier.fillMaxWidth(),enabled)
+        OutlinedButton(onClick=onVolver,enabled=!ocupado,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp),shape=RoundedCornerShape(12.dp)){Text("Cancelar")}
     }
-}
-
-@Composable
-private fun CampoMascota(
-    etiqueta: String, valor: String, error: String?, habilitado: Boolean,
-    teclado: KeyboardType = KeyboardType.Text, onCambio: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = valor, onValueChange = onCambio, label = { Text(etiqueta) },
-        modifier = Modifier.fillMaxWidth(), singleLine = true, enabled = habilitado,
-        isError = error != null, keyboardOptions = KeyboardOptions(keyboardType = teclado),
-        supportingText = { if (error != null) Text(error) }
-    )
 }

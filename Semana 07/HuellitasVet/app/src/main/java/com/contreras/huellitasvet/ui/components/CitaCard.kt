@@ -11,8 +11,8 @@ import java.util.Locale
 @Composable
 fun CitaCard(detalle: CitaConDetalle, puedeCancelar: Boolean,
     ocupado: Boolean, onCancelar: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    VetCard {
+        Column( verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(detalle.mascota.mascota.nombre, style = MaterialTheme.typography.titleLarge)
             Text(detalle.servicio.nombre)
             Text("${detalle.cita.fecha} · ${detalle.cita.hora}")

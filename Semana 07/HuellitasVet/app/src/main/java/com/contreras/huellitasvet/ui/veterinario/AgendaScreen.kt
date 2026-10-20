@@ -7,12 +7,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.model.EstadoCita
 import com.contreras.huellitasvet.model.ReglasAgenda
-import com.contreras.huellitasvet.ui.components.MascotaAvatar
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.ui.components.EstadoCitaChip
 import com.contreras.huellitasvet.viewmodel.AgendaViewModel
 import java.time.LocalDate
@@ -27,18 +28,17 @@ fun AgendaScreen(vm: AgendaViewModel, onVolver: () -> Unit, onAtender: (Int) -> 
     val mensaje by vm.mensaje.collectAsStateWithLifecycle()
     var cancelarId by rememberSaveable { mutableStateOf<Int?>(null) }
     val seleccionada = citas.firstOrNull { it.cita.id == cancelarId }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            TextButton(onClick = onVolver) { Text("Volver al panel") }
-            Text("Agenda", style = MaterialTheme.typography.headlineMedium)
+            VetHeader("Agenda")
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items((0..7).map { LocalDate.now().plusDays(it.toLong()) }) { dia ->
-                    FilterChip(selected = fecha == dia, enabled = !ocupado,
+                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = fecha == dia, enabled = !ocupado,
                         onClick = { vm.elegirFecha(dia) },
-                        label = { Text(dia.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale("es", "PE")))) })
+                        label = { Text(dia.format(DateTimeFormatter.ofPattern("EEE d", Locale("es", "PE")))) })
                 }
             }
         }
@@ -48,16 +48,20 @@ fun AgendaScreen(vm: AgendaViewModel, onVolver: () -> Unit, onAtender: (Int) -> 
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column {
-                    Text(detalle.cita.hora, style = MaterialTheme.typography.labelLarge)
+                    Text(detalle.cita.hora, style = MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
                     VerticalDivider(Modifier.padding(start = 16.dp).weight(1f))
                 }
-                Card(Modifier.weight(1f)) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MascotaAvatar(especie = detalle.mascota.mascota.especie)
-                        Text(detalle.mascota.mascota.nombre, style = MaterialTheme.typography.titleLarge)
-                        Text(detalle.servicio.nombre)
-                        Text("Dueño: ${detalle.mascota.dueno.nombre}")
+                VetCard(Modifier.weight(1f)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                            MascotaAvatar(especie=detalle.mascota.mascota.especie,tamano=40.dp)
+                            Column(Modifier.weight(1f)) {
+                                Text("${detalle.mascota.mascota.nombre} · ${detalle.servicio.nombre}",style=MaterialTheme.typography.titleSmall)
+                                Text("Dueño: ${detalle.mascota.dueno.nombre}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                         EstadoCitaChip(detalle.cita.estado)
+                        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
                         if (detalle.cita.estado == EstadoCita.PENDIENTE.name) {
                             Button(enabled = !ocupado, onClick = { vm.confirmar(detalle) }) { Text("Confirmar") }
                         }
@@ -66,6 +70,7 @@ fun AgendaScreen(vm: AgendaViewModel, onVolver: () -> Unit, onAtender: (Int) -> 
                         }
                         if (ReglasAgenda.permite(detalle.cita.estado, EstadoCita.CANCELADA)) {
                             TextButton(enabled = !ocupado, onClick = { cancelarId = detalle.cita.id }) { Text("Cancelar") }
+                        }
                         }
                     }
                 }

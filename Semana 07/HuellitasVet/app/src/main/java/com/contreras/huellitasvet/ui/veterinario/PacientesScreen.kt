@@ -6,10 +6,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.contreras.huellitasvet.ui.components.MascotaAvatar
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.ui.components.HistorialItem
 import com.contreras.huellitasvet.viewmodel.PacientesViewModel
 import java.time.LocalDate
@@ -21,33 +22,35 @@ fun PacientesScreen(vm: PacientesViewModel, onVolver: () -> Unit, onFicha: (Int)
     val especie by vm.especie.collectAsStateWithLifecycle()
     val visitas by vm.ultimasVisitas.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            TextButton(onClick = onVolver) { Text("Volver al panel") }
-            Text("Pacientes", style = MaterialTheme.typography.headlineMedium)
+            VetHeader("Pacientes")
         }
         item {
-            OutlinedTextField(value = texto, onValueChange = { vm.texto.value = it },
+            OutlinedTextField(shape=androidx.compose.foundation.shape.RoundedCornerShape(12.dp),colors=OutlinedTextFieldDefaults.colors(unfocusedContainerColor=MaterialTheme.colorScheme.surface,focusedContainerColor=MaterialTheme.colorScheme.surface),value = texto, onValueChange = { vm.texto.value = it },
                 label = { Text("Buscar mascota o dueño") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listOf("Todos" to null, "Perros" to "PERRO", "Gatos" to "GATO", "Otros" to "OTRO")) { (nombre, valor) ->
-                    FilterChip(selected = especie == valor, onClick = { vm.especie.value = valor }, label = { Text(nombre) })
+                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = especie == valor, onClick = { vm.especie.value = valor }, label = { Text(nombre) })
                 }
             }
         }
         error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         if (pacientes.isEmpty()) item { Text("No hay pacientes que coincidan con la búsqueda.") }
         items(pacientes, key = { it.mascota.id }) { paciente ->
-            Card(onClick = { onFicha(paciente.mascota.id) }, modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MascotaAvatar(especie = paciente.mascota.especie)
-                    Text(paciente.mascota.nombre, style = MaterialTheme.typography.titleLarge)
-                    Text("${paciente.mascota.raza} · ${LocalDate.now().year - paciente.mascota.anioNacimiento} años")
-                    Text("Dueño: ${paciente.dueno.nombre}")
-                    Text("Última visita: ${visitas[paciente.mascota.id] ?: "Sin atenciones"}")
+            Card(onClick = { onFicha(paciente.mascota.id) }, modifier = Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+                Row(Modifier.padding(14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    MascotaAvatar(especie=paciente.mascota.especie,tamano=48.dp)
+                    Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+                        Text(paciente.mascota.nombre,style=MaterialTheme.typography.titleMedium)
+                        Text("${paciente.mascota.raza} · ${LocalDate.now().year-paciente.mascota.anioNacimiento} años",style=MaterialTheme.typography.bodySmall)
+                        Text("Dueño: ${paciente.dueno.nombre}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(visitas[paciente.mascota.id]?.let{"Última visita: ${fechaCorta(it)}"} ?: "Sin atenciones",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text("›",color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -59,9 +62,9 @@ fun FichaPacienteScreen(vm: PacientesViewModel, onVolver: () -> Unit) {
     val paciente by vm.paciente.collectAsStateWithLifecycle()
     val historial by vm.historial.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { TextButton(onClick = onVolver) { Text("Volver a pacientes") } }
+        item { VetHeader("Ficha del paciente",onVolver=onVolver) }
         error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         paciente?.let { p ->
             item {

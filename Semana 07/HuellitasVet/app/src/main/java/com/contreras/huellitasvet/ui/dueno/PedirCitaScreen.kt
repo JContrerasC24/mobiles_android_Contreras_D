@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.model.Horarios
 import com.contreras.huellitasvet.viewmodel.PedirCitaViewModel
 import java.time.format.DateTimeFormatter
@@ -37,11 +38,10 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
     val valido = aceptar && mascota != null && servicio != null && hora != null &&
         listo && Horarios.disponible(fecha, hora!!, horas.orEmpty(), ahora)
     LaunchedEffect(creada) { if (creada != null) onCreada() }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            TextButton(onClick = onVolver, enabled = !ocupado) { Text("Volver") }
-            Text("Pedir una cita", style = MaterialTheme.typography.headlineMedium)
+            VetHeader("Pedir una cita",onVolver={if(!ocupado)onVolver()})
         }
         if (!aceptar) item { Text("La clínica no está recibiendo citas", color = MaterialTheme.colorScheme.error) }
         item { Text("Mascota", style = MaterialTheme.typography.titleLarge) }
@@ -49,7 +49,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(mascotas, key = { it.id }) { m ->
-                    FilterChip(selected = mascotaId == m.id, enabled = !ocupado,
+                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = mascotaId == m.id, enabled = !ocupado,
                         onClick = { vm.mascota.value = m.id }, label = { Text(m.nombre) })
                 }
             }
@@ -72,7 +72,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items((0..7).map { ahora.toLocalDate().plusDays(it.toLong()) }) { dia ->
-                    FilterChip(selected = dia == fecha, enabled = !ocupado,
+                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = dia == fecha, enabled = !ocupado,
                         onClick = { vm.elegirFecha(dia) },
                         label = { Text(dia.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale("es", "PE")))) })
                 }
@@ -84,7 +84,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 fila.forEach { turno ->
                     val libre = listo && Horarios.disponible(fecha, turno, horas.orEmpty(), ahora)
-                    FilterChip(selected = hora == turno && libre, enabled = libre && !ocupado,
+                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = hora == turno && libre, enabled = libre && !ocupado,
                         onClick = { vm.hora.value = turno },
                         label = { Text(turno, textDecoration = if (libre) TextDecoration.None else TextDecoration.LineThrough) })
                 }
@@ -108,7 +108,7 @@ fun PedirCitaScreen(vm: PedirCitaViewModel, onVolver: () -> Unit, onCreada: () -
         error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         item {
             Button(onClick = vm::confirmar, enabled = valido && !ocupado && creada == null,
-                modifier = Modifier.fillMaxWidth()) { Text(if (ocupado) "Reservando…" else "Confirmar cita") }
+                modifier = Modifier.fillMaxWidth().heightIn(min=48.dp)) { Text(if (ocupado) "Reservando…" else "Confirmar cita") }
         }
     }
 }

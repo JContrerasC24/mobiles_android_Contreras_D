@@ -4,6 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -85,10 +90,39 @@ fun NavVet(
         }
     }
 
+    val entradaActual by navController.currentBackStackEntryAsState()
+    val ruta=entradaActual?.destination?.route
+    val vet=usuario?.rol==Rol.ADMIN.name
+    val tabs=if(vet) listOf(
+        Triple(Rutas.PANEL,"Panel",Icons.Default.BarChart),Triple(Rutas.AGENDA,"Agenda",Icons.Default.CalendarMonth),
+        Triple(Rutas.PACIENTES,"Pacientes",Icons.Default.Pets),Triple(Rutas.SERVICIOS,"Servicios",Icons.Default.Sell),
+        Triple(Rutas.AJUSTES,"Ajustes",Icons.Default.Settings)
+    ) else listOf(Triple(Rutas.INICIO,"Inicio",Icons.Default.Home),Triple(Rutas.MASCOTAS,"Mascotas",Icons.Default.Pets),
+        Triple(Rutas.MIS_CITAS,"Citas",Icons.Default.CalendarMonth),Triple(Rutas.PERFIL,"Perfil",Icons.Default.PersonOutline))
+    val mostrarBarra=usuario!=null && (tabs.any{it.first==ruta} || ruta==Rutas.FICHA_MASCOTA || ruta==Rutas.FICHA_PACIENTE)
+    Scaffold(modifier=modifier,bottomBar={
+        if(mostrarBarra) {
+            HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+            NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp,
+                windowInsets=NavigationBarDefaults.windowInsets) {
+                tabs.forEach { (destino,label,icono) ->
+                    val selected=ruta==destino || (destino==Rutas.MASCOTAS && ruta==Rutas.FICHA_MASCOTA) || (destino==Rutas.PACIENTES && ruta==Rutas.FICHA_PACIENTE)
+                    NavigationBarItem(selected=selected,onClick={
+                        if(ruta!=destino)navController.navigate(destino) {
+                            popUpTo(if(vet)Rutas.PANEL else Rutas.INICIO){inclusive=false}
+                            launchSingleTop=true
+                        }
+                    },icon={Icon(icono,label,Modifier.size(22.dp))},label={Text(label,style=MaterialTheme.typography.labelSmall)},
+                        colors=NavigationBarItemDefaults.colors(selectedIconColor=MaterialTheme.colorScheme.primary,
+                            selectedTextColor=MaterialTheme.colorScheme.primary,indicatorColor=MaterialTheme.colorScheme.surface))
+                }
+            }
+        }
+    }) { padding ->
     NavHost(
         navController = navController,
         startDestination = Rutas.SPLASH,
-        modifier = modifier
+        modifier = Modifier.fillMaxSize().padding(padding)
     ) {
         composable(Rutas.SPLASH) { SplashScreen() }
         composable(Rutas.LOGIN) { LoginScreen(sesion) }
@@ -258,9 +292,6 @@ fun NavVet(
         composable(Rutas.SERVICIOS) {
             if (usuario?.rol == Rol.ADMIN.name) {
                 Column(Modifier.fillMaxSize()) {
-                    TextButton(onClick = { navController.popBackStack() }) {
-                        Text("Volver al panel")
-                    }
                     ServiciosScreen(
                         vm = servicios,
                         onEditar = { id -> servicios.prepararFormulario(); navController.navigate("servicio/$id") },
@@ -270,4 +301,5 @@ fun NavVet(
             }
         }
     }
+}
 }

@@ -27,12 +27,17 @@ internal fun elegirProximaCita(
     .filter { (_, momento) -> !momento.isBefore(ahora) }
     .minByOrNull { (_, momento) -> momento }?.first
 
-class InicioViewModel(repo: VetRepository, val dueno: Usuario) : ViewModel() {
+class InicioViewModel(repo: VetRepository, val dueno: Usuario, recordatorios: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.flowOf(true)) : ViewModel() {
+    val mostrarRecordatorios = recordatorios.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
     val mascotas = repo.observarMascotasDeDueno(dueno.id)
         .catch { _error.value = "No se pudieron cargar tus mascotas." }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val servicios = repo.observarServiciosActivos()
+        .catch { _error.value = "No se pudieron cargar los servicios." }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Actualiza la próxima cita aunque Room no emita cambios al pasar el tiempo.

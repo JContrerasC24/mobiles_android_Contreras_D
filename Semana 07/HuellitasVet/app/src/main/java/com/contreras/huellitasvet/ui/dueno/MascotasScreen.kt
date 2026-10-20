@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.contreras.huellitasvet.ui.components.MascotaAvatar
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.viewmodel.InicioViewModel
 import java.time.LocalDate
 
@@ -28,6 +28,7 @@ fun MascotasScreen(
     val anioActual = LocalDate.now().year
 
     Scaffold(
+        contentWindowInsets=WindowInsets(0,0,0,0),
         floatingActionButton = {
             FloatingActionButton(onClick = onAgregar) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar mascota")
@@ -39,14 +40,14 @@ fun MascotasScreen(
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { TextButton(onClick = onVolver) { Text("Volver al inicio") } }
-            item { Text("Mis mascotas", style = MaterialTheme.typography.headlineMedium) }
+
+            item { VetHeader("Mis mascotas") }
             error?.let { mensaje -> item { Text(mensaje, color = MaterialTheme.colorScheme.error) } }
             if (mascotas.isEmpty()) {
                 item { Text("Todavía no tienes mascotas registradas. Usa + para agregar una.") }
             }
             items(mascotas, key = { it.id }) { mascota ->
-                Card(onClick = { onMascota(mascota.id) }, modifier = Modifier.fillMaxWidth()) {
+                Card(onClick = { onMascota(mascota.id) }, modifier = Modifier.fillMaxWidth(), colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
                     Row(
                         Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,

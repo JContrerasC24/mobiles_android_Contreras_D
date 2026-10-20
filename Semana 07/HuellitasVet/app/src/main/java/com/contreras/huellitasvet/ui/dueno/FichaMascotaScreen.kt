@@ -6,11 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.ui.components.HistorialItem
-import com.contreras.huellitasvet.ui.components.MascotaAvatar
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.ui.components.VetButton
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import java.time.LocalDate
@@ -32,31 +33,36 @@ fun FichaMascotaScreen(
     LaunchedEffect(finalizado) { if (finalizado) onVolver() }
 
     LazyColumn(
-        Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp),
+        Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { TextButton(onClick = onVolver, enabled = !ocupado) { Text("Volver") } }
+        item { VetHeader(mascota?.nombre ?: "Ficha de mascota",onVolver={if(!ocupado)onVolver()}) }
         if (cargando) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         mensaje?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         val m = mascota
         if (m != null) {
             item {
-                MascotaAvatar(especie = m.especie)
-                Text(m.nombre, style = MaterialTheme.typography.headlineMedium)
-                Text("${m.especie.lowercase().replaceFirstChar { it.titlecase() }} · ${m.raza}")
-                val edad = LocalDate.now().year - m.anioNacimiento
-                Text("$edad ${if (edad == 1) "año" else "años"} · ${m.peso} kg")
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    VetButton("Pedir cita", onPedirCita, enabled = !ocupado)
-                    OutlinedButton(onClick = onEditar, enabled = !ocupado) { Text("Editar") }
+                VetCard {
+                    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+                        MascotaAvatar(especie=m.especie)
+                        Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                            Text(m.nombre,style=MaterialTheme.typography.titleLarge)
+                            Text("${m.raza} · ${LocalDate.now().year-m.anioNacimiento} años",style=MaterialTheme.typography.bodySmall)
+                            Text("${tituloValor(m.sexo)} · ${m.peso} kg",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
             item {
-                TabRow(selectedTabIndex = pestana) {
-                    Tab(selected = pestana == 0, onClick = { pestana = 0 }, text = { Text("Datos") })
-                    Tab(selected = pestana == 1, onClick = { pestana = 1 }, text = { Text("Historial clínico") })
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    VetButton("Pedir cita", onPedirCita, Modifier.weight(1f), enabled = !ocupado)
+                    OutlinedButton(onClick = onEditar, enabled = !ocupado,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Text("Editar") }
+                }
+            }
+            item {
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    VetChoice("Datos",pestana==0,{pestana=0},Modifier.weight(1f))
+                    VetChoice("Historial clínico",pestana==1,{pestana=1},Modifier.weight(1f))
                 }
             }
             if (pestana == 0) {
