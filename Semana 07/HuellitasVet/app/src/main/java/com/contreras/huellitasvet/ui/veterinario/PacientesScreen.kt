@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.ui.components.HistorialItem
+import com.contreras.huellitasvet.ui.components.graficos.GraficoLineas
 import com.contreras.huellitasvet.viewmodel.PacientesViewModel
 import java.time.LocalDate
 
@@ -61,6 +62,7 @@ fun PacientesScreen(vm: PacientesViewModel, onVolver: () -> Unit, onFicha: (Int)
 fun FichaPacienteScreen(vm: PacientesViewModel, onVolver: () -> Unit) {
     val paciente by vm.paciente.collectAsStateWithLifecycle()
     val historial by vm.historial.collectAsStateWithLifecycle()
+    val registrosPeso by vm.historialPeso.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -73,6 +75,12 @@ fun FichaPacienteScreen(vm: PacientesViewModel, onVolver: () -> Unit) {
                 Text("Dueño: ${p.dueno.nombre}")
                 Text("${p.mascota.especie} · ${p.mascota.raza} · ${p.mascota.sexo}")
                 Text("${LocalDate.now().year - p.mascota.anioNacimiento} años · ${p.mascota.peso} kg")
+            }
+            item {
+                VetCard {
+                    Text("Evolución del peso", style = MaterialTheme.typography.titleMedium)
+                    GraficoLineas(registros = registrosPeso)
+                }
             }
         }
         item { Text("Historial clínico", style = MaterialTheme.typography.titleLarge) }

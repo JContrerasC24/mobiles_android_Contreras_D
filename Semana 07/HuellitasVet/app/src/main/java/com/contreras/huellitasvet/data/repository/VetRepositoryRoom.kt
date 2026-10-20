@@ -116,6 +116,9 @@ class VetRepositoryRoom(
     override fun observarHistorial(mascotaId: Int) =
         db.citaDao().observarHistorial(mascotaId)
 
+    override fun observarHistorialPeso(mascotaId: Int) =
+        db.citaDao().observarHistorialPeso(mascotaId)
+
     override suspend fun cancelarCitaDeDueno(id: Int, duenoId: Int) {
         db.withTransaction {
             val cita = checkNotNull(db.citaDao().obtener(id)) { "La cita ya no existe." }

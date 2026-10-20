@@ -30,6 +30,9 @@ class PacientesViewModel(repo: VetRepository, mascotaId: Int? = null) : ViewMode
     val historial = (mascotaId?.let(repo::observarHistorial) ?: flowOf(emptyList()))
         .catch { _error.value = "No se pudo cargar el historial." }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val historialPeso = (mascotaId?.let(repo::observarHistorialPeso) ?: flowOf(emptyList()))
+        .catch { _error.value = "No se pudo cargar la evolución del peso." }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val ultimasVisitas = todas.flatMapLatest { lista ->
         if (lista.isEmpty()) flowOf(emptyMap<Int, String?>())
         else combine(lista.map { paciente ->

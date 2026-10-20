@@ -7,6 +7,7 @@ import androidx.room.Transaction
 import com.contreras.huellitasvet.data.local.entity.Cita
 import com.contreras.huellitasvet.data.local.relation.CitaConDetalle
 import com.contreras.huellitasvet.model.ConteoServicio
+import com.contreras.huellitasvet.model.RegistroPeso
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -117,6 +118,21 @@ interface CitaDao {
     fun observarHistorial(
         mascotaId: Int
     ): Flow<List<CitaConDetalle>>
+
+    @Query(
+        """
+        SELECT fecha, hora, pesoRegistrado AS peso
+        FROM citas
+        WHERE mascotaId = :mascotaId
+          AND estado = 'ATENDIDA'
+          AND pesoRegistrado IS NOT NULL
+          AND pesoRegistrado > 0
+        ORDER BY fecha ASC, hora ASC, id ASC
+        """
+    )
+    fun observarHistorialPeso(
+        mascotaId: Int
+    ): Flow<List<RegistroPeso>>
 
     // Consultas del panel
 

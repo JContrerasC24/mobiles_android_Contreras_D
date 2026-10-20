@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.ui.components.HistorialItem
 import com.contreras.huellitasvet.ui.components.*
+import com.contreras.huellitasvet.ui.components.graficos.GraficoLineas
 import com.contreras.huellitasvet.ui.components.VetButton
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import java.time.LocalDate
@@ -28,6 +29,8 @@ fun FichaMascotaScreen(
     val finalizado by vm.finalizado.collectAsStateWithLifecycle()
     val historial = remember(vm, mascotaId) { vm.historial(mascotaId) }
     val atenciones by historial.collectAsStateWithLifecycle()
+    val historialPesoFlow = remember(vm, mascotaId) { vm.historialPeso(mascotaId) }
+    val registrosPeso by historialPesoFlow.collectAsStateWithLifecycle()
     var pestana by rememberSaveable { mutableIntStateOf(0) }
     var confirmarEliminar by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(finalizado) { if (finalizado) onVolver() }
@@ -66,6 +69,12 @@ fun FichaMascotaScreen(
                 }
             }
             if (pestana == 0) {
+                item {
+                    VetCard {
+                        Text("Evolución del peso", style = MaterialTheme.typography.titleMedium)
+                        GraficoLineas(registros = registrosPeso)
+                    }
+                }
                 item {
                     Text("Sexo: ${m.sexo.lowercase().replaceFirstChar { it.titlecase() }}")
                     Text("Año de nacimiento: ${m.anioNacimiento}")
