@@ -15,4 +15,6 @@ object ReglasCitas {
         activa(cita) && !momento(cita).isBefore(ahora)
     fun puedeCancelar(cita: Cita, ahora: LocalDateTime): Boolean =
         activa(cita) && Duration.between(ahora, momento(cita)) > Duration.ofHours(2)
+    fun puedeReprogramar(cita: Cita, ahora: LocalDateTime): Boolean =
+        puedeCancelar(cita, ahora)
 }

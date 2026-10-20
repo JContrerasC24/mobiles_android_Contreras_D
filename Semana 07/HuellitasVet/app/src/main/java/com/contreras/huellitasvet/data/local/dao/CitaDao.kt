@@ -63,6 +63,21 @@ interface CitaDao {
 
     @Query(
         """
+        SELECT COUNT(*) FROM citas
+        WHERE fecha = :fecha
+          AND hora = :hora
+          AND estado != 'CANCELADA'
+          AND id != :excluirCitaId
+        """
+    )
+    suspend fun contarOcupadasExcluyendo(
+        fecha: String,
+        hora: String,
+        excluirCitaId: Int
+    ): Int
+
+    @Query(
+        """
         SELECT DISTINCT hora FROM citas
         WHERE fecha = :fecha
           AND estado != 'CANCELADA'
@@ -72,6 +87,34 @@ interface CitaDao {
     fun observarHorasOcupadas(
         fecha: String
     ): Flow<List<String>>
+
+    @Query(
+        """
+        SELECT DISTINCT hora FROM citas
+        WHERE fecha = :fecha
+          AND estado != 'CANCELADA'
+          AND id != :excluirCitaId
+        ORDER BY hora
+        """
+    )
+    fun observarHorasOcupadasExcluyendo(
+        fecha: String,
+        excluirCitaId: Int
+    ): Flow<List<String>>
+
+    @Query(
+        """
+        UPDATE citas
+        SET fecha = :nuevaFecha,
+            hora = :nuevaHora
+        WHERE id = :id
+        """
+    )
+    suspend fun reprogramarCita(
+        id: Int,
+        nuevaFecha: String,
+        nuevaHora: String
+    )
 
     // Lecturas con relaciones
 
