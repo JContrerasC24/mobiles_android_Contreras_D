@@ -47,7 +47,7 @@ fun FichaMascotaScreen(
             item {
                 VetCard {
                     Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
-                        MascotaAvatar(especie=m.especie)
+                        MascotaAvatar(especie=m.especie,tamano=88.dp)
                         Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(m.nombre,style=MaterialTheme.typography.titleLarge)
                             Text("${m.raza} · ${LocalDate.now().year-m.anioNacimiento} años",style=MaterialTheme.typography.bodySmall)
@@ -76,9 +76,12 @@ fun FichaMascotaScreen(
                     }
                 }
                 item {
-                    Text("Sexo: ${m.sexo.lowercase().replaceFirstChar { it.titlecase() }}")
-                    Text("Año de nacimiento: ${m.anioNacimiento}")
-                    Text("Peso actual: ${m.peso} kg")
+                    VetCard {
+                        Text("Su perfil",style=MaterialTheme.typography.titleMedium)
+                        VetDetail("Sexo", tituloValor(m.sexo))
+                        VetDetail("Nacimiento", m.anioNacimiento.toString())
+                        VetDetail("Peso actual", "${m.peso} kg")
+                    }
                 }
                 item {
                     TextButton(onClick = { confirmarEliminar = true }, enabled = !ocupado) {

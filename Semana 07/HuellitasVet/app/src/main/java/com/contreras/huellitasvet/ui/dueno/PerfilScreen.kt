@@ -42,7 +42,7 @@ fun PreferenciasContenido(vm:PreferenciasViewModel,veterinario:Boolean,onVolver:
     val aceptar by vm.aceptarCitas.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        VetHeader(if(veterinario)"Ajustes" else "Mi perfil")
+        VetBrandHeader(if(veterinario)"Tu espacio profesional" else "Tu cuenta", if(veterinario)"Preferencias de la clínica" else "Todo sobre ti y tus mascotas")
         VetCard {
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
                 Surface(shape=RoundedCornerShape(50),color=MaterialTheme.colorScheme.primaryContainer) {
@@ -56,11 +56,11 @@ fun PreferenciasContenido(vm:PreferenciasViewModel,veterinario:Boolean,onVolver:
             }
             contadores()
         }
-        Card(onClick={if(!ocupado)onCambiar()},colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.primary,contentColor=MaterialTheme.colorScheme.onPrimary)) {
+        Card(onClick={if(!ocupado)onCambiar()},colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface,contentColor=MaterialTheme.colorScheme.onSurface)) {
             Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
                 Icon(Icons.Default.SwapHoriz,null)
                 Column(Modifier.weight(1f)) {
-                    Text("Cambiar de perfil",style=MaterialTheme.typography.titleSmall)
+                    Text("Explorar otro perfil · Demo",style=MaterialTheme.typography.titleSmall)
                     Text(if(veterinario)"Modo práctica: ir a vista Dueño" else "Modo práctica: ir a vista Veterinario",style=MaterialTheme.typography.bodySmall)
                 }
                 Icon(Icons.Default.ChevronRight,null)

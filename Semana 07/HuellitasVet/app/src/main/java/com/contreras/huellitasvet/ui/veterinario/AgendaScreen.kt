@@ -31,19 +31,18 @@ fun AgendaScreen(vm: AgendaViewModel, onVolver: () -> Unit, onAtender: (Int) -> 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            VetHeader("Agenda")
+            VetBrandHeader("Tu agenda", "Cada visita, un cuidado importante")
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items((0..7).map { LocalDate.now().plusDays(it.toLong()) }) { dia ->
-                    FilterChip(colors=FilterChipDefaults.filterChipColors(selectedContainerColor=MaterialTheme.colorScheme.primary,selectedLabelColor=MaterialTheme.colorScheme.onPrimary),selected = fecha == dia, enabled = !ocupado,
-                        onClick = { vm.elegirFecha(dia) },
-                        label = { Text(dia.format(DateTimeFormatter.ofPattern("EEE d", Locale("es", "PE")))) })
+                    VetDay(dia, fecha == dia, { vm.elegirFecha(dia) }, !ocupado)
                 }
             }
         }
         mensaje?.let { item { Text(it) } }
-        if (citas.isEmpty()) item { Text("No hay citas para este día") }
+        item { Text("${fechaCorta(fecha.toString())} · ${citas.size} citas", style=MaterialTheme.typography.titleMedium) }
+        if (citas.isEmpty()) item { VetEmpty("Un día sin citas", "Las reservas de esta fecha aparecerán aquí.") }
         items(citas, key = { it.cita.id }) { detalle ->
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {

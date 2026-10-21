@@ -39,7 +39,7 @@ fun FormularioServicioScreen(vm:ServiciosViewModel,id:Int?,onVolver:()->Unit) {
         verticalArrangement=Arrangement.spacedBy(12.dp)) {
         VetHeader(if(id==null)"Nuevo servicio" else "Editar servicio",onVolver={if(!ocupado)onVolver()})
         VetField(nombre,{nombre=it},"Nombre del servicio",enabled=habilitado,error=errores["nombre"])
-        Text("Duración")
+        Text("Duración de la visita",style=MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             listOf(15,30,45,60).forEach { minutos ->
                 VetChoice("$minutos min",duracion==minutos,{duracion=minutos},Modifier.weight(1f),habilitado)
@@ -48,7 +48,7 @@ fun FormularioServicioScreen(vm:ServiciosViewModel,id:Int?,onVolver:()->Unit) {
         errores["duracion"]?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         VetField(precio,{precio=it},"Precio (S/)",enabled=habilitado,error=errores["precio"],keyboard=KeyboardType.Decimal)
         VetField(descripcion,{descripcion=it},"Descripción",enabled=habilitado,lines=3)
-        Text("Ícono")
+        Text("Identidad del servicio",style=MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             listOf("heart" to "Consulta","Vaccines" to "Vacuna","ContentCut" to "Baño","Pets" to "Mascota").forEach { (valor,simbolo) ->
                 FilterChip(selected=iconoServicio(icono)==iconoServicio(valor),onClick={icono=valor},enabled=habilitado,modifier=Modifier.weight(1f),label={Icon(iconoServicio(valor),simbolo,tint=MaterialTheme.colorScheme.primary)})
@@ -58,9 +58,9 @@ fun FormularioServicioScreen(vm:ServiciosViewModel,id:Int?,onVolver:()->Unit) {
             Column(Modifier.weight(1f)) { Text("Servicio activo",style=MaterialTheme.typography.titleSmall); Text("Los dueños pueden pedirlo",style=MaterialTheme.typography.bodySmall) }; Switch(activo,{activo=it},enabled=habilitado)
         }
         error?.let{Text(it,color=MaterialTheme.colorScheme.error)}
-        Button(shape=androidx.compose.foundation.shape.RoundedCornerShape(12.dp),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp),enabled=habilitado,onClick={
+        Button(shape=androidx.compose.foundation.shape.RoundedCornerShape(18.dp),modifier=Modifier.fillMaxWidth().heightIn(min=54.dp),enabled=habilitado,onClick={
             vm.guardar(Servicio(id?:0,nombre,descripcion,duracion,precio.replace(',','.').toDoubleOrNull()?:Double.NaN,activo,icono))
         }){Text(if(ocupado)"Guardando…" else "Guardar servicio")}
-        OutlinedButton(onClick=onVolver,enabled=!ocupado,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text("Cancelar")}
+        OutlinedButton(onClick=onVolver,enabled=!ocupado,modifier=Modifier.fillMaxWidth().heightIn(min=54.dp)){Text("Cancelar")}
     }
 }

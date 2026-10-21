@@ -32,7 +32,7 @@ fun PacientesScreen(vm: PacientesViewModel, onVolver: () -> Unit, onFicha: (Int)
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            VetHeader("Pacientes")
+            VetBrandHeader("Tus pacientes", "Encuentra su ficha y acompaña su evolución")
         }
         item {
             OutlinedTextField(
@@ -110,7 +110,7 @@ fun PacientesScreen(vm: PacientesViewModel, onVolver: () -> Unit, onFicha: (Int)
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    MascotaAvatar(especie = paciente.mascota.especie, tamano = 48.dp)
+                    MascotaAvatar(especie = paciente.mascota.especie, tamano = 64.dp)
                     Column(
                         Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(3.dp)
@@ -152,11 +152,20 @@ fun FichaPacienteScreen(vm: PacientesViewModel, onVolver: () -> Unit) {
         error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         paciente?.let { p ->
             item {
-                MascotaAvatar(especie = p.mascota.especie)
-                Text(p.mascota.nombre, style = MaterialTheme.typography.headlineMedium)
-                Text("Dueño: ${p.dueno.nombre}")
-                Text("${p.mascota.especie} · ${p.mascota.raza} · ${p.mascota.sexo}")
-                Text("${LocalDate.now().year - p.mascota.anioNacimiento} años · ${p.mascota.peso} kg")
+                VetCard {
+                    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                        MascotaAvatar(especie=p.mascota.especie,tamano=88.dp)
+                        Column {
+                            Text(p.mascota.nombre,style=MaterialTheme.typography.headlineMedium)
+                            Text(p.mascota.raza,style=MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    HorizontalDivider(Modifier.padding(vertical=8.dp))
+                    VetDetail("Dueño",p.dueno.nombre)
+                    VetDetail("Edad","${LocalDate.now().year-p.mascota.anioNacimiento} años")
+                    VetDetail("Sexo",tituloValor(p.mascota.sexo))
+                    VetDetail("Peso","${p.mascota.peso} kg")
+                }
             }
             item {
                 VetCard {

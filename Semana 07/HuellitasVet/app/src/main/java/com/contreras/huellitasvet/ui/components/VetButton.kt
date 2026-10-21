@@ -8,5 +8,5 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 @Composable
 fun VetButton(text:String,onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true) {
-    Button(onClick,modifier.heightIn(min=48.dp),enabled=enabled,shape=RoundedCornerShape(12.dp)){Text(text)}
+    Button(onClick,modifier.heightIn(min=54.dp),enabled=enabled,shape=RoundedCornerShape(18.dp)){Text(text)}
 }

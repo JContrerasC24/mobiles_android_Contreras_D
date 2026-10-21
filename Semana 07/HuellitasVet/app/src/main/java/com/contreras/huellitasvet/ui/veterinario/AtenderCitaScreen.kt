@@ -40,7 +40,7 @@ fun AtenderCitaScreen(vm: AtenderCitaViewModel, onVolver: () -> Unit) {
 
     Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        VetHeader("Atender cita",onVolver={if(!ocupado)onVolver()})
+        VetHeader("Registro de atención",onVolver={if(!ocupado)onVolver()},subtitulo="Cada detalle forma parte de su historia")
         detalle?.let { d ->
             VetCard {
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -69,7 +69,7 @@ fun AtenderCitaScreen(vm: AtenderCitaViewModel, onVolver: () -> Unit) {
         if (detalle != null && !ReglasCitas.activa(detalle!!.cita)) Text("Esta cita ya no permite registrar atención.")
         Button(shape=androidx.compose.foundation.shape.RoundedCornerShape(12.dp),enabled = editable, onClick = {
             vm.registrar(diagnostico, tratamiento, peso.replace(',', '.').toDoubleOrNull() ?: Double.NaN)
-        }, modifier = Modifier.fillMaxWidth()) { Text(if (ocupado) "Guardando…" else "Registrar atención") }
+        }, modifier = Modifier.fillMaxWidth().heightIn(min=54.dp)) { Text(if (ocupado) "Guardando…" else "Registrar atención") }
         VetDanger("Cancelar cita",{confirmarCancelar=true},editable)
     }
     if (confirmarCancelar) AlertDialog(

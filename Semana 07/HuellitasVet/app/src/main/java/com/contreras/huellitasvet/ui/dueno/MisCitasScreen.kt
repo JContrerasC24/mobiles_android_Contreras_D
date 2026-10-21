@@ -58,7 +58,9 @@ fun MisCitasScreen(vm: MisCitasViewModel, onInicio: () -> Unit, onPedir: () -> U
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                VetHeader("Mis citas", subtitulo = "Puedes reprogramar o cancelar con más de 2 horas de anticipación")
+                VetBrandHeader("Mis citas", "Organiza su próxima visita")
+                Spacer(Modifier.height(12.dp))
+                VetNotice("Reprograma o cancela con más de 2 horas de anticipación.")
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
