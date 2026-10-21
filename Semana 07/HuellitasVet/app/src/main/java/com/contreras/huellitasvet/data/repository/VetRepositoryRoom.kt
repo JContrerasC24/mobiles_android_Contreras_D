@@ -73,6 +73,9 @@ class VetRepositoryRoom(
     override fun observarHorasOcupadas(fecha: String) =
         db.citaDao().observarHorasOcupadas(fecha)
 
+    override fun observarHorasOcupadasExcluyendo(fecha: String, citaId: Int) =
+        db.citaDao().observarHorasOcupadasExcluyendo(fecha, citaId)
+
     override suspend fun crearCita(
         mascotaId: Int,
         servicioId: Int,
@@ -116,6 +119,9 @@ class VetRepositoryRoom(
     override fun observarHistorial(mascotaId: Int) =
         db.citaDao().observarHistorial(mascotaId)
 
+    override fun observarHistorialPeso(mascotaId: Int) =
+        db.citaDao().observarHistorialPeso(mascotaId)
+
     override suspend fun cancelarCitaDeDueno(id: Int, duenoId: Int) {
         db.withTransaction {
             val cita = checkNotNull(db.citaDao().obtener(id)) { "La cita ya no existe." }
@@ -125,6 +131,30 @@ class VetRepositoryRoom(
                 "Ya no puedes cancelar esta cita"
             }
             db.citaDao().actualizarEstado(id, EstadoCita.CANCELADA.name)
+        }
+    }
+
+    override suspend fun reprogramarCitaDeDueno(
+        citaId: Int,
+        duenoId: Int,
+        nuevaFecha: String,
+        nuevaHora: String
+    ) {
+        db.withTransaction {
+            val cita = checkNotNull(db.citaDao().obtener(citaId)) { "La cita ya no existe." }
+            val mascota = db.mascotaDao().observarUna(cita.mascotaId).first()
+            check(mascota?.duenoId == duenoId) { "No puedes reprogramar esta cita." }
+            check(ReglasCitas.puedeReprogramar(cita, LocalDateTime.now())) {
+                "Ya no puedes reprogramar esta cita"
+            }
+            val fechaParsed = java.time.LocalDate.parse(nuevaFecha)
+            check(com.contreras.huellitasvet.model.Horarios.disponible(
+                fechaParsed, nuevaHora, emptyList(), LocalDateTime.now()
+            )) { "El horario ya no está disponible. Elige otro." }
+            check(db.citaDao().contarOcupadasExcluyendo(nuevaFecha, nuevaHora, citaId) == 0) {
+                "El horario ya está ocupado"
+            }
+            db.citaDao().reprogramarCita(citaId, nuevaFecha, nuevaHora)
         }
     }
 

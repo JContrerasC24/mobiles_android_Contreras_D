@@ -7,6 +7,7 @@ import com.contreras.huellitasvet.data.local.entity.Usuario
 import com.contreras.huellitasvet.data.local.relation.CitaConDetalle
 import com.contreras.huellitasvet.data.repository.VetRepository
 import com.contreras.huellitasvet.model.Especie
+import com.contreras.huellitasvet.model.RegistroPeso
 import com.contreras.huellitasvet.model.Sexo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
@@ -151,11 +152,23 @@ class MascotaViewModel(
         }
     }
 
+    private val historialesPeso = mutableMapOf<Int, StateFlow<List<RegistroPeso>>>()
+
     fun historial(mascotaId: Int): StateFlow<List<CitaConDetalle>> =
         historiales.getOrPut(mascotaId) {
             repo.observarHistorial(mascotaId)
                 .map { citas -> citas.filter { it.mascota.mascota.duenoId == dueno.id } }
                 .catch { _mensaje.value = "No se pudo cargar el historial clínico." }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        }
+
+    fun historialPeso(mascotaId: Int): StateFlow<List<RegistroPeso>> =
+        historialesPeso.getOrPut(mascotaId) {
+            repo.observarHistorialPeso(mascotaId)
+                .combine(repo.observarMascota(mascotaId)) { registros, m ->
+                    if (m?.duenoId == dueno.id) registros else emptyList()
+                }
+                .catch { _mensaje.value = "No se pudo cargar la evolución del peso." }
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
         }
 }

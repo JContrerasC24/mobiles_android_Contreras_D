@@ -27,7 +27,7 @@ fun ServiciosScreen(vm:ServiciosViewModel,onEditar:(Int)->Unit,modifier:Modifier
     Box(modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(start=20.dp,end=20.dp,top=20.dp,bottom=100.dp),
             verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            item { VetHeader("Servicios") }
+            item { VetBrandHeader("Cuidados y servicios", "Organiza la atención que ofrece tu clínica") }
             error?.let { item{Text(it,color=MaterialTheme.colorScheme.error)} }
             if(servicios.isEmpty())item{VetNotice("Agrega el primer servicio con el botón +.")}
             items(servicios,key={it.id}) { s ->
@@ -40,7 +40,7 @@ fun ServiciosScreen(vm:ServiciosViewModel,onEditar:(Int)->Unit,modifier:Modifier
                             Text(s.nombre,style=MaterialTheme.typography.titleSmall)
                             Text("${s.duracionMin} min · S/ ${String.format(Locale.US,"%.2f",s.precio)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Switch(s.activo,{vm.alternar(s)},enabled=!ocupado)
+                        // El interruptor se presenta debajo para dar espacio al nombre y al precio.
                         Box {
                             IconButton(onClick={menuId=s.id},enabled=!ocupado){Icon(Icons.Default.MoreVert,"Opciones de ${s.nombre}",Modifier.size(20.dp))}
                             DropdownMenu(expanded=menuId==s.id,onDismissRequest={menuId=null}) {
@@ -50,6 +50,12 @@ fun ServiciosScreen(vm:ServiciosViewModel,onEditar:(Int)->Unit,modifier:Modifier
                                     onClick={menuId=null;eliminarId=s.id})
                             }
                         }
+                    }
+                    if(s.descripcion.isNotBlank()) Text(s.descripcion,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                        Text(if(s.activo)"Disponible para reservar" else "Servicio desactivado",Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
+                        Switch(s.activo,{vm.alternar(s)},enabled=!ocupado)
                     }
                 }
             }

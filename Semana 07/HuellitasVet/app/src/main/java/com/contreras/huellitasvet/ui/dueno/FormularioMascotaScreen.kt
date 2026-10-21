@@ -1,27 +1,24 @@
 package com.contreras.huellitasvet.ui.dueno
+
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.contreras.huellitasvet.ui.components.*
-
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.text.input.KeyboardType
 import com.contreras.huellitasvet.model.Especie
 import com.contreras.huellitasvet.model.Sexo
+import com.contreras.huellitasvet.ui.components.*
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
+
 @Composable
 fun FormularioMascotaScreen(vm:MascotaViewModel,id:Int?=null,onVolver:()->Unit) {
     val f by vm.formulario.collectAsStateWithLifecycle()
@@ -31,32 +28,66 @@ fun FormularioMascotaScreen(vm:MascotaViewModel,id:Int?=null,onVolver:()->Unit) 
     val finalizado by vm.finalizado.collectAsStateWithLifecycle()
     val mensaje by vm.mensaje.collectAsStateWithLifecycle()
     val mascota by vm.mascota.collectAsStateWithLifecycle()
-    LaunchedEffect(finalizado){if(finalizado)onVolver()}
+    var paso by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(finalizado) { if(finalizado) onVolver() }
+    LaunchedEffect(errores) { if(errores.containsKey("nombre") || errores.containsKey("especie")) paso=0 }
     val enabled=!ocupado && !cargando && !finalizado && (id==null || mascota!=null)
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        VetHeader(if(id==null)"Nueva mascota" else "Editar mascota",onVolver={if(!ocupado)onVolver()})
-        Box(Modifier.fillMaxWidth(),contentAlignment=Alignment.Center) { MascotaAvatar(especie=f.especie,tamano=80.dp) }
-        VetField(f.nombre,{vm.actualizar(f.copy(nombre=it))},"Nombre",enabled=enabled,error=errores["nombre"])
-        Text("Especie",style=MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            Especie.entries.forEach { e -> VetChoice(tituloValor(e.name),f.especie==e.name,
-                {vm.actualizar(f.copy(especie=e.name))},Modifier.weight(1f),enabled) }
+    val volver:()->Unit={if(!ocupado) {if(paso>0) paso-- else onVolver()}}
+    BackHandler(enabled=paso>0 || ocupado) { volver() }
+    Column(Modifier.fillMaxSize().imePadding()) {
+        Column(Modifier.padding(horizontal=20.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            VetHeader(if(id==null)"Su nuevo perfil" else "Editar su perfil",onVolver=volver)
+            VetSteps(paso,listOf("Conocernos","Sus datos"))
         }
-        errores["especie"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
-        VetField(f.raza,{vm.actualizar(f.copy(raza=it))},"Raza",enabled=enabled)
-        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            VetField(f.anio,{vm.actualizar(f.copy(anio=it))},"Año de nacimiento",Modifier.weight(1f),enabled,errores["anio"],KeyboardType.Number)
-            VetField(f.peso,{vm.actualizar(f.copy(peso=it))},"Peso (kg)",Modifier.weight(1f),enabled,errores["peso"],KeyboardType.Decimal)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(18.dp)) {
+            if(cargando) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if(paso==0) {
+                Text("Cuéntanos sobre tu compañero",style=MaterialTheme.typography.headlineMedium)
+                Text("Empecemos con su nombre y especie.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+                VetField(f.nombre,{vm.actualizar(f.copy(nombre=it))},"¿Cómo se llama?",enabled=enabled,error=errores["nombre"])
+                Text("¿Qué tipo de mascota es?",style=MaterialTheme.typography.titleMedium)
+                Especie.entries.chunked(2).forEach { row ->
+                    Row(horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+                        row.forEach { e ->
+                            val selected=f.especie==e.name
+                            Card(onClick={vm.actualizar(f.copy(especie=e.name))},enabled=enabled,modifier=Modifier.weight(1f),shape=RoundedCornerShape(24.dp),
+                                border=BorderStroke(if(selected)2.dp else 1.dp,if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                                colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+                                Column(Modifier.fillMaxWidth().padding(20.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                                    MascotaAvatar(especie=e.name,tamano=80.dp)
+                                    Text(tituloValor(e.name),style=MaterialTheme.typography.titleMedium)
+                                    Text(if(selected)"Seleccionado" else "Elegir",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                        if(row.size==1) Spacer(Modifier.weight(1f))
+                    }
+                }
+                errores["especie"]?.let { Text(it,color=MaterialTheme.colorScheme.error) }
+            } else {
+                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                    MascotaAvatar(especie=f.especie,tamano=80.dp)
+                    Column { Text(f.nombre,style=MaterialTheme.typography.headlineMedium);Text("Completemos su ficha",color=MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
+                VetCard {
+                    VetField(f.raza,{vm.actualizar(f.copy(raza=it))},"Raza",enabled=enabled)
+                    VetField(f.anio,{vm.actualizar(f.copy(anio=it))},"Año de nacimiento",enabled=enabled,error=errores["anio"],keyboard=KeyboardType.Number)
+                    VetField(f.peso,{vm.actualizar(f.copy(peso=it))},"Peso (kg)",enabled=enabled,error=errores["peso"],keyboard=KeyboardType.Decimal)
+                    Text("Sexo",style=MaterialTheme.typography.titleMedium)
+                    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        Sexo.entries.forEach { s -> VetChoice(tituloValor(s.name),f.sexo==s.name,{vm.actualizar(f.copy(sexo=s.name))},Modifier.weight(1f),enabled) }
+                    }
+                    errores["sexo"]?.let { Text(it,color=MaterialTheme.colorScheme.error) }
+                }
+                VetNotice("Estos datos acompañarán su historial clínico y ayudarán a personalizar su atención.")
+            }
+            mensaje?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-        Text("Sexo",style=MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            Sexo.entries.forEach { s -> VetChoice(tituloValor(s.name),f.sexo==s.name,
-                {vm.actualizar(f.copy(sexo=s.name))},Modifier.weight(1f),enabled) }
+        Surface(shadowElevation=8.dp) {
+            Column(Modifier.padding(20.dp)) {
+                VetButton(if(ocupado)"Guardando…" else if(paso==0)"Continuar" else "Guardar mascota",
+                    {if(paso==0) paso=1 else vm.guardarFormulario()},Modifier.fillMaxWidth(),enabled && (paso==1 || (f.nombre.isNotBlank() && f.especie.isNotBlank())))
+            }
         }
-        errores["sexo"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
-        mensaje?.let{Text(it,color=MaterialTheme.colorScheme.error)}
-        VetButton(if(ocupado)"Guardando…" else "Guardar mascota",vm::guardarFormulario,Modifier.fillMaxWidth(),enabled)
-        OutlinedButton(onClick=onVolver,enabled=!ocupado,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp),shape=RoundedCornerShape(12.dp)){Text("Cancelar")}
     }
 }

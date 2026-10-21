@@ -114,7 +114,7 @@ fun NavVet(
                         }
                     },icon={Icon(icono,label,Modifier.size(22.dp))},label={Text(label,style=MaterialTheme.typography.labelSmall)},
                         colors=NavigationBarItemDefaults.colors(selectedIconColor=MaterialTheme.colorScheme.primary,
-                            selectedTextColor=MaterialTheme.colorScheme.primary,indicatorColor=MaterialTheme.colorScheme.surface))
+                            selectedTextColor=MaterialTheme.colorScheme.primary,indicatorColor=MaterialTheme.colorScheme.primaryContainer))
                 }
             }
         }

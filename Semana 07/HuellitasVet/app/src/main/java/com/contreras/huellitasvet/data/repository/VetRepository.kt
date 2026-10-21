@@ -7,6 +7,7 @@ import com.contreras.huellitasvet.data.local.relation.CitaConDetalle
 import com.contreras.huellitasvet.data.local.relation.MascotaConDueno
 import com.contreras.huellitasvet.model.ConteoServicio
 import com.contreras.huellitasvet.model.EstadoCita
+import com.contreras.huellitasvet.model.RegistroPeso
 import kotlinx.coroutines.flow.Flow
 
 interface VetRepository {
@@ -29,6 +30,7 @@ interface VetRepository {
     suspend fun mascotaTieneCitas(id: Int): Boolean
 
     fun observarHorasOcupadas(fecha: String): Flow<List<String>>
+    fun observarHorasOcupadasExcluyendo(fecha: String, citaId: Int): Flow<List<String>>
     suspend fun crearCita(
         mascotaId: Int, servicioId: Int, fecha: String,
         hora: String, nota: String
@@ -37,7 +39,11 @@ interface VetRepository {
     fun observarCitasPorFecha(fecha: String): Flow<List<CitaConDetalle>>
     fun observarCita(id: Int): Flow<CitaConDetalle?>
     fun observarHistorial(mascotaId: Int): Flow<List<CitaConDetalle>>
+    fun observarHistorialPeso(mascotaId: Int): Flow<List<RegistroPeso>>
     suspend fun cancelarCitaDeDueno(id: Int, duenoId: Int)
+    suspend fun reprogramarCitaDeDueno(
+        citaId: Int, duenoId: Int, nuevaFecha: String, nuevaHora: String
+    )
     suspend fun cambiarEstadoCita(id: Int, estado: EstadoCita)
     suspend fun registrarAtencion(
         citaId: Int, diagnostico: String, tratamiento: String, peso: Double

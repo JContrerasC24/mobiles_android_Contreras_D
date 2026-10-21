@@ -41,7 +41,7 @@ fun MascotasScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            item { VetHeader("Mis mascotas") }
+            item { VetBrandHeader("Mi familia", "Sus datos y cuidados, en un solo lugar") }
             error?.let { mensaje -> item { Text(mensaje, color = MaterialTheme.colorScheme.error) } }
             if (mascotas.isEmpty()) {
                 item { Text("Todavía no tienes mascotas registradas. Usa + para agregar una.") }
@@ -53,7 +53,7 @@ fun MascotasScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        MascotaAvatar(especie = mascota.especie)
+                        MascotaAvatar(especie = mascota.especie, tamano = 76.dp)
                         Column(Modifier.weight(1f)) {
                             Text(mascota.nombre, style = MaterialTheme.typography.titleMedium)
                             Text("${mascota.especie.lowercase().replaceFirstChar { it.titlecase() }} · ${mascota.raza}")

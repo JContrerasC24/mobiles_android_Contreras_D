@@ -23,16 +23,33 @@ class AtencionPacientesTest {
             Mascota(id, id, nombre, especie, "Mestiza", 2023, 5.0, "HEMBRA"),
             Usuario(id, dueno, "correo$id@test", "1234", "CLIENTE")
         )
-    private val lista = listOf(paciente(1, "Luna", "GATO", "Ana"),
-        paciente(2, "Max", "PERRO", "Luis"), paciente(3, "Nina", "PERRO", "Ana"))
+    private val lista = listOf(
+        paciente(1, "Michí", "GATO", "José Pérez"),
+        paciente(2, "Max", "PERRO", "Luis"),
+        paciente(3, "Nina", "PERRO", "Ana")
+    )
 
     @Test fun buscaPorMascotaODuenoIgnorandoMayusculasYEspacios() {
-        assertEquals(listOf(1), filtrarPacientes(lista, " LUNA ", null).map { it.mascota.id })
-        assertEquals(listOf(1, 3), filtrarPacientes(lista, "ana", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, " MICHI ", null).map { it.mascota.id })
+        assertEquals(listOf(3), filtrarPacientes(lista, "ana", null).map { it.mascota.id })
     }
     @Test fun combinaEspecieConTextoYTodosRestauraLaLista() {
         assertEquals(listOf(3), filtrarPacientes(lista, "Ana", "PERRO").map { it.mascota.id })
         assertTrue(filtrarPacientes(lista, "Luis", "GATO").isEmpty())
         assertEquals(3, filtrarPacientes(lista, "", null).size)
+    }
+
+    @Test fun buscaIgnorandoTildesEnMascotaYDueno() {
+        assertEquals(listOf(1), filtrarPacientes(lista, "michi", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, "Michí", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, "perez", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, "Pérez", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, "jose", null).map { it.mascota.id })
+        assertEquals(listOf(1), filtrarPacientes(lista, "José", null).map { it.mascota.id })
+    }
+
+    @Test fun sinTildesEliminaAcentosCorrectamente() {
+        assertEquals("jose perez", sinTildes("José Pérez").lowercase())
+        assertEquals("michi", sinTildes("Michí").lowercase())
     }
 }

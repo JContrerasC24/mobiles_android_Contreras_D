@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.contreras.huellitasvet.ui.components.HistorialItem
 import com.contreras.huellitasvet.ui.components.*
+import com.contreras.huellitasvet.ui.components.graficos.GraficoLineas
 import com.contreras.huellitasvet.ui.components.VetButton
 import com.contreras.huellitasvet.viewmodel.MascotaViewModel
 import java.time.LocalDate
@@ -28,6 +29,8 @@ fun FichaMascotaScreen(
     val finalizado by vm.finalizado.collectAsStateWithLifecycle()
     val historial = remember(vm, mascotaId) { vm.historial(mascotaId) }
     val atenciones by historial.collectAsStateWithLifecycle()
+    val historialPesoFlow = remember(vm, mascotaId) { vm.historialPeso(mascotaId) }
+    val registrosPeso by historialPesoFlow.collectAsStateWithLifecycle()
     var pestana by rememberSaveable { mutableIntStateOf(0) }
     var confirmarEliminar by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(finalizado) { if (finalizado) onVolver() }
@@ -44,7 +47,7 @@ fun FichaMascotaScreen(
             item {
                 VetCard {
                     Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
-                        MascotaAvatar(especie=m.especie)
+                        MascotaAvatar(especie=m.especie,tamano=88.dp)
                         Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(m.nombre,style=MaterialTheme.typography.titleLarge)
                             Text("${m.raza} · ${LocalDate.now().year-m.anioNacimiento} años",style=MaterialTheme.typography.bodySmall)
@@ -67,9 +70,18 @@ fun FichaMascotaScreen(
             }
             if (pestana == 0) {
                 item {
-                    Text("Sexo: ${m.sexo.lowercase().replaceFirstChar { it.titlecase() }}")
-                    Text("Año de nacimiento: ${m.anioNacimiento}")
-                    Text("Peso actual: ${m.peso} kg")
+                    VetCard {
+                        Text("Evolución del peso", style = MaterialTheme.typography.titleMedium)
+                        GraficoLineas(registros = registrosPeso)
+                    }
+                }
+                item {
+                    VetCard {
+                        Text("Su perfil",style=MaterialTheme.typography.titleMedium)
+                        VetDetail("Sexo", tituloValor(m.sexo))
+                        VetDetail("Nacimiento", m.anioNacimiento.toString())
+                        VetDetail("Peso actual", "${m.peso} kg")
+                    }
                 }
                 item {
                     TextButton(onClick = { confirmarEliminar = true }, enabled = !ocupado) {
