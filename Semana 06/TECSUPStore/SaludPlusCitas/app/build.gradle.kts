@@ -56,4 +56,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     // Añade iconos para los accesos y la navegación.
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

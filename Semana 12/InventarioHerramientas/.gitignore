@@ -1,0 +1,29 @@
+# Android Studio e IntelliJ
+*.iml
+.idea/
+
+# Archivos temporales de Gradle y Kotlin
+.gradle/
+.kotlin/
+
+# Configuración local del SDK
+local.properties
+
+# Archivos generados al compilar
+**/build/
+.externalNativeBuild/
+.cxx/
+
+# Capturas locales
+/captures/
+
+# Configuración de Firebase
+google-services.json
+
+# Archivos de firma
+*.jks
+*.keystore
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
