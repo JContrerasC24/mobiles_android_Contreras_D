@@ -8,13 +8,13 @@ plugins {
 }
 
 android {
-    namespace = "com.contreras.saludplus.inventarioherramientas"
+    namespace = "com.tecsup.inventarioherramientas"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.contreras.saludplus.inventarioherramientas"
+        applicationId = "com.tecsup.inventarioherramientas"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

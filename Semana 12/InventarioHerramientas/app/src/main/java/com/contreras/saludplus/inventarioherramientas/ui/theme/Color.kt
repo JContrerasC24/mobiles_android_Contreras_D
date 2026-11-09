@@ -1,4 +1,4 @@
-package com.contreras.saludplus.inventarioherramientas.ui.theme
+package com.tecsup.inventarioherramientas.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

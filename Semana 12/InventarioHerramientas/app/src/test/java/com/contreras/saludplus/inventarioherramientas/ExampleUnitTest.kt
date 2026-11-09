@@ -1,4 +1,4 @@
-package com.contreras.saludplus.inventarioherramientas
+package com.tecsup.inventarioherramientas
 
 import org.junit.Test
 

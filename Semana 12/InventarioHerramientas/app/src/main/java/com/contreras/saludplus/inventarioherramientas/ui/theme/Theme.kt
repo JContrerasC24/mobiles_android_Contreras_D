@@ -1,4 +1,4 @@
-package com.contreras.saludplus.inventarioherramientas.ui.theme
+package com.tecsup.inventarioherramientas.ui.theme
 
 import android.app.Activity
 import android.os.Build
