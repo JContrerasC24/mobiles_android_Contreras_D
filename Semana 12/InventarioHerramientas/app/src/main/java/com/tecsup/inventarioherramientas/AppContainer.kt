@@ -7,27 +7,34 @@ import com.tecsup.inventarioherramientas.data.auth.AuthRepository
 import com.tecsup.inventarioherramientas.data.auth.FirebaseAuthRepository
 import com.tecsup.inventarioherramientas.data.local.AppDatabase
 import com.tecsup.inventarioherramientas.data.remote.RetrofitClient
+import com.tecsup.inventarioherramientas.data.repository.FirebaseRegistroHerramientaRepository
 import com.tecsup.inventarioherramientas.data.repository.ItemRepository
 import com.tecsup.inventarioherramientas.data.repository.ItemRepositoryImpl
+import com.tecsup.inventarioherramientas.data.repository.RegistroHerramientaRepository
 import kotlinx.coroutines.tasks.await
+import com.tecsup.inventarioherramientas.data.repository.MovimientoRepository
+import com.tecsup.inventarioherramientas.data.repository.FirebaseMovimientoRepository
 
 class AppContainer(context: Context) {
 
     private val appContext = context.applicationContext
 
+    // Inicio, recuperación y cierre de sesión.
     val authRepository: AuthRepository by lazy {
         FirebaseAuthRepository()
     }
 
+    // Base de datos local Room.
     val database: AppDatabase by lazy {
         AppDatabase.obtener(appContext)
     }
 
+    // Consulta del inventario, sincronización y favoritos.
     val itemRepository: ItemRepository by lazy {
         val proyectoId = requireNotNull(
             FirebaseApp.getInstance().options.projectId
         ) {
-            "No se encontró el ID del proyecto Firebase"
+            "No se encontró el ID del proyecto Firebase."
         }
 
         ItemRepositoryImpl(
@@ -38,16 +45,24 @@ class AppContainer(context: Context) {
                 val usuario = FirebaseAuth
                     .getInstance()
                     .currentUser
-                    ?: error("Debes iniciar sesión")
+                    ?: error("Debes iniciar sesión.")
 
                 val token = usuario
                     .getIdToken(false)
                     .await()
                     .token
-                    ?: error("No se pudo obtener la autorización")
+                    ?: error("No se pudo obtener la autorización.")
 
                 "Bearer $token"
             }
         )
+    }
+
+    // Registro de nuevas herramientas en Firestore.
+    val registroHerramientaRepository: RegistroHerramientaRepository by lazy {
+        FirebaseRegistroHerramientaRepository()
+    }
+    val movimientoRepository: MovimientoRepository by lazy {
+        FirebaseMovimientoRepository()
     }
 }

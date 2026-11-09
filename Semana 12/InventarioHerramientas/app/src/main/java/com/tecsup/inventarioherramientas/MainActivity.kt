@@ -20,6 +20,7 @@ import com.tecsup.inventarioherramientas.ui.navigation.AppNav
 
 class MainActivity : ComponentActivity() {
 
+
     private val contenedor by lazy {
         AppContainer(applicationContext)
     }

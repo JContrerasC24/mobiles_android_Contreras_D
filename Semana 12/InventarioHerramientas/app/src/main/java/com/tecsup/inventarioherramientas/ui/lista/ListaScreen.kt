@@ -32,6 +32,7 @@ fun ListaScreen(
     onFavorito: (String) -> Unit,
     onVerDetalle: (String) -> Unit,
     onVerFavoritos: () -> Unit,
+    onVerAdmin: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     LazyColumn(
@@ -74,7 +75,6 @@ fun ListaScreen(
                     )
                 }
 
-                // Abre Favoritos sin cerrar la sesión.
                 OutlinedButton(
                     onClick = onVerFavoritos,
                     modifier = Modifier.fillMaxWidth()
@@ -82,7 +82,16 @@ fun ListaScreen(
                     Text("Ver favoritos")
                 }
 
-                // Esta es la única acción que solicita cerrar la sesión.
+                // Solo el administrador ve este acceso.
+                if (sesion.rol == Rol.ADMIN) {
+                    OutlinedButton(
+                        onClick = onVerAdmin,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Panel administrador")
+                    }
+                }
+
                 OutlinedButton(
                     onClick = onCerrarSesion,
                     modifier = Modifier.fillMaxWidth()
