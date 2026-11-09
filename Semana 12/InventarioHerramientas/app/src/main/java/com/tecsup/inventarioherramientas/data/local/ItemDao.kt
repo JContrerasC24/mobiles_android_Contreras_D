@@ -65,4 +65,19 @@ interface ItemDao {
 
         guardarTodos(actualizados)
     }
+    @Transaction
+    suspend fun reemplazarInventario(
+        nuevos: List<ItemEntity>
+    ) {
+        val favoritosActuales = idsFavoritos().toSet()
+
+        val actualizados = nuevos.map { herramienta ->
+            herramienta.copy(
+                esFavorito = herramienta.id in favoritosActuales
+            )
+        }
+
+        borrarTodo()
+        guardarTodos(actualizados)
+    }
 }
