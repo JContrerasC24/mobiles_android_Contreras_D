@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.tecsup.inventarioherramientas.AppContainer
 import com.tecsup.inventarioherramientas.data.repository.ItemRepository
 import com.tecsup.inventarioherramientas.domain.model.Item
+import com.tecsup.inventarioherramientas.notification.Notificador
 import com.tecsup.inventarioherramientas.ui.UiState
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
@@ -17,11 +18,12 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import kotlinx.coroutines.withTimeoutOrNull
+import retrofit2.HttpException
 
 class ListaViewModel(
-    private val repositorio: ItemRepository
+    private val repositorio: ItemRepository,
+    private val notificador: Notificador
 ) : ViewModel() {
 
     private data class ResultadoRefresco(
@@ -34,13 +36,16 @@ class ListaViewModel(
         MutableStateFlow(ResultadoRefresco())
 
     private val _actualizando = MutableStateFlow(false)
+
     val actualizando: StateFlow<Boolean> =
         _actualizando.asStateFlow()
 
     private val _mensajeAccion = MutableStateFlow<String?>(null)
+
     val mensajeAccion: StateFlow<String?> =
         _mensajeAccion.asStateFlow()
 
+    // La lista visible siempre procede de Room.
     val estado: StateFlow<UiState<List<Item>>> =
         combine(
             repositorio.items,
@@ -63,7 +68,11 @@ class ListaViewModel(
 
             nuevoEstado
         }.catch { error ->
-            emit(UiState.Error(mensajeDeError(error)))
+            emit(
+                UiState.Error(
+                    mensajeDeError(error)
+                )
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -108,28 +117,40 @@ class ListaViewModel(
                 val resultado = withTimeoutOrNull(30_000L) {
                     repositorio.refrescar()
                 } ?: Result.failure<Int>(
-                    IOException("La actualización superó los 30 segundos.")
+                    IOException(
+                        "La actualización superó los 30 segundos."
+                    )
                 )
 
-                resultado.onSuccess {
+                resultado
+                    .onSuccess { cantidad ->
                         resultadoRefresco.value =
-                            ResultadoRefresco(terminado = true)
+                            ResultadoRefresco(
+                                terminado = true
+                            )
+
+                        notificador.mostrar(
+                            titulo = "Inventario actualizado",
+                            texto = "Se guardaron $cantidad elementos"
+                        )
                     }
                     .onFailure { error ->
-                        resultadoRefresco.value = ResultadoRefresco(
-                            terminado = true,
-                            error = mensajeDeError(error),
-                            sinConexion = error is IOException
-                        )
+                        resultadoRefresco.value =
+                            ResultadoRefresco(
+                                terminado = true,
+                                error = mensajeDeError(error),
+                                sinConexion = error is IOException
+                            )
                     }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                resultadoRefresco.value = ResultadoRefresco(
-                    terminado = true,
-                    error = mensajeDeError(e),
-                    sinConexion = e is IOException
-                )
+                resultadoRefresco.value =
+                    ResultadoRefresco(
+                        terminado = true,
+                        error = mensajeDeError(e),
+                        sinConexion = e is IOException
+                    )
             } finally {
                 _actualizando.value = false
             }
@@ -138,6 +159,8 @@ class ListaViewModel(
 
     fun alternarFavorito(id: String) {
         viewModelScope.launch {
+            _mensajeAccion.value = null
+
             try {
                 repositorio.alternarFavorito(id)
             } catch (e: CancellationException) {
@@ -155,10 +178,17 @@ class ListaViewModel(
                 "No se pudo conectar con el servidor."
 
             is HttpException -> when (error.code()) {
-                401 -> "La sesión no está autorizada. Ingresa nuevamente."
-                403 -> "No tienes permiso. Revisa el perfil y las reglas."
-                404 -> "No se encontró el recurso solicitado."
-                else -> "El servidor respondió con error ${error.code()}."
+                401 ->
+                    "La sesión no está autorizada. Ingresa nuevamente."
+
+                403 ->
+                    "No tienes permiso. Revisa el perfil y las reglas."
+
+                404 ->
+                    "No se encontró el recurso solicitado."
+
+                else ->
+                    "El servidor respondió con error ${error.code()}."
             }
 
             is IllegalStateException ->
@@ -177,13 +207,20 @@ class ListaViewModel(
         override fun <T : ViewModel> create(
             modelClass: Class<T>
         ): T {
-            if (modelClass.isAssignableFrom(ListaViewModel::class.java)) {
+            if (
+                modelClass.isAssignableFrom(
+                    ListaViewModel::class.java
+                )
+            ) {
                 return ListaViewModel(
-                    contenedor.itemRepository
+                    repositorio = contenedor.itemRepository,
+                    notificador = contenedor.notificador
                 ) as T
             }
 
-            throw IllegalArgumentException("ViewModel desconocido")
+            throw IllegalArgumentException(
+                "ViewModel desconocido"
+            )
         }
     }
 }

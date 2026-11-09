@@ -4,7 +4,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.Transaction
+import com.tecsup.inventarioherramientas.domain.model.Movimiento
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
@@ -43,8 +45,7 @@ class FirebaseMovimientoRepository(
                 .collection("herramientas")
                 .document(herramientaId)
 
-            // El identificador se genera una sola vez,
-            // antes de los posibles reintentos de la transacción.
+            // Se genera una sola vez, fuera de la transacción.
             val movimientoRef = db
                 .collection("movimientos")
                 .document()
@@ -93,7 +94,10 @@ class FirebaseMovimientoRepository(
                     "prestamoId" to movimientoRef.id
                 )
 
-                transaccion.set(movimientoRef, movimiento)
+                transaccion.set(
+                    movimientoRef,
+                    movimiento
+                )
 
                 transaccion.update(
                     herramientaRef,
@@ -171,7 +175,7 @@ class FirebaseMovimientoRepository(
                     .collection("movimientos")
                     .document(prestamoId)
 
-                // Todas las lecturas se hacen antes de escribir.
+                // Todas las lecturas se realizan antes de escribir.
                 val salida = transaccion.get(salidaRef)
 
                 require(
@@ -200,7 +204,10 @@ class FirebaseMovimientoRepository(
                     "prestamoId" to prestamoId
                 )
 
-                transaccion.set(movimientoRef, movimiento)
+                transaccion.set(
+                    movimientoRef,
+                    movimiento
+                )
 
                 transaccion.update(
                     herramientaRef,
@@ -214,6 +221,65 @@ class FirebaseMovimientoRepository(
 
                 movimientoRef.id
             }.await()
+        }
+    }
+
+    override suspend fun obtenerHistorial(
+        herramientaId: String
+    ): Result<List<Movimiento>> {
+        return try {
+            obtenerUid()
+
+            require(herramientaId.isNotBlank()) {
+                "Selecciona una herramienta."
+            }
+
+            val respuesta = db
+                .collection("movimientos")
+                .whereEqualTo("herramientaId", herramientaId)
+                .get(Source.SERVER)
+                .await()
+
+            val movimientos = respuesta.documents
+                .map { documento ->
+                    val fecha = requireNotNull(
+                        documento.getTimestamp("fecha")
+                    ) {
+                        "Un movimiento no tiene una fecha válida."
+                    }
+
+                    Movimiento(
+                        id = documento.id,
+                        herramientaId = documento
+                            .getString("herramientaId").orEmpty(),
+                        codigoHerramienta = documento
+                            .getString("codigoHerramienta").orEmpty(),
+                        nombreHerramienta = documento
+                            .getString("nombreHerramienta").orEmpty(),
+                        tipo = documento
+                            .getString("tipo").orEmpty(),
+                        responsable = documento
+                            .getString("responsable").orEmpty(),
+                        registradoPorUid = documento
+                            .getString("registradoPorUid").orEmpty(),
+                        fechaMillis = fecha.toDate().time,
+                        condicion = documento
+                            .getString("condicion").orEmpty(),
+                        observacion = documento
+                            .getString("observacion").orEmpty(),
+                        prestamoId = documento
+                            .getString("prestamoId").orEmpty()
+                    )
+                }
+                .sortedByDescending { movimiento ->
+                    movimiento.fechaMillis
+                }
+
+            Result.success(movimientos)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -249,7 +315,8 @@ class FirebaseMovimientoRepository(
         } catch (e: Exception) {
             val validacion = generateSequence<Throwable>(e) {
                 it.cause
-            }.filterIsInstance<IllegalArgumentException>()
+            }
+                .filterIsInstance<IllegalArgumentException>()
                 .firstOrNull()
 
             val mensaje = when {

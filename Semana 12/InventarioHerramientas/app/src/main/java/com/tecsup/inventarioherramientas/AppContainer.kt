@@ -14,6 +14,8 @@ import com.tecsup.inventarioherramientas.data.repository.RegistroHerramientaRepo
 import kotlinx.coroutines.tasks.await
 import com.tecsup.inventarioherramientas.data.repository.MovimientoRepository
 import com.tecsup.inventarioherramientas.data.repository.FirebaseMovimientoRepository
+import com.tecsup.inventarioherramientas.notification.Notificador
+import com.tecsup.inventarioherramientas.notification.NotificadorAndroid
 
 class AppContainer(context: Context) {
 
@@ -22,6 +24,10 @@ class AppContainer(context: Context) {
     // Inicio, recuperación y cierre de sesión.
     val authRepository: AuthRepository by lazy {
         FirebaseAuthRepository()
+    }
+
+    val notificador: Notificador by lazy {
+        NotificadorAndroid(appContext)
     }
 
     // Base de datos local Room.

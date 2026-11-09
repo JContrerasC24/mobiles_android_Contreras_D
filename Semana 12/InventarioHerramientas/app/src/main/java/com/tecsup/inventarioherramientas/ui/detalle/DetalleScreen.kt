@@ -3,6 +3,7 @@ package com.tecsup.inventarioherramientas.ui.detalle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +23,9 @@ fun DetalleScreen(
     estado: UiState<Item>,
     aviso: String?,
     onReintentar: () -> Unit,
+    esAdmin: Boolean,
+    onMovimiento: (String, String) -> Unit,
+    onVerHistorial: (String) -> Unit,
     onVolver: () -> Unit
 ) {
     Column(
@@ -32,7 +36,7 @@ fun DetalleScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OutlinedButton(onClick = onVolver) {
-            Text("Volver ")
+            Text("Volver")
         }
 
         Text(
@@ -83,6 +87,57 @@ fun DetalleScreen(
                 Text("Ubicación: ${herramienta.ubicacion}")
                 Text("Condición: ${herramienta.condicion}")
                 Text("Disponibilidad: ${herramienta.disponibilidad}")
+
+                // Ambos roles pueden consultar el historial.
+                OutlinedButton(
+                    onClick = {
+                        onVerHistorial(herramienta.id)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ver historial")
+                }
+
+                // Solo el administrador puede registrar movimientos.
+                if (esAdmin) {
+                    when {
+                        herramienta.disponibilidad == "PRESTADA" -> {
+                            Button(
+                                onClick = {
+                                    onMovimiento(
+                                        herramienta.id,
+                                        "ENTRADA"
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Registrar devolución")
+                            }
+                        }
+
+                        herramienta.disponibilidad == "DISPONIBLE" &&
+                                herramienta.condicion == "BUENA" -> {
+                            Button(
+                                onClick = {
+                                    onMovimiento(
+                                        herramienta.id,
+                                        "SALIDA"
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Registrar préstamo")
+                            }
+                        }
+
+                        else -> {
+                            Text(
+                                "Esta herramienta no está habilitada " +
+                                        "para préstamo."
+                            )
+                        }
+                    }
+                }
             }
         }
     }

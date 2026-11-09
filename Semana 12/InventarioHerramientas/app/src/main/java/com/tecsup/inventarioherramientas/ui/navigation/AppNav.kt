@@ -1,8 +1,10 @@
 package com.tecsup.inventarioherramientas.ui.navigation
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,8 +23,12 @@ import com.tecsup.inventarioherramientas.ui.detalle.DetalleScreen
 import com.tecsup.inventarioherramientas.ui.detalle.DetalleViewModel
 import com.tecsup.inventarioherramientas.ui.favoritos.FavoritosScreen
 import com.tecsup.inventarioherramientas.ui.favoritos.FavoritosViewModel
+import com.tecsup.inventarioherramientas.ui.historial.HistorialScreen
+import com.tecsup.inventarioherramientas.ui.historial.HistorialViewModel
 import com.tecsup.inventarioherramientas.ui.lista.ListaScreen
 import com.tecsup.inventarioherramientas.ui.lista.ListaViewModel
+import com.tecsup.inventarioherramientas.ui.movimiento.MovimientoScreen
+import com.tecsup.inventarioherramientas.ui.movimiento.MovimientoViewModel
 import com.tecsup.inventarioherramientas.ui.registro.RegistroHerramientaScreen
 import com.tecsup.inventarioherramientas.ui.registro.RegistroHerramientaViewModel
 
@@ -75,7 +81,9 @@ fun AppNav(
                 onVerDetalle = { id ->
                     navController.navigate(
                         "detalle/${Uri.encode(id)}"
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 },
                 onVerFavoritos = {
                     navController.navigate("favoritos") {
@@ -93,7 +101,7 @@ fun AppNav(
             )
         }
 
-        // Herramientas favoritas guardadas en Room.
+        // Favoritos locales.
         composable("favoritos") {
             val favoritosViewModel: FavoritosViewModel = viewModel(
                 factory = favoritosFactory
@@ -113,7 +121,9 @@ fun AppNav(
                 onVerDetalle = { id ->
                     navController.navigate(
                         "detalle/${Uri.encode(id)}"
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 },
                 onVolver = {
                     navController.popBackStack()
@@ -154,17 +164,49 @@ fun AppNav(
             val aviso by detalleViewModel.aviso
                 .collectAsStateWithLifecycle()
 
+            // Recarga al regresar de un préstamo o devolución.
+            val recargarDetalle by entrada.savedStateHandle
+                .getStateFlow("recargarDetalle", false)
+                .collectAsStateWithLifecycle()
+
+            LaunchedEffect(recargarDetalle) {
+                if (recargarDetalle) {
+                    detalleViewModel.cargar()
+                    entrada.savedStateHandle["recargarDetalle"] = false
+                }
+            }
+
             DetalleScreen(
                 estado = estado,
                 aviso = aviso,
                 onReintentar = detalleViewModel::cargar,
+                esAdmin = sesion.rol == Rol.ADMIN,
+                onMovimiento = { id, tipo ->
+                    if (
+                        sesion.rol == Rol.ADMIN &&
+                        tipo in setOf("SALIDA", "ENTRADA")
+                    ) {
+                        navController.navigate(
+                            "movimiento/${Uri.encode(id)}/$tipo"
+                        ) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                onVerHistorial = { id ->
+                    navController.navigate(
+                        "historial/${Uri.encode(id)}"
+                    ) {
+                        launchSingleTop = true
+                    }
+                },
                 onVolver = {
                     navController.popBackStack()
                 }
             )
         }
 
-        // Panel exclusivo del administrador.
+        // Panel del administrador.
         composable("admin") {
             if (sesion.rol == Rol.ADMIN) {
                 val adminFactory = remember(
@@ -210,7 +252,7 @@ fun AppNav(
             }
         }
 
-        // Registro exclusivo del administrador.
+        // Registro de nuevas herramientas.
         composable("registro") {
             if (sesion.rol == Rol.ADMIN) {
                 val registroFactory = remember(
@@ -241,6 +283,119 @@ fun AppNav(
             } else {
                 Text("Acceso exclusivo para administradores.")
             }
+        }
+
+        // Préstamo o devolución.
+        composable(
+            route = "movimiento/{id}/{tipo}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.StringType
+                },
+                navArgument("tipo") {
+                    type = NavType.StringType
+                }
+            )
+        ) { entrada ->
+            val herramientaId = requireNotNull(
+                entrada.arguments?.getString("id")
+            )
+
+            val tipo = requireNotNull(
+                entrada.arguments?.getString("tipo")
+            )
+
+            if (
+                sesion.rol == Rol.ADMIN &&
+                tipo in setOf("SALIDA", "ENTRADA")
+            ) {
+                val movimientoFactory = remember(
+                    contenedor,
+                    herramientaId,
+                    tipo,
+                    sesion.rol
+                ) {
+                    MovimientoViewModel.Factory(
+                        contenedor = contenedor,
+                        herramientaId = herramientaId,
+                        tipo = tipo,
+                        rol = sesion.rol
+                    )
+                }
+
+                val movimientoViewModel: MovimientoViewModel =
+                    viewModel(
+                        factory = movimientoFactory
+                    )
+
+                val estado by movimientoViewModel.estado
+                    .collectAsStateWithLifecycle()
+
+                val volverAlDetalle: () -> Unit = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("recargarDetalle", true)
+
+                    navController.popBackStack()
+                    Unit
+                }
+
+                // También actualiza el detalle si se usa
+                // el botón o gesto Atrás de Android.
+                BackHandler {
+                    volverAlDetalle()
+                }
+
+                MovimientoScreen(
+                    herramientaId = herramientaId,
+                    tipo = tipo,
+                    estado = estado,
+                    onGuardar = movimientoViewModel::guardar,
+                    onVolver = volverAlDetalle
+                )
+            } else {
+                Text("No tienes acceso a esta operación.")
+            }
+        }
+
+        // Historial de una herramienta.
+        composable(
+            route = "historial/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.StringType
+                }
+            )
+        ) { entrada ->
+            val herramientaId = requireNotNull(
+                entrada.arguments?.getString("id")
+            )
+
+            val historialFactory = remember(
+                contenedor,
+                herramientaId
+            ) {
+                HistorialViewModel.Factory(
+                    contenedor = contenedor,
+                    herramientaId = herramientaId
+                )
+            }
+
+            val historialViewModel: HistorialViewModel = viewModel(
+                factory = historialFactory
+            )
+
+            val estado by historialViewModel.estado
+                .collectAsStateWithLifecycle()
+
+            HistorialScreen(
+                herramientaId = herramientaId,
+                estado = estado,
+                onActualizar = historialViewModel::cargar,
+                onVolver = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

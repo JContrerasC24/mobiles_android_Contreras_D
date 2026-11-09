@@ -30,24 +30,34 @@ class LoginViewModel(
     private fun recuperarSesion() {
         viewModelScope.launch {
             try {
-                _estado.value =
-                    UiState.Exito(repositorio.sesionActual())
+                // El repositorio intenta obtener el perfil del servidor.
+                // Si no hay conexión, puede utilizar el perfil local.
+                val sesion = repositorio.sesionActual()
+
+                _estado.value = UiState.Exito(sesion)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _estado.value = UiState.Error(
-                    "No se pudo recuperar la sesión. " +
-                            "Comprueba tu conexión e inicia sesión nuevamente."
+                    "No se pudo recuperar el perfil. " +
+                            "Conecta internet y vuelve a abrir la app, " +
+                            "o inicia sesión nuevamente."
                 )
             }
         }
     }
 
-    fun iniciarSesion(correo: String, clave: String) {
-        // Evita solicitudes repetidas.
+    fun iniciarSesion(
+        correo: String,
+        clave: String
+    ) {
+        // Evita enviar solicitudes mientras otra está en curso.
         if (_estado.value is UiState.Cargando) return
 
-        if (correo.isBlank() || clave.isBlank()) {
+        val correoLimpio = correo.trim()
+
+        // La validación ocurre antes de llamar al repositorio.
+        if (correoLimpio.isBlank() || clave.isBlank()) {
             _estado.value = UiState.Error(
                 "Completa el correo y la contraseña."
             )
@@ -58,7 +68,10 @@ class LoginViewModel(
 
         viewModelScope.launch {
             try {
-                repositorio.iniciarSesion(correo, clave)
+                repositorio.iniciarSesion(
+                    correo = correoLimpio,
+                    clave = clave
+                )
                     .onSuccess { sesion ->
                         _estado.value = UiState.Exito(sesion)
                     }
@@ -82,7 +95,9 @@ class LoginViewModel(
         _estado.value = UiState.Exito(null)
     }
 
-    private fun mensajeDeError(error: Throwable): String {
+    private fun mensajeDeError(
+        error: Throwable
+    ): String {
         return when (error) {
             is IllegalArgumentException,
             is IllegalStateException ->
@@ -102,9 +117,13 @@ class LoginViewModel(
         override fun <T : ViewModel> create(
             modelClass: Class<T>
         ): T {
-            if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+            if (
+                modelClass.isAssignableFrom(
+                    LoginViewModel::class.java
+                )
+            ) {
                 return LoginViewModel(
-                    contenedor.authRepository
+                    repositorio = contenedor.authRepository
                 ) as T
             }
 
