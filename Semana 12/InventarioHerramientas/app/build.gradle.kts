@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+
+    // Se activara cuando descarguemos google-services.json:
+    // alias(libs.plugins.google.services)
 }
 
 android {
@@ -51,4 +55,31 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // ViewModel y estados en Compose
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Navegacion entre pantallas
+    implementation(libs.androidx.navigation.compose)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Base de datos local Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // Corrutinas y await() para Firebase
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Firebase Authentication y Firestore
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    // Pruebas de corrutinas para los ViewModels
+    testImplementation(libs.kotlinx.coroutines.test)
 }
