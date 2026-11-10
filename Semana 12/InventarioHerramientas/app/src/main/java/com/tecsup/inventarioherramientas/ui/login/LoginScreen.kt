@@ -21,6 +21,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Surface
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.tecsup.inventarioherramientas.ui.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -70,7 +80,16 @@ private fun FormularioLogin(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        com.tecsup.inventarioherramientas.ui.Cabecera("Acceso al taller", "Inventario de herramientas")
+        Surface(shape = RoundedCornerShape(24.dp), color = Petroleo) {
+            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("INVENTARIO", color = Ambar, letterSpacing = 2.sp, style = MaterialTheme.typography.labelMedium)
+                    Text("Taller", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Bold)
+                }
+                Foto("caja", Modifier.size(92.dp).clip(RoundedCornerShape(18.dp)))
+            }
+        }
+        Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
 
         OutlinedTextField(
             value = correo,
@@ -111,6 +130,7 @@ private fun FormularioLogin(
 
         Button(
             onClick = { onIngresar(correo, clave) },
+            colors = ButtonDefaults.buttonColors(containerColor = Ambar, contentColor = Petroleo),
             enabled = !cargando,
             modifier = Modifier.fillMaxWidth()
         ) {

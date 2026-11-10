@@ -69,7 +69,7 @@ fun AdminScreen(
             is UiState.Exito -> {
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     com.tecsup.inventarioherramientas.ui.Indicador(estado.datos.totalGuardado.toString(), "Herramientas", Modifier.weight(1f))
-                    com.tecsup.inventarioherramientas.ui.Indicador(estado.datos.totalFavoritos.toString(), "Favoritos", Modifier.weight(1f))
+                    com.tecsup.inventarioherramientas.ui.Indicador(estado.datos.totalFavoritos.toString(), "Favoritos", Modifier.weight(1f), destacado = true)
                 }
             }
         }
@@ -92,6 +92,7 @@ fun AdminScreen(
 
         OutlinedButton(
             onClick = { confirmarLimpieza = true },
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             enabled = !ocupado,
             modifier = Modifier.fillMaxWidth()
         ) {

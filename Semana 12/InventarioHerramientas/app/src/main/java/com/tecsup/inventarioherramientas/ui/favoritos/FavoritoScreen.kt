@@ -82,7 +82,7 @@ fun FavoritosScreen(
                         key = { it.id }
                     ) { herramienta ->
                         com.tecsup.inventarioherramientas.ui.HerramientaCard(
-                            herramienta, { onQuitarFavorito(herramienta.id) }, { onVerDetalle(herramienta.id) }
+                            herramienta, { onQuitarFavorito(herramienta.id) }, { onVerDetalle(herramienta.id) }, compacta = true
                         )
                     }
                 }

@@ -1,158 +1,92 @@
 package com.tecsup.inventarioherramientas.ui.lista
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.material3.*
-import androidx.compose.foundation.layout.*
-import com.tecsup.inventarioherramientas.ui.Cabecera
-import com.tecsup.inventarioherramientas.ui.HerramientaCard
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.tecsup.inventarioherramientas.domain.model.Item
-import com.tecsup.inventarioherramientas.domain.model.Rol
-import com.tecsup.inventarioherramientas.domain.model.Sesion
-import com.tecsup.inventarioherramientas.ui.UiState
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import com.tecsup.inventarioherramientas.domain.model.*
+import com.tecsup.inventarioherramientas.ui.*
 
 @Composable
-fun ListaScreen(
-    sesion: Sesion,
-    estado: UiState<List<Item>>,
-    actualizando: Boolean,
-    aviso: String?,
-    mensajeAccion: String?,
-    onRefrescar: () -> Unit,
-    onFavorito: (String) -> Unit,
-    onVerDetalle: (String) -> Unit,
-    onVerFavoritos: () -> Unit,
-    onVerAdmin: () -> Unit,
-    onCerrarSesion: () -> Unit
-) {
+fun ListaScreen(sesion: Sesion, estado: UiState<List<Item>>, actualizando: Boolean, aviso: String?,
+    mensajeAccion: String?, onRefrescar: () -> Unit, onFavorito: (String) -> Unit,
+    onVerDetalle: (String) -> Unit, onVerFavoritos: () -> Unit, onVerAdmin: () -> Unit, onCerrarSesion: () -> Unit) {
     var consulta by rememberSaveable { mutableStateOf("") }
-    var disponibles by rememberSaveable { mutableStateOf(false) }
+    var filtro by rememberSaveable { mutableStateOf("Todas") }
     var menu by remember { mutableStateOf(false) }
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Column(
-                modifier = Modifier.padding(top = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Cabecera("Catálogo", sesion.correo)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onVerFavoritos) { Text("Favoritos") }
-                    Box {
-                        OutlinedButton(onClick = { menu = true }) { Text("Opciones") }
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            if (sesion.rol == Rol.ADMIN) {
-                                DropdownMenuItem(text = { Text("Administración") }, onClick = { menu = false; onVerAdmin() })
+    val inventario = (estado as? UiState.Exito)?.datos.orEmpty()
+    val visibles = inventario.filter {
+        (it.nombre.contains(consulta.trim(), true) || it.codigo.contains(consulta.trim(), true)) &&
+            when (filtro) {
+                "Disponibles" -> it.disponibilidad == "DISPONIBLE"
+                "Prestadas" -> it.disponibilidad == "PRESTADA"
+                else -> true
+            }
+    }
+    Column(Modifier.fillMaxSize()) {
+        LazyVerticalGrid(GridCells.Adaptive(150.dp), modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(shape = RoundedCornerShape(22.dp), color = Petroleo) {
+                        Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Petroleo, Turquesa))).padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("INVENTARIO DEL TALLER", color = Color(0xFFBCE8E1), fontSize = 10.sp, letterSpacing = 2.sp)
+                                    Text("Catálogo", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 30.sp)
+                                }
+                                Box {
+                                    TextButton(onClick = { menu = true }) { Text("Cuenta", color = Color.White) }
+                                    DropdownMenu(menu, { menu = false }) {
+                                        DropdownMenuItem(text = { Text(sesion.correo) }, onClick = {}, enabled = false)
+                                        DropdownMenuItem(text = { Text("Actualizar inventario") }, enabled = !actualizando,
+                                            onClick = { menu = false; onRefrescar() })
+                                        DropdownMenuItem(text = { Text("Cerrar sesión") }, onClick = { menu = false; onCerrarSesion() })
+                                    }
+                                }
                             }
-                            DropdownMenuItem(text = { Text("Actualizar inventario") }, enabled = !actualizando,
-                                onClick = { menu = false; onRefrescar() })
-                            DropdownMenuItem(text = { Text("Cerrar sesión") }, onClick = { menu = false; onCerrarSesion() })
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(consulta, { consulta = it }, Modifier.fillMaxWidth(),
+                                placeholder = { Text("Buscar herramienta o código") }, singleLine = true,
+                                shape = RoundedCornerShape(14.dp), colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color.White, focusedContainerColor = Color.White))
                         }
                     }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        for (opcion in listOf("Todas", "Disponibles", "Prestadas")) {
+                            FilterChip(filtro == opcion, { filtro = opcion }, label = { Text(opcion) })
+                        }
+                    }
+                    if (actualizando) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    listOfNotNull(aviso, mensajeAccion).forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+                    if (estado is UiState.Exito) Text("${visibles.size} herramientas", style = MaterialTheme.typography.labelLarge)
                 }
-                OutlinedTextField(value = consulta, onValueChange = { consulta = it },
-                    label = { Text("Buscar por nombre o código") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth())
-                FilterChip(selected = disponibles, onClick = { disponibles = !disponibles },
-                    label = { Text("Solo disponibles") })
-                if (actualizando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                if (aviso != null) {
-                    Text(
-                        text = aviso,
-                        color = MaterialTheme.colorScheme.error
-                    )
+            }
+            when (estado) {
+                UiState.Cargando -> item { CircularProgressIndicator() }
+                is UiState.Error -> item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column { Text(estado.mensaje); TextButton(onClick = onRefrescar) { Text("Reintentar") } }
                 }
-
-                if (mensajeAccion != null) {
-                    Text(
-                        text = mensajeAccion,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                is UiState.Exito -> if (visibles.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { Text(if (inventario.isEmpty()) "El inventario está vacío." else "Sin coincidencias con estos filtros.") }
+                } else items(visibles, key = { it.id }) { item ->
+                    HerramientaCard(item, { onFavorito(item.id) }, { onVerDetalle(item.id) })
                 }
             }
         }
-
-        when (estado) {
-            UiState.Cargando -> {
-                item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text("Cargando herramientas...")
-                    }
-                }
-            }
-
-            is UiState.Error -> {
-                item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = estado.mensaje,
-                            color = MaterialTheme.colorScheme.error
-                        )
-
-                        Button(
-                            onClick = onRefrescar,
-                            enabled = !actualizando
-                        ) {
-                            Text("Reintentar")
-                        }
-                    }
-                }
-            }
-
-            is UiState.Exito -> {
-                val visibles = estado.datos.filter { item ->
-                    (item.nombre.contains(consulta.trim(), ignoreCase = true) ||
-                        item.codigo.contains(consulta.trim(), ignoreCase = true)) &&
-                        (!disponibles || item.disponibilidad == "DISPONIBLE")
-                }
-                if (visibles.isEmpty()) {
-                    item {
-                        Text(if (estado.datos.isEmpty()) "No hay herramientas registradas." else "Ninguna herramienta coincide con la búsqueda.")
-                    }
-                } else {
-                    items(
-                        items = visibles,
-                        key = { herramienta -> herramienta.id }
-                    ) { herramienta ->
-                        HerramientaCard(
-                            herramienta = herramienta,
-                            onFavorito = {
-                                onFavorito(herramienta.id)
-                            },
-                            onVerDetalle = {
-                                onVerDetalle(herramienta.id)
-                            }
-                        )
-                    }
-                }
-            }
+        NavigationBar(containerColor = Color.White, windowInsets = WindowInsets(0,0,0,0)) {
+            NavigationBarItem(true, {}, icon = { Text("▦", fontSize = 22.sp) }, label = { Text("Catálogo") })
+            NavigationBarItem(false, onVerFavoritos, icon = { Text("♡", fontSize = 22.sp) }, label = { Text("Favoritos") })
+            if (sesion.rol == Rol.ADMIN) NavigationBarItem(false, onVerAdmin,
+                icon = { Text("▤", fontSize = 22.sp) }, label = { Text("Administración") })
         }
-
-
     }
 }
-

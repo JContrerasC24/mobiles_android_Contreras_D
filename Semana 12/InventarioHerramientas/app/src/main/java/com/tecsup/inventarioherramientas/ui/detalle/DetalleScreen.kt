@@ -14,6 +14,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tecsup.inventarioherramientas.domain.model.Item
 import com.tecsup.inventarioherramientas.ui.UiState
@@ -71,7 +73,11 @@ fun DetalleScreen(
             is UiState.Exito -> {
                 val herramienta = estado.datos
 
-                com.tecsup.inventarioherramientas.ui.Cabecera(herramienta.nombre, herramienta.codigo)
+                com.tecsup.inventarioherramientas.ui.Foto(herramienta.nombre,
+                    Modifier.fillMaxWidth().height(220.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(22.dp)))
+                Text(herramienta.codigo, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Text(herramienta.nombre, style = MaterialTheme.typography.headlineMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                com.tecsup.inventarioherramientas.ui.EstadoItem(herramienta)
 
                 Text(
                     text = herramienta.descripcion.ifBlank {
@@ -81,7 +87,7 @@ fun DetalleScreen(
 
                 Text("Ubicación: ${herramienta.ubicacion}")
                 Text("Condición: ${herramienta.condicion}")
-                Text("Disponibilidad: ${herramienta.disponibilidad}")
+                
 
                 // Ambos roles pueden consultar el historial.
                 OutlinedButton(

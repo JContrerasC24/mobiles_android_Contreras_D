@@ -28,3 +28,13 @@ gradlew.bat testDebugUnitTest assembleDebug
 ```
 
 El APK se genera en app/build/outputs/apk/debug/app-debug.apk.
+
+## Revisión visual del proyecto final
+
+La nueva petición fue acercar las cinco pantallas a la referencia visual y entregar las imágenes dentro del proyecto. Se incorporó una cuadrícula adaptativa con favoritos sobre la imagen, tres filtros de disponibilidad y navegación inferior. La ficha de detalle muestra la herramienta en grande. Favoritos usa filas compactas con miniatura. El acceso usa una marca visual de taller y un botón ámbar. El panel diferencia herramientas y favoritos con colores e indicadores.
+
+La carpeta app/src/main/res/drawable-nodpi contiene nueve imágenes locales. Ocho representan familias de herramientas y la caja sirve como recurso genérico cuando el nombre no coincide. Son imágenes ilustrativas creadas con ImageGen. Los datos de cada tarjeta proceden del inventario.
+
+Consigna visual de generación: producir una lámina fotográfica de estudio en cuadrícula 3 × 3 con alicate, destornillador, taladro, martillo, sierra circular, llave, amoladora, cinta métrica y caja. Fondo marfil, luz suave, objetos completos sin logotipos ni texto. Separar la lámina en nueve recursos de Android.
+
+Verificación: el APK compiló, las pruebas unitarias pasaron y se comprobó visualmente el catálogo en el Pixel 6 con cuatro registros reales. La sesión activa era de administrador.
