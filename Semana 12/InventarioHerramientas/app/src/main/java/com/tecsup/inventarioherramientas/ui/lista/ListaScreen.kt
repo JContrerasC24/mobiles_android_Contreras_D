@@ -13,7 +13,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.*
+import androidx.compose.foundation.layout.*
+import com.tecsup.inventarioherramientas.ui.Cabecera
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tecsup.inventarioherramientas.domain.model.Item
@@ -35,6 +39,9 @@ fun ListaScreen(
     onVerAdmin: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
+    var consulta by rememberSaveable { mutableStateOf("") }
+    var disponibles by rememberSaveable { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -46,59 +53,27 @@ fun ListaScreen(
                 modifier = Modifier.padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "Inventario de herramientas",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-
-                Text(text = sesion.correo)
-
-                Text(
-                    text = if (sesion.rol == Rol.ADMIN) {
-                        "Administrador"
-                    } else {
-                        "Usuario"
-                    }
-                )
-
-                Button(
-                    onClick = onRefrescar,
-                    enabled = !actualizando,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = if (actualizando) {
-                            "Actualizando..."
-                        } else {
-                            "Actualizar inventario"
+                Cabecera("Catálogo", sesion.correo)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onVerFavoritos) { Text("Favoritos") }
+                    Box {
+                        OutlinedButton(onClick = { menu = true }) { Text("Opciones") }
+                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            if (sesion.rol == Rol.ADMIN) {
+                                DropdownMenuItem(text = { Text("Administración") }, onClick = { menu = false; onVerAdmin() })
+                            }
+                            DropdownMenuItem(text = { Text("Actualizar inventario") }, enabled = !actualizando,
+                                onClick = { menu = false; onRefrescar() })
+                            DropdownMenuItem(text = { Text("Cerrar sesión") }, onClick = { menu = false; onCerrarSesion() })
                         }
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onVerFavoritos,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Ver favoritos")
-                }
-
-                // Solo el administrador ve este acceso.
-                if (sesion.rol == Rol.ADMIN) {
-                    OutlinedButton(
-                        onClick = onVerAdmin,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Panel administrador")
                     }
                 }
-
-                OutlinedButton(
-                    onClick = onCerrarSesion,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Cerrar sesión")
-                }
-
+                OutlinedTextField(value = consulta, onValueChange = { consulta = it },
+                    label = { Text("Buscar por nombre o código") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth())
+                FilterChip(selected = disponibles, onClick = { disponibles = !disponibles },
+                    label = { Text("Solo disponibles") })
+                if (actualizando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 if (aviso != null) {
                     Text(
                         text = aviso,
@@ -148,13 +123,18 @@ fun ListaScreen(
             }
 
             is UiState.Exito -> {
-                if (estado.datos.isEmpty()) {
+                val visibles = estado.datos.filter { item ->
+                    (item.nombre.contains(consulta.trim(), ignoreCase = true) ||
+                        item.codigo.contains(consulta.trim(), ignoreCase = true)) &&
+                        (!disponibles || item.disponibilidad == "DISPONIBLE")
+                }
+                if (visibles.isEmpty()) {
                     item {
-                        Text("No hay herramientas registradas.")
+                        Text(if (estado.datos.isEmpty()) "No hay herramientas registradas." else "Ninguna herramienta coincide con la búsqueda.")
                     }
                 } else {
                     items(
-                        items = estado.datos,
+                        items = visibles,
                         key = { herramienta -> herramienta.id }
                     ) { herramienta ->
                         HerramientaCard(
@@ -171,13 +151,7 @@ fun ListaScreen(
             }
         }
 
-        item {
-            Text(
-                text = "Inventario del taller",
-                modifier = Modifier.padding(bottom = 16.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+
     }
 }
 
