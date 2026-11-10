@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
 import com.tecsup.inventarioherramientas.ui.Cabecera
+import com.tecsup.inventarioherramientas.ui.HerramientaCard
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tecsup.inventarioherramientas.domain.model.Item
@@ -155,48 +156,3 @@ fun ListaScreen(
     }
 }
 
-@Composable
-private fun HerramientaCard(
-    herramienta: Item,
-    onFavorito: () -> Unit,
-    onVerDetalle: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = herramienta.nombre,
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            Text("Código: ${herramienta.codigo}")
-            Text("Ubicación: ${herramienta.ubicacion}")
-            Text("Condición: ${herramienta.condicion}")
-            Text("Disponibilidad: ${herramienta.disponibilidad}")
-
-            Button(
-                onClick = onVerDetalle,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ver detalle")
-            }
-
-            OutlinedButton(
-                onClick = onFavorito,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = if (herramienta.esFavorito) {
-                        "Quitar de favoritos"
-                    } else {
-                        "Marcar favorito"
-                    }
-                )
-            }
-        }
-    }
-}

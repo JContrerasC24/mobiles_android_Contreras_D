@@ -81,46 +81,9 @@ fun FavoritosScreen(
                         items = estado.datos,
                         key = { it.id }
                     ) { herramienta ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement =
-                                    Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = herramienta.nombre,
-                                    style =
-                                        MaterialTheme.typography.titleLarge
-                                )
-
-                                Text("Código: ${herramienta.codigo}")
-                                Text("Ubicación: ${herramienta.ubicacion}")
-                                Text(
-                                    "Disponibilidad: " +
-                                            herramienta.disponibilidad
-                                )
-
-                                Button(
-                                    onClick = {
-                                        onVerDetalle(herramienta.id)
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Ver detalle")
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        onQuitarFavorito(herramienta.id)
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Quitar de favoritos")
-                                }
-                            }
-                        }
+                        com.tecsup.inventarioherramientas.ui.HerramientaCard(
+                            herramienta, { onQuitarFavorito(herramienta.id) }, { onVerDetalle(herramienta.id) }
+                        )
                     }
                 }
             }
