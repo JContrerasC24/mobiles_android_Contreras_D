@@ -51,10 +51,7 @@ fun AdminScreen(
             Text("Volver al inventario")
         }
 
-        Text(
-            text = "Panel del administrador",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        com.tecsup.inventarioherramientas.ui.Cabecera("Administración", "Control del taller")
 
         when (estado) {
             UiState.Cargando -> {
@@ -70,17 +67,10 @@ fun AdminScreen(
             }
 
             is UiState.Exito -> {
-                Text(
-                    text = "Herramientas guardadas: " +
-                            estado.datos.totalGuardado,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = "Favoritos: " +
-                            estado.datos.totalFavoritos,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    com.tecsup.inventarioherramientas.ui.Indicador(estado.datos.totalGuardado.toString(), "Herramientas", Modifier.weight(1f))
+                    com.tecsup.inventarioherramientas.ui.Indicador(estado.datos.totalFavoritos.toString(), "Favoritos", Modifier.weight(1f))
+                }
             }
         }
 

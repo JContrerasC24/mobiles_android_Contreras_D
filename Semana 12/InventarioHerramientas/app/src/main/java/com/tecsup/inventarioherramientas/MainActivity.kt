@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MaterialTheme {
+            MaterialTheme(colorScheme = com.tecsup.inventarioherramientas.ui.TallerColors) {
                 val loginViewModel: LoginViewModel = viewModel(
                     factory = loginFactory
                 )

@@ -59,6 +59,7 @@ private fun FormularioLogin(
     // No se guarda la contraseña en el estado persistente.
     var clave by remember { mutableStateOf("") }
 
+    var visible by remember { mutableStateOf(false) }
     val cargando = estado is UiState.Cargando
 
     Column(
@@ -69,12 +70,7 @@ private fun FormularioLogin(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Inventario de herramientas",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Text("Ingresa para consultar el inventario del taller.")
+        com.tecsup.inventarioherramientas.ui.Cabecera("Acceso al taller", "Inventario de herramientas")
 
         OutlinedTextField(
             value = correo,
@@ -94,7 +90,12 @@ private fun FormularioLogin(
             label = { Text("Contraseña") },
             singleLine = true,
             enabled = !cargando,
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (visible) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                androidx.compose.material3.TextButton(onClick = { visible = !visible }) {
+                    Text(if (visible) "Ocultar" else "Mostrar")
+                }
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),

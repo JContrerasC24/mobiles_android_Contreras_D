@@ -41,10 +41,7 @@ fun FavoritosScreen(
                     Text("Volver al inventario")
                 }
 
-                Text(
-                    text = "Herramientas favoritas",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                com.tecsup.inventarioherramientas.ui.Cabecera("Favoritos", "Mi colección")
 
                 if (mensaje != null) {
                     Text(

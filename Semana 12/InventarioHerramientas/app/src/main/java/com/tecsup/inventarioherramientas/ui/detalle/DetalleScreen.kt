@@ -71,12 +71,7 @@ fun DetalleScreen(
             is UiState.Exito -> {
                 val herramienta = estado.datos
 
-                Text(
-                    text = herramienta.nombre,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Text("Código: ${herramienta.codigo}")
+                com.tecsup.inventarioherramientas.ui.Cabecera(herramienta.nombre, herramienta.codigo)
 
                 Text(
                     text = herramienta.descripcion.ifBlank {
