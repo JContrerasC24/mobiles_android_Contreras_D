@@ -36,14 +36,17 @@ class AppContainer(context: Context) {
     }
 
     // Consulta del inventario, sincronización y favoritos.
-    val itemRepository: ItemRepository by lazy {
+    val itemRepository: ItemRepository
+        get() {
+        val usuarioSesion = requireNotNull(FirebaseAuth.getInstance().currentUser) { "Debes iniciar sesión." }
         val proyectoId = requireNotNull(
             FirebaseApp.getInstance().options.projectId
         ) {
             "No se encontró el ID del proyecto Firebase."
         }
 
-        ItemRepositoryImpl(
+        return ItemRepositoryImpl(
+            uid = usuarioSesion.uid,
             api = RetrofitClient.api,
             dao = database.itemDao(),
             proyectoId = proyectoId,
@@ -53,6 +56,7 @@ class AppContainer(context: Context) {
                     .currentUser
                     ?: error("Debes iniciar sesión.")
 
+                require(usuario.uid == usuarioSesion.uid) { "La sesión ha cambiado." }
                 val token = usuario
                     .getIdToken(false)
                     .await()

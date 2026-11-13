@@ -1,5 +1,6 @@
 package com.tecsup.inventarioherramientas.ui.historial
 
+import com.tecsup.inventarioherramientas.ui.BotonVolver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -47,16 +47,9 @@ fun HistorialScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(onClick = onVolver) {
-                    Text("Volver al detalle")
-                }
+                BotonVolver("Volver al detalle", onVolver)
 
-                Text(
-                    text = "Historial de movimientos",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-
-                Text("Herramienta: $herramientaId")
+                com.tecsup.inventarioherramientas.ui.Cabecera("Historial", herramientaId)
 
                 Button(
                     onClick = onActualizar,
@@ -104,6 +97,8 @@ fun HistorialScreen(
                         key = { it.id }
                     ) { movimiento ->
                         Card(
+                            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
@@ -113,6 +108,7 @@ fun HistorialScreen(
                             ) {
                                 Text(
                                     text = when (movimiento.tipo) {
+                                        "FIN_MANTENIMIENTO" -> "Mantenimiento finalizado"
                                         "SALIDA" -> "Salida por préstamo"
                                         "ENTRADA" -> "Entrada por devolución"
                                         else -> movimiento.tipo
@@ -141,6 +137,12 @@ fun HistorialScreen(
                                     "Condición: ${movimiento.condicion}"
                                 )
 
+                                movimiento.cobro?.let { pago ->
+                                    com.tecsup.inventarioherramientas.ui.Cabecera(
+                                        com.tecsup.inventarioherramientas.domain.model.soles(pago.totalCentimos),
+                                        "Pagado · ${pago.metodo} · ${pago.dias} días")
+                                    if (pago.referencia.isNotBlank()) Text("Comprobante: ${pago.referencia}")
+                                }
                                 if (movimiento.observacion.isNotBlank()) {
                                     Text(
                                         "Observación: " +

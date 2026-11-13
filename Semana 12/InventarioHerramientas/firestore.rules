@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function rol() { return request.auth != null && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in ['admin','usuario']; }
+  function admin() { return request.auth != null && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin'; }
+  function condicion(c) { return c in ['BUENA','DANADA','MANTENIMIENTO']; }
+  function nueva(id) {
+   let d = request.resource.data;
+   return d.keys().hasAll(['codigo','nombre','descripcion','ubicacion','condicion','disponibilidad'])
+    && d.keys().hasOnly(['codigo','nombre','descripcion','ubicacion','condicion','disponibilidad'])
+    && d.codigo == id && id.matches('HER-[0-9]{3,6}')
+    && d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 100
+    && d.descripcion is string && d.descripcion.size() <= 500
+    && d.ubicacion is string && d.ubicacion.size() > 0 && d.ubicacion.size() <= 100
+    && condicion(d.condicion) && d.disponibilidad == 'DISPONIBLE';
+  }
+  function pagoValido(p) {
+   return p.keys().hasAll(['tarifaCentimos','dias','totalCentimos','metodo','referencia','estado','moneda'])
+    && p.keys().hasOnly(['tarifaCentimos','dias','totalCentimos','metodo','referencia','estado','moneda'])
+    && p.tarifaCentimos is int && p.tarifaCentimos >= 100 && p.tarifaCentimos <= 100000
+    && p.dias is int && p.dias >= 1 && p.dias <= 365
+    && p.totalCentimos is int && p.totalCentimos == p.tarifaCentimos * p.dias
+    && p.metodo in ['EFECTIVO','YAPE','TARJETA'] && p.moneda == 'PEN' && p.estado == 'PAGADO'
+    && p.referencia is string && p.referencia.size() <= 80
+    && (p.metodo == 'EFECTIVO' || p.referencia.size() > 0);
+  }
+  function mismaSalida(m) {
+   let s = get(/databases/$(database)/documents/movimientos/$(m.prestamoId)).data;
+   return s.tipo == 'SALIDA' && s.herramientaId == m.herramientaId
+    && s.prestamoId == m.prestamoId && s.responsable == m.responsable;
+  }
+  function transicion(id, mid, a, d, m) {
+   return d.diff(a).affectedKeys().hasOnly(['disponibilidad','condicion','prestamoActivoId','ultimoMovimientoId'])
+    && d.ultimoMovimientoId == mid && m.herramientaId == id && d.condicion == m.condicion
+    && (
+     (m.tipo == 'SALIDA' && a.disponibilidad == 'DISPONIBLE' && a.condicion == 'BUENA'
+      && a.get('prestamoActivoId',null) == null && d.disponibilidad == 'PRESTADA'
+      && d.condicion == a.condicion && d.prestamoActivoId == mid && m.prestamoId == mid)
+     || (m.tipo == 'ENTRADA' && a.disponibilidad == 'PRESTADA'
+      && a.prestamoActivoId is string && m.prestamoId == a.prestamoActivoId
+      && d.disponibilidad == 'DISPONIBLE' && d.prestamoActivoId == null && condicion(d.condicion)
+      && mismaSalida(m))
+     || (m.tipo == 'FIN_MANTENIMIENTO' && a.condicion == 'MANTENIMIENTO'
+      && a.disponibilidad == 'DISPONIBLE' && a.get('prestamoActivoId',null) == null
+      && d.disponibilidad == a.disponibilidad && d.get('prestamoActivoId',null) == null
+      && d.condicion in ['BUENA','DANADA'] && m.prestamoId == mid && m.observacion.size() > 0)
+    );
+  }
+  function movimiento(mid) {
+   let m = request.resource.data;
+   let ruta = /databases/$(database)/documents/herramientas/$(m.herramientaId);
+   let a = get(ruta).data;
+   let d = getAfter(ruta).data;
+   return m.keys().hasAll(['herramientaId','codigoHerramienta','nombreHerramienta','tipo','responsable','registradoPorUid','fecha','condicion','observacion','prestamoId'])
+    && m.keys().hasOnly(['herramientaId','codigoHerramienta','nombreHerramienta','tipo','responsable','registradoPorUid','fecha','condicion','observacion','prestamoId','alquiler','solicitudId'])
+    && m.herramientaId is string && m.codigoHerramienta == a.codigo && m.nombreHerramienta == a.nombre
+    && m.responsable is string && m.responsable.size() > 0 && m.responsable.size() <= 100
+    && m.registradoPorUid == request.auth.uid && m.fecha == request.time && condicion(m.condicion)
+    && m.observacion is string && m.observacion.size() <= 500 && m.prestamoId is string
+    && (m.tipo == 'SALIDA' ? pagoValido(m.alquiler) : !('alquiler' in m))
+    && (!('solicitudId' in m) || solicitudPagada(m, mid))
+    && transicion(m.herramientaId, mid, a, d, m);
+  }
+
+  function solicitudPagada(m, mid) {
+   let ruta = /databases/$(database)/documents/solicitudes/$(m.solicitudId);
+   let a = get(ruta).data;
+   let d = getAfter(ruta).data;
+   return m.tipo == 'SALIDA' && a.estado == 'APROBADA' && d.estado == 'COMPLETADA'
+    && d.movimientoId == mid && a.herramientaId == m.herramientaId
+    && a.responsable == m.responsable && a.dias == m.alquiler.dias;
+  }
+  function solicitudNueva(id) {
+   let d = request.resource.data;
+   let h = get(/databases/$(database)/documents/herramientas/$(d.herramientaId)).data;
+   return d.keys().hasAll(['uid','herramientaId','nombreHerramienta','responsable','dias','observacion','estado','fecha','actualizado'])
+    && d.keys().hasOnly(['uid','herramientaId','nombreHerramienta','responsable','dias','observacion','estado','fecha','actualizado'])
+    && d.uid == request.auth.uid && id == d.uid + '_' + d.herramientaId
+    && d.herramientaId is string && d.nombreHerramienta == h.nombre
+    && h.disponibilidad == 'DISPONIBLE' && h.condicion == 'BUENA' && h.get('prestamoActivoId',null) == null
+    && d.responsable is string && d.responsable.size() > 0 && d.responsable.size() <= 100
+    && d.dias is int && d.dias >= 1 && d.dias <= 365
+    && d.observacion is string && d.observacion.size() <= 500
+    && d.estado == 'PENDIENTE' && d.fecha == request.time && d.actualizado == request.time;
+  }
+  function cerrarSolicitud(id) {
+   let d = request.resource.data;
+   let ruta = /databases/$(database)/documents/movimientos/$(d.movimientoId);
+   let m = getAfter(ruta).data;
+   return resource.data.estado == 'APROBADA' && d.estado == 'COMPLETADA'
+    && !exists(ruta) && m.solicitudId == id && m.tipo == 'SALIDA'
+    && m.herramientaId == d.herramientaId && m.responsable == d.responsable
+    && m.alquiler.dias == d.dias && pagoValido(m.alquiler)
+    && m.registradoPorUid == request.auth.uid;
+  }
+  match /solicitudes/{id} {
+   // A deterministic key also permits reading one's not-yet-created request in a transaction.
+   allow get: if rol() && (admin() || id.matches(request.auth.uid + '_HER-[0-9]{3,6}'));
+   allow list: if rol() && (admin() || resource.data.uid == request.auth.uid);
+   allow create: if rol() && solicitudNueva(id);
+   allow update: if rol() && (
+    (resource.data.uid == request.auth.uid && resource.data.estado in ['RECHAZADA','COMPLETADA'] && solicitudNueva(id))
+    || (admin() && request.resource.data.actualizado == request.time
+     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado','actualizado','movimientoId'])
+     && (
+      (resource.data.estado == 'PENDIENTE' && request.resource.data.estado in ['APROBADA','RECHAZADA']
+       && !('movimientoId' in request.resource.data))
+      || (resource.data.estado == 'APROBADA' && request.resource.data.estado == 'RECHAZADA'
+       && !('movimientoId' in request.resource.data))
+      || cerrarSolicitud(id)
+     ))
+   );
+   allow delete: if false;
+  }
+
+  match /usuarios/{uid} {
+   allow read: if request.auth != null && request.auth.uid == uid;
+   allow write: if false;
+  }
+  match /herramientas/{id} {
+   allow read: if rol();
+   allow create: if admin() && nueva(id);
+   allow update: if admin()
+    && request.resource.data.ultimoMovimientoId is string
+    && !exists(/databases/$(database)/documents/movimientos/$(request.resource.data.ultimoMovimientoId))
+    && transicion(id, request.resource.data.ultimoMovimientoId, resource.data, request.resource.data,
+      getAfter(/databases/$(database)/documents/movimientos/$(request.resource.data.ultimoMovimientoId)).data);
+   allow delete: if false;
+  }
+  match /movimientos/{id} {
+   allow read: if rol();
+   allow create: if admin() && movimiento(id);
+   allow update, delete: if false;
+  }
+ }
+}

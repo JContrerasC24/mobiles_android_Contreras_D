@@ -32,6 +32,7 @@ class RegistroHerramientaViewModel(
         nombre: String,
         descripcion: String,
         ubicacion: String,
+        cantidad: Int,
         condicion: String
     ) {
         if (_estado.value is UiState.Cargando) return
@@ -57,6 +58,7 @@ class RegistroHerramientaViewModel(
                     nombre = nombre,
                     descripcion = descripcion,
                     ubicacion = ubicacion,
+                    cantidad = cantidad,
                     condicion = condicion
                 ).getOrThrow()
 

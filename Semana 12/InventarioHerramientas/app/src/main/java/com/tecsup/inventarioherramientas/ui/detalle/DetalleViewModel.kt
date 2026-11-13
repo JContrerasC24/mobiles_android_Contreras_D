@@ -19,6 +19,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 
 class DetalleViewModel(
+    private val movimientos: com.tecsup.inventarioherramientas.data.repository.MovimientoRepository,
     private val repositorio: ItemRepository,
     private val herramientaId: String
 ) : ViewModel() {
@@ -31,6 +32,12 @@ class DetalleViewModel(
 
     private val _aviso = MutableStateFlow<String?>(null)
     val aviso: StateFlow<String?> = _aviso.asStateFlow()
+
+    suspend fun consultarPrestamo(id: String) = movimientos.obtenerHistorial(herramientaId)
+        .map { lista -> lista.firstOrNull { it.id == id && it.tipo == "SALIDA" } }
+
+    suspend fun finalizarMantenimiento(condicion: String, nota: String) =
+        movimientos.finalizarMantenimiento(herramientaId, condicion, nota).onSuccess { cargar() }
 
     private var trabajoCarga: Job? = null
 
@@ -128,6 +135,7 @@ class DetalleViewModel(
         ): T {
             if (modelClass.isAssignableFrom(DetalleViewModel::class.java)) {
                 return DetalleViewModel(
+                    movimientos = contenedor.movimientoRepository,
                     repositorio = contenedor.itemRepository,
                     herramientaId = herramientaId
                 ) as T

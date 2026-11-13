@@ -16,3 +16,8 @@ data class ItemEntity(
     val prestamoActivoId: String? = null,
     val esFavorito: Boolean = false
 )
+@Entity(tableName = "favoritos_cuenta", primaryKeys = ["uid", "herramientaId"])
+data class FavoritoCuenta(val uid: String, val herramientaId: String)
+
+@Entity(tableName = "sincronizacion")
+data class Sincronizacion(@PrimaryKey val id: Int = 1, val fecha: Long)

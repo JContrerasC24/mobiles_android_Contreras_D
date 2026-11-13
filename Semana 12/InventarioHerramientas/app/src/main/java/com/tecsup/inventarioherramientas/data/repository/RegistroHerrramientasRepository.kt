@@ -7,6 +7,7 @@ interface RegistroHerramientaRepository {
         nombre: String,
         descripcion: String,
         ubicacion: String,
+        cantidad: Int,
         condicion: String
     ): Result<String>
 }

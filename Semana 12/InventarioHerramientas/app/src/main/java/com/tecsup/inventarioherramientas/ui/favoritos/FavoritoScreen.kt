@@ -1,5 +1,6 @@
 package com.tecsup.inventarioherramientas.ui.favoritos
 
+import com.tecsup.inventarioherramientas.ui.BotonVolver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -37,9 +37,7 @@ fun FavoritosScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(onClick = onVolver) {
-                    Text("Volver al inventario")
-                }
+                BotonVolver("Volver al inventario", onVolver)
 
                 com.tecsup.inventarioherramientas.ui.Cabecera("Favoritos", "Mi colección")
 

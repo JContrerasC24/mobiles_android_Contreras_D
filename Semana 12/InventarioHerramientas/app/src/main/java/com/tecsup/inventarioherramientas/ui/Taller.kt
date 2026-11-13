@@ -70,9 +70,15 @@ fun Indicador(valor: String, etiqueta: String, modifier: Modifier = Modifier, de
 
 @Composable
 fun EstadoItem(item: Item) {
-    val disponible = item.disponibilidad.equals("DISPONIBLE", true)
+    val disponible = item.listaParaPrestamo
+    val etiqueta = when {
+        item.disponibilidad == "PRESTADA" -> "Prestada"
+        disponible -> "Lista para préstamo"
+        item.condicion == "MANTENIMIENTO" -> "En mantenimiento"
+        else -> "Préstamo bloqueado"
+    }
     Surface(shape = CircleShape, color = if (disponible) Color(0xFFD9F1E4) else Color(0xFFFFE8BD)) {
-        Text(item.disponibilidad.lowercase().replaceFirstChar { it.uppercase() },
+        Text(etiqueta,
             Modifier.padding(horizontal = 9.dp, vertical = 3.dp), color = Petroleo, style = MaterialTheme.typography.labelMedium)
     }
 }
@@ -90,7 +96,7 @@ private fun Corazon(item: Item, accion: () -> Unit) {
 }
 
 @Composable
-fun HerramientaCard(herramienta: Item, onFavorito: () -> Unit, onVerDetalle: () -> Unit, compacta: Boolean = false) {
+fun HerramientaCard(herramienta: Item, onFavorito: () -> Unit, onVerDetalle: () -> Unit, compacta: Boolean = false, stock: String? = null) {
     ElevatedCard(onClick = onVerDetalle, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White)) {
         if (compacta) {
@@ -109,10 +115,31 @@ fun HerramientaCard(herramienta: Item, onFavorito: () -> Unit, onVerDetalle: () 
                 Box(Modifier.align(Alignment.TopEnd)) { Corazon(herramienta, onFavorito) }
             }
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(com.tecsup.inventarioherramientas.domain.model.soles(com.tecsup.inventarioherramientas.domain.model.tarifaSugerida(herramienta.nombre)) + " / día", fontWeight = FontWeight.Bold, color = Turquesa)
                 Text(herramienta.codigo, color = Turquesa, letterSpacing = 1.sp, style = MaterialTheme.typography.labelSmall)
                 Text(herramienta.nombre, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(herramienta.ubicacion, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
+                if (stock != null) Text(stock, color = Petroleo, fontWeight = FontWeight.Bold)
                 EstadoItem(herramienta)
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectorCondicion(valor: String, enabled: Boolean, cambiar: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for ((codigo, nombre) in listOf("BUENA" to "Buena · lista para usar",
+            "DANADA" to "Dañada · bloquear préstamo", "MANTENIMIENTO" to "Requiere mantenimiento")) {
+            Surface(onClick = { cambiar(codigo) }, enabled = enabled,
+                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
+                color = if (valor == codigo) MaterialTheme.colorScheme.primaryContainer else Color.White,
+                border = androidx.compose.foundation.BorderStroke(1.dp,
+                    if (valor == codigo) Turquesa else Color(0xFFDBE4E4))) {
+                Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(valor == codigo, null, enabled = enabled)
+                    Text(nombre, Modifier.weight(1f).padding(end = 10.dp))
+                }
             }
         }
     }

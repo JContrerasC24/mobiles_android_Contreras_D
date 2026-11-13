@@ -15,13 +15,38 @@ class FirebaseMovimientoRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : MovimientoRepository {
 
+    override suspend fun finalizarMantenimiento(id: String, condicion: String, nota: String) = ejecutar {
+        val uid = obtenerUid()
+        require(condicion in setOf("BUENA", "DANADA") && nota.trim().length in 1..500) { "Revisa la condición y la observación." }
+        val ref = db.collection("herramientas").document(id)
+        val movimiento = db.collection("movimientos").document()
+        db.runTransaction { tx ->
+            comprobarAdmin(tx, uid)
+            val item = tx.get(ref)
+            require(item.getString("condicion") == "MANTENIMIENTO" && item.getString("disponibilidad") == "DISPONIBLE" &&
+                item.getString("prestamoActivoId").isNullOrBlank()) { "La herramienta cambió de estado. Actualiza la ficha." }
+            tx.set(movimiento, mapOf("herramientaId" to id, "codigoHerramienta" to item.getString("codigo"),
+                "nombreHerramienta" to item.getString("nombre"), "tipo" to "FIN_MANTENIMIENTO",
+                "responsable" to auth.currentUser?.email.orEmpty(), "registradoPorUid" to uid,
+                "fecha" to FieldValue.serverTimestamp(), "condicion" to condicion, "observacion" to nota.trim(), "prestamoId" to movimiento.id))
+            tx.update(ref, mapOf("condicion" to condicion, "ultimoMovimientoId" to movimiento.id))
+            movimiento.id
+        }.await()
+    }
+
     override suspend fun prestar(
         herramientaId: String,
         responsable: String,
+        cobro: com.tecsup.inventarioherramientas.domain.model.CobroAlquiler,
         observacion: String
-    ): Result<String> {
+    ): Result<String> = prestarSolicitud(herramientaId, responsable, cobro, observacion, null)
+
+    suspend fun prestarSolicitud(herramientaId: String, responsable: String,
+        cobro: com.tecsup.inventarioherramientas.domain.model.CobroAlquiler,
+        observacion: String, solicitudId: String?): Result<String> {
         return ejecutar {
             val uid = obtenerUid()
+            cobro.validar()
             val responsableLimpio = responsable.trim()
             val observacionLimpia = observacion.trim()
 
@@ -79,13 +104,26 @@ class FirebaseMovimientoRepository(
                     "La herramienta tiene un préstamo pendiente."
                 }
 
-                val movimiento = mapOf(
+                val solicitudRef = solicitudId?.let { db.collection("solicitudes").document(it) }
+                if (solicitudRef != null) {
+                    val solicitud = transaccion.get(solicitudRef)
+                    require(solicitud.getString("estado") == "APROBADA" && solicitud.getString("herramientaId") == herramientaId) {
+                        "La solicitud ya no está aprobada. Actualiza la lista."
+                    }
+                    require(solicitud.getString("responsable") == responsableLimpio && solicitud.getLong("dias") == cobro.dias.toLong()) {
+                        "Conserva el responsable y los días de la solicitud aprobada."
+                    }
+                }
+                val movimiento = mutableMapOf<String, Any>(
                     "herramientaId" to herramientaId,
                     "codigoHerramienta" to
                             herramienta.getString("codigo").orEmpty(),
                     "nombreHerramienta" to
                             herramienta.getString("nombre").orEmpty(),
                     "tipo" to "SALIDA",
+                    "alquiler" to mapOf("tarifaCentimos" to cobro.tarifaCentimos, "dias" to cobro.dias,
+                        "totalCentimos" to cobro.totalCentimos, "metodo" to cobro.metodo,
+                        "referencia" to cobro.referencia.trim(), "estado" to "PAGADO", "moneda" to "PEN"),
                     "responsable" to responsableLimpio,
                     "registradoPorUid" to uid,
                     "fecha" to FieldValue.serverTimestamp(),
@@ -94,6 +132,11 @@ class FirebaseMovimientoRepository(
                     "prestamoId" to movimientoRef.id
                 )
 
+                if (solicitudRef != null) {
+                    movimiento["solicitudId"] = solicitudRef.id
+                    transaccion.update(solicitudRef, mapOf("estado" to "COMPLETADA", "movimientoId" to movimientoRef.id,
+                        "actualizado" to FieldValue.serverTimestamp()))
+                }
                 transaccion.set(
                     movimientoRef,
                     movimiento
@@ -268,7 +311,12 @@ class FirebaseMovimientoRepository(
                         observacion = documento
                             .getString("observacion").orEmpty(),
                         prestamoId = documento
-                            .getString("prestamoId").orEmpty()
+                            .getString("prestamoId").orEmpty(),
+                        cobro = (documento.get("alquiler") as? Map<*, *>)?.let { pago ->
+                            com.tecsup.inventarioherramientas.domain.model.CobroAlquiler(
+                                (pago["tarifaCentimos"] as Number).toLong(), (pago["dias"] as Number).toInt(),
+                                pago["metodo"] as String, pago["referencia"] as String)
+                        }
                     )
                 }
                 .sortedByDescending { movimiento ->

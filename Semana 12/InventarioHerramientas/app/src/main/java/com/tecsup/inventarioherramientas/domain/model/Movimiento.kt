@@ -11,5 +11,6 @@ data class Movimiento(
     val fechaMillis: Long,
     val condicion: String,
     val observacion: String,
+    val cobro: CobroAlquiler? = null,
     val prestamoId: String
 )

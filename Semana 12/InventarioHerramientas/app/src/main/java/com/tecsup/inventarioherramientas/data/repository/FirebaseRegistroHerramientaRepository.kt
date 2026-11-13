@@ -16,10 +16,11 @@ class FirebaseRegistroHerramientaRepository(
         nombre: String,
         descripcion: String,
         ubicacion: String,
+        cantidad: Int,
         condicion: String
     ): Result<String> {
         return try {
-            val codigoLimpio = codigo.trim().uppercase(Locale.ROOT)
+            val codigoLimpio = codigo.replace(Regex("\\s+"), "").uppercase(Locale.ROOT)
             val nombreLimpio = nombre.trim()
             val descripcionLimpia = descripcion.trim()
             val ubicacionLimpia = ubicacion.trim()
@@ -61,9 +62,14 @@ class FirebaseRegistroHerramientaRepository(
                 "Selecciona una condición válida."
             }
 
-            val documento = db
-                .collection("herramientas")
-                .document(codigoLimpio)
+            require(cantidad in 1..100) { "Registra entre 1 y 100 unidades." }
+            val numero = codigoLimpio.substringAfter("-")
+            val inicio = numero.toInt()
+            require(inicio + cantidad - 1 <= 999999) { "El rango de códigos excede HER-999999." }
+            val referencias = (0 until cantidad).map { indice ->
+                val codigoUnidad = "HER-" + (inicio + indice).toString().padStart(numero.length, '0')
+                db.collection("herramientas").document(codigoUnidad)
+            }
 
             val datos = mapOf(
                 "codigo" to codigoLimpio,
@@ -75,15 +81,12 @@ class FirebaseRegistroHerramientaRepository(
             )
 
             db.runTransaction { transaccion ->
-                val existente = transaccion.get(documento)
-
-                if (existente.exists()) {
-                    throw IllegalArgumentException(
-                        "Ya existe una herramienta con código $codigoLimpio."
-                    )
+                for (ref in referencias) {
+                    require(!transaccion.get(ref).exists()) { "El código ${ref.id} ya está en uso. Elige otro rango." }
                 }
-
-                transaccion.set(documento, datos)
+                for (ref in referencias) {
+                    transaccion.set(ref, datos + ("codigo" to ref.id))
+                }
 
                 codigoLimpio
             }.await()

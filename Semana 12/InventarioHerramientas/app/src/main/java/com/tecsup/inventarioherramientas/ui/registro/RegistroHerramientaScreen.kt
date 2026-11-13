@@ -1,5 +1,6 @@
 package com.tecsup.inventarioherramientas.ui.registro
 
+import com.tecsup.inventarioherramientas.ui.BotonVolver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -29,9 +29,10 @@ import com.tecsup.inventarioherramientas.ui.UiState
 @Composable
 fun RegistroHerramientaScreen(
     estado: UiState<String?>,
-    onRegistrar: (String, String, String, String, String) -> Unit,
+    onRegistrar: (String, String, String, String, Int, String) -> Unit,
     onVolver: () -> Unit
 ) {
+    var cantidad by rememberSaveable { mutableStateOf("1") }
     var codigo by rememberSaveable { mutableStateOf("") }
     var nombre by rememberSaveable { mutableStateOf("") }
     var descripcion by rememberSaveable { mutableStateOf("") }
@@ -50,19 +51,15 @@ fun RegistroHerramientaScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        OutlinedButton(
-            onClick = onVolver,
-            enabled = !cargando
-        ) {
-            Text("Volver")
-        }
+        BotonVolver("Volver", onVolver, enabled = !cargando)
 
-        Text(
-            text = "Registrar herramienta",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        com.tecsup.inventarioherramientas.ui.Cabecera("Nueva herramienta", "Registro de unidades")
 
         OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
             value = codigo,
             onValueChange = { codigo = it },
             label = { Text("Código, por ejemplo HER-003") },
@@ -72,6 +69,10 @@ fun RegistroHerramientaScreen(
         )
 
         OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
             value = nombre,
             onValueChange = { nombre = it },
             label = { Text("Nombre") },
@@ -81,6 +82,10 @@ fun RegistroHerramientaScreen(
         )
 
         OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
             value = descripcion,
             onValueChange = { descripcion = it },
             label = { Text("Descripción") },
@@ -90,6 +95,10 @@ fun RegistroHerramientaScreen(
         )
 
         OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
             value = ubicacion,
             onValueChange = { ubicacion = it },
             label = { Text("Ubicación") },
@@ -100,27 +109,14 @@ fun RegistroHerramientaScreen(
 
         Text("Condición física")
 
-        val condiciones = listOf(
-            "BUENA" to "Buena",
-            "DANADA" to "Dañada",
-            "MANTENIMIENTO" to "En mantenimiento"
-        )
-
-        condiciones.forEach { (valor, etiqueta) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = condicion == valor,
-                    onClick = { condicion = valor },
-                    enabled = editable
-                )
-
-                Text(etiqueta)
-            }
-        }
-
-        Text("La herramienta se registrará como DISPONIBLE.")
+        com.tecsup.inventarioherramientas.ui.SelectorCondicion(condicion, editable) { condicion = it }
+        OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White), value = cantidad, onValueChange = { cantidad = it.filter(Char::isDigit).take(3) },
+            label = { Text("Cantidad de unidades") }, supportingText = { Text("Cada unidad recibe un código consecutivo desde el código inicial.") },
+            singleLine = true, enabled = editable, modifier = Modifier.fillMaxWidth())
 
         if (estado is UiState.Error) {
             Text(
@@ -134,12 +130,15 @@ fun RegistroHerramientaScreen(
         }
 
         Button(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp),
             onClick = {
                 onRegistrar(
                     codigo,
                     nombre,
                     descripcion,
                     ubicacion,
+                    cantidad.toIntOrNull() ?: 0,
                     condicion
                 )
             },

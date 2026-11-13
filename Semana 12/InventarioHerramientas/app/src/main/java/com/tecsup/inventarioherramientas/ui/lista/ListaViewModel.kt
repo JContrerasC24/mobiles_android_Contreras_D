@@ -26,6 +26,8 @@ class ListaViewModel(
     private val notificador: Notificador
 ) : ViewModel() {
 
+    val ultimaSincronizacion = repositorio.ultimaSincronizacion
+
     private data class ResultadoRefresco(
         val terminado: Boolean = false,
         val error: String? = null,

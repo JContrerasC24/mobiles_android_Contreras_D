@@ -13,21 +13,24 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class ItemRepositoryImpl(
+    private val uid: String,
     private val api: ApiService,
     private val dao: ItemDao,
     private val proyectoId: String,
     private val obtenerAutorizacion: suspend () -> String
 ) : ItemRepository {
 
-    private val mutex = Mutex()
+    private companion object { val mutex = Mutex() }
+
+    override val ultimaSincronizacion = dao.ultimaSincronizacion()
 
     override val items: Flow<List<Item>> =
-        dao.todos().map { entidades ->
+        dao.todos(uid).map { entidades ->
             entidades.map { it.aModelo() }
         }
 
     override val favoritos: Flow<List<Item>> =
-        dao.favoritos().map { entidades ->
+        dao.favoritos(uid).map { entidades ->
             entidades.map { it.aModelo() }
         }
 
@@ -73,11 +76,11 @@ class ItemRepositoryImpl(
                     autorizacion = obtenerAutorizacion()
                 ).aEntity()
 
-                dao.guardarSinPerderFavoritos(
+                dao.guardarTodos(
                     listOf(descargado)
                 )
 
-                val guardado = dao.obtenerPorId(id)
+                val guardado = dao.obtenerPorId(uid, id)
                     ?: error("No se pudo recuperar el detalle guardado")
 
                 guardado.aModelo()
@@ -86,7 +89,7 @@ class ItemRepositoryImpl(
     }
 
     override suspend fun alternarFavorito(id: String) {
-        dao.alternarFavorito(id)
+        dao.alternarFavorito(uid, id)
     }
 
     override suspend fun cantidadGuardada(): Int {
@@ -94,12 +97,12 @@ class ItemRepositoryImpl(
     }
 
     override suspend fun cantidadFavoritos(): Int {
-        return dao.contarFavoritos()
+        return dao.contarFavoritos(uid)
     }
 
     override suspend fun limpiarCache() {
         mutex.withLock {
-            dao.borrarTodo()
+            dao.limpiarCache(uid)
         }
     }
 

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ItemRepository {
 
+    val ultimaSincronizacion: Flow<Long?>
     val items: Flow<List<Item>>
 
     val favoritos: Flow<List<Item>>

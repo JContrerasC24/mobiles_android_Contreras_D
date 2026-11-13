@@ -10,4 +10,7 @@ data class Item(
     val disponibilidad: String,
     val prestamoActivoId: String? = null,
     val esFavorito: Boolean = false
-)
+) {
+    val listaParaPrestamo: Boolean
+        get() = disponibilidad == "DISPONIBLE" && condicion == "BUENA" && prestamoActivoId.isNullOrBlank()
+}

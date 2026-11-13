@@ -31,6 +31,7 @@ class MovimientoViewModel(
 
     fun guardar(
         responsable: String,
+        cobro: com.tecsup.inventarioherramientas.domain.model.CobroAlquiler,
         condicionRetorno: String,
         observacion: String
     ) {
@@ -61,6 +62,7 @@ class MovimientoViewModel(
                     movimientoRepository.prestar(
                         herramientaId = herramientaId,
                         responsable = responsable,
+                        cobro = cobro,
                         observacion = observacion
                     )
                 } else {

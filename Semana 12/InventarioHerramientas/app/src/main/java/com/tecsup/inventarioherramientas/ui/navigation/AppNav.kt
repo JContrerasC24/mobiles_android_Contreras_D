@@ -52,6 +52,17 @@ fun AppNav(
         navController = navController,
         startDestination = "lista"
     ) {
+        composable("solicitudes") {
+            com.tecsup.inventarioherramientas.ui.solicitudes.SolicitudesScreen(sesion, contenedor,
+                onTerminar = { navController.popBackStack("lista", inclusive = false) },
+                onVolver = { navController.popBackStack() })
+        }
+        composable("solicitar/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entrada ->
+            com.tecsup.inventarioherramientas.ui.solicitudes.SolicitarScreen(
+                requireNotNull(entrada.arguments?.getString("id")), sesion,
+                onVolver = { navController.popBackStack() },
+                onEnviado = { navController.navigate("solicitudes") { popUpTo("solicitar/{id}") { inclusive = true } } })
+        }
         // Inventario principal.
         composable("lista") {
             val listaViewModel: ListaViewModel = viewModel(
@@ -70,7 +81,10 @@ fun AppNav(
             val mensajeAccion by listaViewModel.mensajeAccion
                 .collectAsStateWithLifecycle()
 
+            val ultimaSync by listaViewModel.ultimaSincronizacion.collectAsStateWithLifecycle(initialValue = null)
             ListaScreen(
+                onSolicitudes = { navController.navigate("solicitudes") },
+                ultimaSync = ultimaSync,
                 sesion = sesion,
                 estado = estado,
                 actualizando = actualizando,
@@ -177,6 +191,9 @@ fun AppNav(
             }
 
             DetalleScreen(
+                onSolicitar = { navController.navigate("solicitar/${Uri.encode(it)}") },
+                consultarPrestamo = detalleViewModel::consultarPrestamo,
+                finalizar = detalleViewModel::finalizarMantenimiento,
                 estado = estado,
                 aviso = aviso,
                 onReintentar = detalleViewModel::cargar,
@@ -233,6 +250,7 @@ fun AppNav(
                     .collectAsStateWithLifecycle()
 
                 AdminScreen(
+                    onSolicitudes = { navController.navigate("solicitudes") },
                     estado = estado,
                     ocupado = ocupado,
                     mensaje = mensaje,
@@ -340,17 +358,29 @@ fun AppNav(
                     Unit
                 }
 
+                val confirmado = (estado as? com.tecsup.inventarioherramientas.ui.UiState.Exito)?.datos != null
+                val irAlCatalogo: () -> Unit = {
+                    navController.popBackStack("lista", inclusive = false)
+                    Unit
+                }
+
                 // También actualiza el detalle si se usa
                 // el botón o gesto Atrás de Android.
                 BackHandler {
-                    volverAlDetalle()
+                    if (confirmado) irAlCatalogo() else volverAlDetalle()
                 }
 
+                val tarifaInicial = androidx.compose.runtime.produceState<Long?>(null, herramientaId) {
+                    val item = contenedor.itemRepository.obtenerDetalle(herramientaId).getOrNull()
+                    value = item?.let { com.tecsup.inventarioherramientas.domain.model.tarifaSugerida(it.nombre) }
+                }.value
                 MovimientoScreen(
+                    tarifaInicial = tarifaInicial,
                     herramientaId = herramientaId,
                     tipo = tipo,
                     estado = estado,
                     onGuardar = movimientoViewModel::guardar,
+                    onTerminar = irAlCatalogo,
                     onVolver = volverAlDetalle
                 )
             } else {

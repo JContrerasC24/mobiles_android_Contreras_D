@@ -1,5 +1,6 @@
 package com.tecsup.inventarioherramientas.ui.movimiento
 
+import com.tecsup.inventarioherramientas.ui.BotonVolver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,11 +13,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,13 +37,29 @@ import com.tecsup.inventarioherramientas.ui.UiState
 
 @Composable
 fun MovimientoScreen(
+    solicitudAprobada: Boolean = false,
+    nombreInicial: String = "",
+    diasIniciales: Int = 1,
+    tarifaInicial: Long?,
     herramientaId: String,
     tipo: String,
     estado: UiState<String?>,
-    onGuardar: (String, String, String) -> Unit,
+    onGuardar: (String, com.tecsup.inventarioherramientas.domain.model.CobroAlquiler, String, String) -> Unit,
+    onTerminar: () -> Unit,
     onVolver: () -> Unit
 ) {
-    var responsable by rememberSaveable { mutableStateOf("") }
+    var tarifa by rememberSaveable { mutableStateOf("") }
+    var dias by rememberSaveable { mutableStateOf(diasIniciales.toString()) }
+    var metodo by rememberSaveable { mutableStateOf("EFECTIVO") }
+    var referencia by rememberSaveable { mutableStateOf("") }
+    var recibido by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(tarifaInicial) {
+        if (tarifa.isBlank() && tarifaInicial != null) tarifa = java.math.BigDecimal.valueOf(tarifaInicial, 2).toPlainString()
+    }
+    val importe = com.tecsup.inventarioherramientas.domain.model.leerCentimos(tarifa)
+    val cobro = com.tecsup.inventarioherramientas.domain.model.CobroAlquiler(importe ?: 0, dias.toIntOrNull() ?: 0, metodo, referencia)
+    val cobroValido = runCatching { cobro.validar() }.isSuccess && recibido
+    var responsable by rememberSaveable { mutableStateOf(nombreInicial) }
     var observacion by rememberSaveable { mutableStateOf("") }
     var condicion by rememberSaveable { mutableStateOf("BUENA") }
 
@@ -42,6 +67,10 @@ fun MovimientoScreen(
     val cargando = estado is UiState.Cargando
     val confirmado = (estado as? UiState.Exito)?.datos
     val editable = !cargando && confirmado == null
+    if (confirmado != null) {
+        ConfirmacionMovimiento(herramientaId, confirmado, onTerminar)
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -51,28 +80,19 @@ fun MovimientoScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        OutlinedButton(
-            onClick = onVolver,
-            enabled = !cargando
-        ) {
-            Text("Volver al detalle")
-        }
+        BotonVolver("Volver al detalle", onVolver, enabled = !cargando)
 
-        Text(
-            text = if (salida) {
-                "Registrar préstamo"
-            } else {
-                "Registrar devolución"
-            },
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Text("Herramienta: $herramientaId")
+        com.tecsup.inventarioherramientas.ui.Cabecera(if (salida) "Registrar alquiler" else "Registrar devolución", herramientaId)
 
         if (salida) {
             OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
                 value = responsable,
                 onValueChange = { responsable = it },
+                readOnly = solicitudAprobada,
                 label = { Text("Persona que recibe la herramienta") },
                 enabled = editable,
                 singleLine = true,
@@ -81,26 +101,41 @@ fun MovimientoScreen(
         } else {
             Text("Condición al devolver")
 
-            listOf(
-                "BUENA" to "Buena",
-                "DANADA" to "Dañada",
-                "MANTENIMIENTO" to "Requiere mantenimiento"
-            ).forEach { (valor, etiqueta) ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = condicion == valor,
-                        onClick = { condicion = valor },
-                        enabled = editable
-                    )
-
-                    Text(etiqueta)
+            com.tecsup.inventarioherramientas.ui.SelectorCondicion(condicion, editable) { condicion = it }
+        }
+        if (salida) {
+            Text("Tarifa y pago", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White), value = tarifa, onValueChange = { tarifa = it; recibido = false }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal), label = { Text("Tarifa diaria en soles") }, enabled = editable, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White), readOnly = solicitudAprobada, value = dias, onValueChange = { dias = it.filter(Char::isDigit).take(3); recibido = false }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number), label = { Text("Días contratados") }, enabled = editable, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (opcion in listOf("EFECTIVO", "YAPE", "TARJETA")) {
+                    FilterChip(metodo == opcion, { metodo = opcion; referencia = ""; recibido = false }, { Text(opcion.lowercase().replaceFirstChar { it.uppercase() }) }, enabled = editable)
                 }
             }
+            if (metodo != "EFECTIVO") OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White), value = referencia, onValueChange = { referencia = it.take(80); recibido = false }, label = { Text("Número de operación / comprobante") }, enabled = editable, modifier = Modifier.fillMaxWidth())
+            Text("Total: " + com.tecsup.inventarioherramientas.domain.model.soles(cobro.totalCentimos), style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(recibido, { recibido = it }, enabled = editable)
+                Text("Confirmo que verifiqué el pago recibido", Modifier.weight(1f))
+            }
         }
-
         OutlinedTextField(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+                focusedContainerColor = androidx.compose.ui.graphics.Color.White),
             value = observacion,
             onValueChange = { observacion = it },
             label = { Text("Observaciones") },
@@ -116,15 +151,13 @@ fun MovimientoScreen(
             )
         }
 
-        if (confirmado != null) {
-            Text(confirmado)
-        }
-
         Button(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp),
             onClick = {
-                onGuardar(responsable, condicion, observacion)
+                onGuardar(responsable, cobro, condicion, observacion)
             },
-            enabled = editable,
+            enabled = editable && (!salida || cobroValido),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -140,6 +173,34 @@ fun MovimientoScreen(
 
         if (cargando) {
             CircularProgressIndicator()
+        }
+    }
+}
+@Composable
+private fun ConfirmacionMovimiento(id: String, mensaje: String, onTerminar: () -> Unit) {
+    val terminar by rememberUpdatedState(onTerminar)
+    val teclado = LocalSoftwareKeyboardController.current
+    LaunchedEffect(id, mensaje) {
+        teclado?.hide()
+        delay(3000)
+        terminar()
+    }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+            Text("✓", modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp),
+                style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)
+        }
+        Text(mensaje, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text("Herramienta $id", style = MaterialTheme.typography.titleMedium)
+        Text("Volviendo al catálogo…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        Button(onClick = { terminar() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text("Ir al catálogo ahora")
         }
     }
 }
