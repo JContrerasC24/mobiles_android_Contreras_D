@@ -31,6 +31,18 @@ El APK se genera en app/build/outputs/apk/debug/app-debug.apk.
 
 ## Revisión visual del proyecto final
 
+## Ampliación: stock, pagos y solicitudes por rol
+
+Consultas: mejorar los controles y formularios; incorporar varias unidades por herramienta; registrar tarifas en soles y pagos con efectivo, Yape o tarjeta; permitir que el usuario solicite un alquiler y que el administrador lo apruebe antes de registrar el pago.
+
+Cambios: catálogo agrupado con stock disponible, favoritos por cuenta, formularios y navegación renovados, cierre de mantenimiento, confirmación de movimientos, solicitudes privadas por usuario y revisión administrativa. El préstamo y su pago se confirman junto con la unidad y la solicitud mediante una transacción de Firestore.
+
+Aprendizajes: ocultar un botón no reemplaza las reglas de autorización. La validación del servidor debe comprobar el rol, la propiedad de la solicitud, los importes y las transiciones de estado. Las operaciones atómicas evitan registros parciales o pagos duplicados. Los importes se manejan en céntimos para evitar errores de redondeo.
+
+Verificación: 7 pruebas unitarias Android correctas; compilación del APK e instalación en el emulador; pruebas locales de reglas para privacidad, aprobación administrativa, pagos atómicos, importes inválidos y duplicados. No se registraron pagos reales durante estas pruebas. Publicar firestore.rules en Firebase es un paso independiente del push a GitHub.
+
+La documentación detallada está en docs/ y las pruebas reproducibles de reglas en tests/firestore/.
+
 La nueva petición fue acercar las cinco pantallas a la referencia visual y entregar las imágenes dentro del proyecto. Se incorporó una cuadrícula adaptativa con favoritos sobre la imagen, tres filtros de disponibilidad y navegación inferior. La ficha de detalle muestra la herramienta en grande. Favoritos usa filas compactas con miniatura. El acceso usa una marca visual de taller y un botón ámbar. El panel diferencia herramientas y favoritos con colores e indicadores.
 
 La carpeta app/src/main/res/drawable-nodpi contiene nueve imágenes locales. Ocho representan familias de herramientas y la caja sirve como recurso genérico cuando el nombre no coincide. Son imágenes ilustrativas creadas con ImageGen. Los datos de cada tarjeta proceden del inventario.
