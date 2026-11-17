@@ -43,12 +43,15 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 
-// Google Maps para Jetpack Compose.
+// Componentes de Google Maps para Compose.
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
+// Modelos y ViewModel.
+import com.contreras.campusgps.model.LugarConDistancia
 import com.contreras.campusgps.model.UbicacionUi
 import com.contreras.campusgps.viewmodel.MapaViewModel
 
@@ -56,12 +59,12 @@ import com.contreras.campusgps.viewmodel.MapaViewModel
 /**
  * Pantalla principal de CampusGPS.
  *
- * Responsabilidades:
+ * Permite:
  * - Solicitar permisos de ubicación.
- * - Obtener la ubicación mediante el ViewModel.
- * - Mostrar las coordenadas actuales.
+ * - Obtener la ubicación actual.
  * - Visualizar Google Maps.
- * - Colocar un marcador en la ubicación del usuario.
+ * - Mostrar el marcador del usuario.
+ * - Mostrar los cinco lugares del campus.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,16 +73,22 @@ fun PantallaMapa(
 ) {
 
     // =====================================================
-    // ESTADO DEL VIEWMODEL
+    // ESTADOS DEL VIEWMODEL
     // =====================================================
 
-    // Observa el estado de ubicación.
+    // Observa el estado de la ubicación.
     val estado by vm.estado.collectAsState()
 
-    // Contexto de Android.
+    /*
+     * Obtiene los lugares registrados en el repositorio.
+     *
+     * Los datos llegan mediante el StateFlow
+     * definido dentro de MapaViewModel.
+     */
+    val lugares by vm.lugares.collectAsState()
+
     val contexto = LocalContext.current
 
-    // Mensaje mostrado cuando se deniega un permiso.
     var mensajePermiso by remember {
         mutableStateOf<String?>(null)
     }
@@ -89,12 +98,6 @@ fun PantallaMapa(
     // SOLICITUD DE PERMISOS
     // =====================================================
 
-    /*
-     * Solicita acceso a la ubicación del dispositivo.
-     *
-     * Android permite que el usuario elija entre
-     * ubicación precisa y aproximada.
-     */
     val solicitarPermisos = rememberLauncherForActivityResult(
 
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -109,17 +112,15 @@ fun PantallaMapa(
 
         if (permisoPreciso || permisoAproximado) {
 
-            // Si existe autorización, buscamos la ubicación.
             mensajePermiso = null
 
             vm.buscar()
 
         } else {
 
-            // Mensaje mostrado cuando se rechaza la solicitud.
             mensajePermiso =
                 "Permiso denegado. Autoriza la ubicación " +
-                        "para poder utilizar CampusGPS."
+                        "para utilizar CampusGPS."
         }
     }
 
@@ -166,7 +167,7 @@ fun PantallaMapa(
         ) {
 
             // =================================================
-            // TÍTULO
+            // TÍTULO PRINCIPAL
             // =================================================
 
             Text(
@@ -182,17 +183,14 @@ fun PantallaMapa(
 
 
             // =================================================
-            // BOTÓN PARA OBTENER LA UBICACIÓN
+            // BOTÓN DE UBICACIÓN
             // =================================================
 
             Button(
 
                 onClick = {
 
-                    /*
-                     * Comprueba si Android ya concedió
-                     * acceso a la ubicación precisa.
-                     */
+                    // Comprueba el permiso de ubicación precisa.
                     val tienePermisoPreciso =
                         ContextCompat.checkSelfPermission(
 
@@ -203,10 +201,7 @@ fun PantallaMapa(
                         ) == PackageManager.PERMISSION_GRANTED
 
 
-                    /*
-                     * Comprueba si Android concedió
-                     * acceso a la ubicación aproximada.
-                     */
+                    // Comprueba el permiso de ubicación aproximada.
                     val tienePermisoAproximado =
                         ContextCompat.checkSelfPermission(
 
@@ -222,14 +217,14 @@ fun PantallaMapa(
                         tienePermisoAproximado
                     ) {
 
-                        // Ya tenemos autorización.
+                        // Si hay permisos, solicita la ubicación.
                         mensajePermiso = null
 
                         vm.buscar()
 
                     } else {
 
-                        // Solicitamos autorización al usuario.
+                        // Si faltan permisos, solicita autorización.
                         solicitarPermisos.launch(
 
                             arrayOf(
@@ -312,7 +307,7 @@ fun PantallaMapa(
 
 
                 // ---------------------------------------------
-                // UBICACIÓN OBTENIDA
+                // UBICACIÓN ENCONTRADA
                 // ---------------------------------------------
 
                 is UbicacionUi.Lista -> {
@@ -330,18 +325,25 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // MAPA INTERACTIVO
+                    // GOOGLE MAPS
                     // =========================================
 
                     /*
-                     * Enviamos la latitud y longitud obtenidas
-                     * por el ViewModel al mapa de Google.
+                     * Enviamos:
+                     *
+                     * 1. La ubicación del usuario.
+                     * 2. Los lugares del campus.
+                     *
+                     * El mapa se encargará de dibujar
+                     * los marcadores correspondientes.
                      */
                     MapaUbicacionActual(
 
                         latitud = actual.posicion.latitud,
 
-                        longitud = actual.posicion.longitud
+                        longitud = actual.posicion.longitud,
+
+                        lugares = lugares
                     )
 
 
@@ -351,19 +353,32 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // COORDENADAS
+                    // COORDENADAS DEL USUARIO
+                    // =========================================
+
+                    Text(
+                        text = "Latitud: ${actual.posicion.latitud}"
+                    )
+
+                    Text(
+                        text = "Longitud: ${actual.posicion.longitud}"
+                    )
+
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+
+                    // =========================================
+                    // TOTAL DE LUGARES REGISTRADOS
                     // =========================================
 
                     Text(
 
-                        text =
-                            "Latitud: ${actual.posicion.latitud}"
-                    )
+                        text = "Lugares registrados: ${lugares.size}",
 
-                    Text(
-
-                        text =
-                            "Longitud: ${actual.posicion.longitud}"
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
@@ -392,46 +407,48 @@ fun PantallaMapa(
 // =========================================================
 
 /**
- * Muestra un mapa centrado en las coordenadas del usuario.
+ * Muestra un mapa interactivo.
  *
- * @param latitud Coordenada geográfica de latitud.
- * @param longitud Coordenada geográfica de longitud.
+ * Incluye:
+ * - Marcador de ubicación actual.
+ * - Marcadores de los lugares del campus.
+ *
+ * Los lugares se reciben desde el ViewModel.
  */
 @Composable
 private fun MapaUbicacionActual(
+
     latitud: Double,
-    longitud: Double
+
+    longitud: Double,
+
+    lugares: List<LugarConDistancia>
+
 ) {
 
     // =====================================================
-    // CONVERTIR COORDENADAS
+    // UBICACIÓN DEL USUARIO
     // =====================================================
 
-    /*
-     * Google Maps utiliza LatLng para representar
-     * una posición geográfica.
-     */
-    val ubicacion = LatLng(
+    val ubicacionUsuario = LatLng(
         latitud,
         longitud
     )
 
 
     // =====================================================
-    // CONFIGURAR CÁMARA
+    // CÁMARA DE GOOGLE MAPS
     // =====================================================
 
     /*
-     * Establece la posición inicial de la cámara.
-     *
-     * 16f representa el nivel de acercamiento
-     * con el que se mostrará el mapa.
+     * Coloca inicialmente la cámara sobre
+     * la ubicación actual del dispositivo.
      */
     val estadoCamara = rememberCameraPositionState {
 
         position = CameraPosition.fromLatLngZoom(
 
-            ubicacion,
+            ubicacionUsuario,
 
             16f
         )
@@ -439,18 +456,45 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // CONFIGURAR MARCADOR
+    // MARCADOR DEL USUARIO
+    // =====================================================
+
+    val marcadorUsuario = rememberUpdatedMarkerState(
+
+        position = ubicacionUsuario
+    )
+
+
+    // =====================================================
+    // MARCADORES DEL CAMPUS
     // =====================================================
 
     /*
-     * Representa la ubicación del usuario.
+     * Convierte los lugares almacenados en el repositorio
+     * en marcadores que Google Maps puede representar.
      *
-     * El marcador se actualizará si cambian
-     * las coordenadas recibidas.
+     * remember evita recrearlos innecesariamente
+     * mientras la lista de lugares no cambie.
      */
-    val marcadorUsuario = rememberUpdatedMarkerState(
-        position = ubicacion
-    )
+    val marcadoresCampus = remember(lugares) {
+
+        lugares.map { elemento ->
+
+            val lugar = elemento.lugar
+
+            val posicionLugar = LatLng(
+
+                lugar.latitud,
+
+                lugar.longitud
+            )
+
+            // Relacionamos cada lugar con su marcador.
+            lugar to MarkerState(
+                position = posicionLugar
+            )
+        }
+    }
 
 
     // =====================================================
@@ -459,18 +503,16 @@ private fun MapaUbicacionActual(
 
     GoogleMap(
 
-        // Tamaño que ocupará el mapa en la pantalla.
         modifier = Modifier
             .fillMaxWidth()
             .height(350.dp),
 
-        // Centra el mapa en la ubicación configurada.
         cameraPositionState = estadoCamara
 
     ) {
 
         // =================================================
-        // MARCADOR DE UBICACIÓN ACTUAL
+        // MARCADOR DEL USUARIO
         // =================================================
 
         Marker(
@@ -481,5 +523,29 @@ private fun MapaUbicacionActual(
 
             snippet = "Ubicación actual del dispositivo"
         )
+
+
+        // =================================================
+        // MARCADORES DE LOS LUGARES DEL CAMPUS
+        // =================================================
+
+        /*
+         * Recorremos los lugares obtenidos
+         * desde LugaresRepositoryLocal.
+         *
+         * Por cada lugar creamos un marcador
+         * dentro del mapa.
+         */
+        marcadoresCampus.forEach { (lugar, marcador) ->
+
+            Marker(
+
+                state = marcador,
+
+                title = lugar.nombre,
+
+                snippet = lugar.categoria
+            )
+        }
     }
 }
