@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <!-- Permite acceder a una ubicación aproximada. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Permite acceder a una ubicación precisa. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Permite que la aplicación acceda a Internet. -->
+    <uses-permission
+        android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -11,6 +22,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CampusGPS">
+        <!-- Clave utilizada por Google Maps. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
