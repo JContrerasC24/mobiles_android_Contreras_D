@@ -26,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,17 +41,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
 // Google Maps.
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 
-// Componentes de Google Maps para Compose.
+// Google Maps Compose.
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
-// Modelos y ViewModel.
 import com.contreras.campusgps.model.LugarConDistancia
 import com.contreras.campusgps.model.UbicacionUi
 import com.contreras.campusgps.viewmodel.MapaViewModel
@@ -59,12 +60,13 @@ import com.contreras.campusgps.viewmodel.MapaViewModel
 /**
  * Pantalla principal de CampusGPS.
  *
- * Permite:
- * - Solicitar permisos de ubicación.
- * - Obtener la ubicación actual.
- * - Visualizar Google Maps.
- * - Mostrar el marcador del usuario.
- * - Mostrar los cinco lugares del campus.
+ * Integra:
+ * - Permisos de ubicación.
+ * - Google Maps.
+ * - Marcadores del campus.
+ * - Distancias calculadas.
+ * - Lista interactiva de lugares.
+ * - Selección de lugares en el mapa.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,16 +78,12 @@ fun PantallaMapa(
     // ESTADOS DEL VIEWMODEL
     // =====================================================
 
-    // Observa el estado de la ubicación.
     val estado by vm.estado.collectAsState()
 
-    /*
-     * Obtiene los lugares registrados en el repositorio.
-     *
-     * Los datos llegan mediante el StateFlow
-     * definido dentro de MapaViewModel.
-     */
     val lugares by vm.lugares.collectAsState()
+
+    // Identificador del lugar seleccionado.
+    val seleccionado by vm.seleccionado.collectAsState()
 
     val contexto = LocalContext.current
 
@@ -167,7 +165,7 @@ fun PantallaMapa(
         ) {
 
             // =================================================
-            // TÍTULO PRINCIPAL
+            // TÍTULO
             // =================================================
 
             Text(
@@ -190,7 +188,6 @@ fun PantallaMapa(
 
                 onClick = {
 
-                    // Comprueba el permiso de ubicación precisa.
                     val tienePermisoPreciso =
                         ContextCompat.checkSelfPermission(
 
@@ -201,7 +198,6 @@ fun PantallaMapa(
                         ) == PackageManager.PERMISSION_GRANTED
 
 
-                    // Comprueba el permiso de ubicación aproximada.
                     val tienePermisoAproximado =
                         ContextCompat.checkSelfPermission(
 
@@ -217,14 +213,12 @@ fun PantallaMapa(
                         tienePermisoAproximado
                     ) {
 
-                        // Si hay permisos, solicita la ubicación.
                         mensajePermiso = null
 
                         vm.buscar()
 
                     } else {
 
-                        // Si faltan permisos, solicita autorización.
                         solicitarPermisos.launch(
 
                             arrayOf(
@@ -276,10 +270,6 @@ fun PantallaMapa(
 
             when (val actual = estado) {
 
-                // ---------------------------------------------
-                // ESTADO INICIAL
-                // ---------------------------------------------
-
                 UbicacionUi.Inicial -> {
 
                     Text(
@@ -287,10 +277,6 @@ fun PantallaMapa(
                     )
                 }
 
-
-                // ---------------------------------------------
-                // BUSCANDO UBICACIÓN
-                // ---------------------------------------------
 
                 UbicacionUi.Buscando -> {
 
@@ -305,10 +291,6 @@ fun PantallaMapa(
                     )
                 }
 
-
-                // ---------------------------------------------
-                // UBICACIÓN ENCONTRADA
-                // ---------------------------------------------
 
                 is UbicacionUi.Lista -> {
 
@@ -325,25 +307,27 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // GOOGLE MAPS
+                    // MAPA INTERACTIVO
                     // =========================================
 
-                    /*
-                     * Enviamos:
-                     *
-                     * 1. La ubicación del usuario.
-                     * 2. Los lugares del campus.
-                     *
-                     * El mapa se encargará de dibujar
-                     * los marcadores correspondientes.
-                     */
                     MapaUbicacionActual(
 
                         latitud = actual.posicion.latitud,
 
                         longitud = actual.posicion.longitud,
 
-                        lugares = lugares
+                        lugares = lugares,
+
+                        seleccionadoId = seleccionado,
+
+                        onSeleccionarLugar = { id ->
+
+                            /*
+                             * Comunica al ViewModel
+                             * qué lugar fue seleccionado.
+                             */
+                            vm.seleccionarLugar(id)
+                        }
                     )
 
 
@@ -353,7 +337,7 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // COORDENADAS DEL USUARIO
+                    // COORDENADAS
                     // =========================================
 
                     Text(
@@ -366,26 +350,31 @@ fun PantallaMapa(
 
 
                     Spacer(
-                        modifier = Modifier.height(12.dp)
+                        modifier = Modifier.height(20.dp)
                     )
 
 
                     // =========================================
-                    // TOTAL DE LUGARES REGISTRADOS
+                    // LISTA DE LUGARES
                     // =========================================
 
-                    Text(
+                    /*
+                     * Muestra los lugares ordenados
+                     * por distancia desde el ViewModel.
+                     */
+                    ListaLugares(
 
-                        text = "Lugares registrados: ${lugares.size}",
+                        lugares = lugares,
 
-                        style = MaterialTheme.typography.bodyMedium
+                        seleccionadoId = seleccionado,
+
+                        onSeleccionar = { id ->
+
+                            vm.seleccionarLugar(id)
+                        }
                     )
                 }
 
-
-                // ---------------------------------------------
-                // ERROR
-                // ---------------------------------------------
 
                 is UbicacionUi.Error -> {
 
@@ -403,17 +392,14 @@ fun PantallaMapa(
 
 
 // =========================================================
-// COMPONENTE DE GOOGLE MAPS
+// MAPA INTERACTIVO
 // =========================================================
 
 /**
- * Muestra un mapa interactivo.
+ * Muestra Google Maps y permite seleccionar lugares.
  *
- * Incluye:
- * - Marcador de ubicación actual.
- * - Marcadores de los lugares del campus.
- *
- * Los lugares se reciben desde el ViewModel.
+ * Cuando cambia seleccionadoId, la cámara se desplaza
+ * hacia las coordenadas del lugar seleccionado.
  */
 @Composable
 private fun MapaUbicacionActual(
@@ -422,7 +408,11 @@ private fun MapaUbicacionActual(
 
     longitud: Double,
 
-    lugares: List<LugarConDistancia>
+    lugares: List<LugarConDistancia>,
+
+    seleccionadoId: Int?,
+
+    onSeleccionarLugar: (Int) -> Unit
 
 ) {
 
@@ -437,13 +427,9 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // CÁMARA DE GOOGLE MAPS
+    // CÁMARA DEL MAPA
     // =====================================================
 
-    /*
-     * Coloca inicialmente la cámara sobre
-     * la ubicación actual del dispositivo.
-     */
     val estadoCamara = rememberCameraPositionState {
 
         position = CameraPosition.fromLatLngZoom(
@@ -452,6 +438,20 @@ private fun MapaUbicacionActual(
 
             16f
         )
+    }
+
+
+    // =====================================================
+    // ESTADO DE CARGA DEL MAPA
+    // =====================================================
+
+    /*
+     * Nos permite saber cuándo el mapa terminó de cargar.
+     *
+     * Solo moveremos la cámara después de ese momento.
+     */
+    var mapaCargado by remember {
+        mutableStateOf(false)
     }
 
 
@@ -469,36 +469,92 @@ private fun MapaUbicacionActual(
     // MARCADORES DEL CAMPUS
     // =====================================================
 
-    /*
-     * Convierte los lugares almacenados en el repositorio
-     * en marcadores que Google Maps puede representar.
-     *
-     * remember evita recrearlos innecesariamente
-     * mientras la lista de lugares no cambie.
-     */
     val marcadoresCampus = remember(lugares) {
 
         lugares.map { elemento ->
 
             val lugar = elemento.lugar
 
-            val posicionLugar = LatLng(
+            val posicion = LatLng(
 
                 lugar.latitud,
 
                 lugar.longitud
             )
 
-            // Relacionamos cada lugar con su marcador.
             lugar to MarkerState(
-                position = posicionLugar
+                position = posicion
             )
         }
     }
 
 
     // =====================================================
-    // MOSTRAR GOOGLE MAPS
+    // BUSCAR LUGAR SELECCIONADO
+    // =====================================================
+
+    /*
+     * Busca las coordenadas correspondientes
+     * al lugar seleccionado desde la lista.
+     */
+    val lugarSeleccionado = lugares.firstOrNull { elemento ->
+
+        elemento.lugar.id == seleccionadoId
+
+    }?.lugar
+
+
+    // =====================================================
+    // NAVEGAR HACIA EL LUGAR SELECCIONADO
+    // =====================================================
+
+    /*
+     * LaunchedEffect observa los cambios de selección.
+     *
+     * Cuando el usuario selecciona un lugar:
+     *
+     * 1. Obtiene sus coordenadas.
+     * 2. Espera que el mapa esté cargado.
+     * 3. Desplaza la cámara hasta el marcador.
+     */
+    LaunchedEffect(
+        seleccionadoId,
+        mapaCargado
+    ) {
+
+        if (
+            mapaCargado &&
+            lugarSeleccionado != null
+        ) {
+
+            val destino = LatLng(
+
+                lugarSeleccionado.latitud,
+
+                lugarSeleccionado.longitud
+            )
+
+            /*
+             * Desplaza suavemente la cámara
+             * hasta el lugar seleccionado.
+             */
+            estadoCamara.animate(
+
+                update = CameraUpdateFactory.newLatLngZoom(
+
+                    destino,
+
+                    17f
+                ),
+
+                durationMs = 800
+            )
+        }
+    }
+
+
+    // =====================================================
+    // GOOGLE MAPS
     // =====================================================
 
     GoogleMap(
@@ -507,12 +563,21 @@ private fun MapaUbicacionActual(
             .fillMaxWidth()
             .height(350.dp),
 
-        cameraPositionState = estadoCamara
+        cameraPositionState = estadoCamara,
+
+        /*
+         * Android notificará cuando el mapa termine
+         * de cargar y pueda recibir movimientos de cámara.
+         */
+        onMapLoaded = {
+
+            mapaCargado = true
+        }
 
     ) {
 
         // =================================================
-        // MARCADOR DEL USUARIO
+        // MARCADOR DE UBICACIÓN ACTUAL
         // =================================================
 
         Marker(
@@ -529,13 +594,6 @@ private fun MapaUbicacionActual(
         // MARCADORES DE LOS LUGARES DEL CAMPUS
         // =================================================
 
-        /*
-         * Recorremos los lugares obtenidos
-         * desde LugaresRepositoryLocal.
-         *
-         * Por cada lugar creamos un marcador
-         * dentro del mapa.
-         */
         marcadoresCampus.forEach { (lugar, marcador) ->
 
             Marker(
@@ -544,7 +602,23 @@ private fun MapaUbicacionActual(
 
                 title = lugar.nombre,
 
-                snippet = lugar.categoria
+                snippet = lugar.categoria,
+
+                /*
+                 * También permitimos seleccionar lugares
+                 * directamente desde los marcadores.
+                 */
+                onClick = {
+
+                    onSeleccionarLugar(lugar.id)
+
+                    /*
+                     * false permite conservar
+                     * el comportamiento normal del marcador,
+                     * incluida su ventana de información.
+                     */
+                    false
+                }
             )
         }
     }
