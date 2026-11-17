@@ -28,13 +28,10 @@ import kotlin.math.roundToInt
 /**
  * Lista interactiva de lugares del campus.
  *
- * Muestra:
- * - Nombre del lugar.
- * - Categoría.
- * - Distancia respecto al usuario.
- *
- * Permite seleccionar un lugar para navegar
- * hacia su posición dentro de Google Maps.
+ * Permite:
+ * - Mostrar lugares ordenados por distancia.
+ * - Seleccionar lugares.
+ * - Identificar visualmente el lugar más cercano.
  */
 @Composable
 fun ListaLugares(
@@ -43,19 +40,16 @@ fun ListaLugares(
 
     seleccionadoId: Int?,
 
+    // Identificador del lugar más cercano.
+    masCercanoId: Int?,
+
     onSeleccionar: (Int) -> Unit
 
 ) {
 
     Column(
-
         modifier = Modifier.fillMaxWidth()
-
     ) {
-
-        // =================================================
-        // TÍTULO
-        // =================================================
 
         Text(
 
@@ -66,34 +60,58 @@ fun ListaLugares(
 
 
         // =================================================
-        // LISTA DE LUGARES
+        // RECORRER LOS LUGARES
         // =================================================
 
-        /*
-         * Los lugares ya llegan ordenados por distancia
-         * desde MapaViewModel.
-         */
         lugares.forEach { elemento ->
 
             val lugar = elemento.lugar
 
-            // Comprueba si este lugar está seleccionado.
+            // Comprueba si el usuario seleccionó este lugar.
             val estaSeleccionado =
                 seleccionadoId == lugar.id
 
+            // Comprueba si es el lugar más cercano.
+            val esMasCercano =
+                masCercanoId == lugar.id
 
-            // =============================================
-            // TARJETA DEL LUGAR
-            // =============================================
+
+            // =================================================
+            // COLOR DE LA TARJETA
+            // =================================================
+
+            /*
+             * Utilizamos diferentes colores según
+             * el estado del lugar.
+             *
+             * 1. Seleccionado: color principal.
+             * 2. Más cercano: color destacado.
+             * 3. Otros lugares: color normal.
+             */
+            val colorTarjeta = when {
+
+                estaSeleccionado -> {
+                    MaterialTheme.colorScheme.primaryContainer
+                }
+
+                esMasCercano -> {
+                    MaterialTheme.colorScheme.tertiaryContainer
+                }
+
+                else -> {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
+            }
+
+
+            // =================================================
+            // TARJETA INTERACTIVA
+            // =================================================
 
             Card(
 
                 onClick = {
 
-                    /*
-                     * Notifica el identificador del lugar
-                     * seleccionado a PantallaMapa.
-                     */
                     onSeleccionar(lugar.id)
                 },
 
@@ -103,20 +121,7 @@ fun ListaLugares(
 
                 colors = CardDefaults.cardColors(
 
-                    /*
-                     * Utiliza un color diferente
-                     * cuando el lugar está seleccionado.
-                     */
-                    containerColor =
-
-                        if (estaSeleccionado) {
-
-                            MaterialTheme.colorScheme.primaryContainer
-
-                        } else {
-
-                            MaterialTheme.colorScheme.surfaceVariant
-                        }
+                    containerColor = colorTarjeta
                 )
 
             ) {
@@ -136,13 +141,11 @@ fun ListaLugares(
                 ) {
 
                     // =====================================
-                    // NOMBRE Y CATEGORÍA
+                    // INFORMACIÓN DEL LUGAR
                     // =====================================
 
                     Column(
-
                         modifier = Modifier.weight(1f)
-
                     ) {
 
                         Text(
@@ -160,6 +163,34 @@ fun ListaLugares(
                             style =
                                 MaterialTheme.typography.bodySmall
                         )
+
+
+                        // =================================
+                        // ETIQUETA MÁS CERCANO
+                        // =================================
+
+                        if (esMasCercano) {
+
+                            Text(
+
+                                text = "Más cercano",
+
+                                style =
+                                    MaterialTheme.typography.labelMedium,
+
+                                color =
+                                    if (estaSeleccionado) {
+
+                                        MaterialTheme.colorScheme
+                                            .onPrimaryContainer
+
+                                    } else {
+
+                                        MaterialTheme.colorScheme
+                                            .onTertiaryContainer
+                                    }
+                            )
+                        }
                     }
 
 
@@ -169,7 +200,7 @@ fun ListaLugares(
 
 
                     // =====================================
-                    // DISTANCIA DEL LUGAR
+                    // DISTANCIA
                     // =====================================
 
                     Text(
@@ -178,7 +209,8 @@ fun ListaLugares(
                             elemento.metros
                         ),
 
-                        style = MaterialTheme.typography.bodyMedium
+                        style =
+                            MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -192,18 +224,12 @@ fun ListaLugares(
 // =====================================================
 
 /**
- * Convierte una distancia numérica en texto.
- *
- * Ejemplos:
- *
- * 150.5 metros -> 151 m
- * 1500 metros  -> 1.50 km
+ * Muestra las distancias en metros o kilómetros.
  */
 private fun formatearDistancia(
     metros: Float?
 ): String {
 
-    // Todavía no se realizó el cálculo.
     if (metros == null) {
 
         return "Sin calcular"
@@ -211,12 +237,10 @@ private fun formatearDistancia(
 
     return if (metros < 1000f) {
 
-        // Distancias menores a un kilómetro.
         "${metros.roundToInt()} m"
 
     } else {
 
-        // Distancias iguales o mayores a un kilómetro.
         String.format(
             Locale.getDefault(),
             "%.2f km",

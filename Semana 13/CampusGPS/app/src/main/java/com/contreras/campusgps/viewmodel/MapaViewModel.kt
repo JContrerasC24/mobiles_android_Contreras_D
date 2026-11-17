@@ -9,7 +9,7 @@ import com.contreras.campusgps.data.UbicacionRepository
 import com.contreras.campusgps.model.LugarConDistancia
 import com.contreras.campusgps.model.UbicacionUi
 
-// Utilidad para calcular las distancias geográficas.
+// Utilidad para calcular distancias geográficas.
 import com.contreras.campusgps.util.Distancia
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,35 +25,36 @@ import kotlinx.coroutines.launch
  *
  * Responsabilidades:
  *
- * 1. Obtener la ubicación actual del dispositivo.
- * 2. Consultar los lugares registrados en el campus.
- * 3. Calcular la distancia hacia cada lugar.
- * 4. Ordenar los lugares del más cercano al más lejano.
- * 5. Permitir la selección de lugares.
- * 6. Administrar los estados que observa la interfaz.
+ * 1. Administrar los estados de ubicación.
+ * 2. Obtener la ubicación actual del usuario.
+ * 3. Obtener los lugares registrados en el campus.
+ * 4. Calcular las distancias geográficas.
+ * 5. Ordenar los lugares por distancia.
+ * 6. Administrar la selección de lugares.
+ * 7. Identificar el lugar más cercano.
+ * 8. Gestionar errores.
  *
- * El ViewModel no contiene componentes visuales.
+ * No contiene componentes visuales de Jetpack Compose.
  */
 class MapaViewModel(
 
-    // Repositorio encargado de obtener la ubicación.
+    // Repositorio para obtener la ubicación del dispositivo.
     private val ubicacionRepo: UbicacionRepository,
 
-    // Repositorio encargado de proporcionar los lugares.
+    // Repositorio para obtener los lugares del campus.
     private val lugaresRepo: LugaresRepository
 
 ) : ViewModel() {
 
 
     // =====================================================
-    // 1. ESTADO DE LA UBICACIÓN
+    // 1. ESTADO DE UBICACIÓN
     // =====================================================
 
     /*
-     * MutableStateFlow permite modificar el estado
-     * de ubicación desde el ViewModel.
+     * Almacena el estado actual de la ubicación.
      *
-     * Inicialmente no se ha solicitado ninguna ubicación.
+     * Inicialmente no hemos solicitado la ubicación.
      */
     private val _estado = MutableStateFlow<UbicacionUi>(
         UbicacionUi.Inicial
@@ -62,8 +63,6 @@ class MapaViewModel(
     /*
      * Expone el estado para que PantallaMapa
      * pueda observar sus cambios.
-     *
-     * La interfaz no puede modificarlo directamente.
      */
     val estado: StateFlow<UbicacionUi> =
         _estado.asStateFlow()
@@ -74,11 +73,11 @@ class MapaViewModel(
     // =====================================================
 
     /*
-     * Obtiene inicialmente los lugares registrados
+     * Obtiene los cinco lugares registrados
      * en LugaresRepositoryLocal.
      *
-     * Como todavía no conocemos la ubicación
-     * del usuario, las distancias empiezan en null.
+     * Inicialmente las distancias son null
+     * porque todavía no conocemos nuestra ubicación.
      */
     private val _lugares = MutableStateFlow<List<LugarConDistancia>>(
 
@@ -94,11 +93,10 @@ class MapaViewModel(
     )
 
     /*
-     * Permite que la interfaz observe la lista
-     * de lugares y sus distancias.
+     * Permite que la interfaz observe los lugares.
      *
-     * Cuando los datos cambian, Compose puede
-     * actualizar automáticamente la pantalla.
+     * Cuando las distancias sean calculadas,
+     * Compose recibirá los nuevos resultados.
      */
     val lugares: StateFlow<List<LugarConDistancia>> =
         _lugares.asStateFlow()
@@ -109,53 +107,49 @@ class MapaViewModel(
     // =====================================================
 
     /*
-     * Guarda el identificador del lugar
-     * que seleccionó el usuario.
+     * Almacena el identificador del lugar
+     * seleccionado por el usuario.
      *
-     * null significa que todavía
-     * no se ha seleccionado ningún lugar.
+     * null indica que no existe una selección.
      */
     private val _seleccionado = MutableStateFlow<Int?>(null)
 
     /*
-     * PantallaMapa observa esta propiedad
-     * para saber qué lugar debe resaltar
-     * y hacia dónde mover la cámara.
+     * PantallaMapa observa este StateFlow
+     * para resaltar una tarjeta y mover la cámara.
      */
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
 
 
     // =====================================================
-    // 4. OBTENER UBICACIÓN DEL DISPOSITIVO
+    // 4. OBTENER UBICACIÓN ACTUAL
     // =====================================================
 
     /**
-     * Solicita la ubicación actual.
+     * Solicita la ubicación actual del dispositivo.
      *
      * Debe ejecutarse después de comprobar
-     * que Android concedió los permisos necesarios.
+     * que el usuario concedió los permisos.
      */
     fun buscar() {
 
-        // Informa que comenzó una nueva búsqueda.
+        // Cambia el estado a Buscando.
         _estado.value = UbicacionUi.Buscando
 
         /*
          * Reinicia la selección anterior.
          *
-         * Así, cuando se solicite nuevamente
-         * la ubicación, el mapa podrá comenzar
-         * mostrando la posición actual del usuario.
+         * Esto permite comenzar una nueva búsqueda
+         * mostrando inicialmente la ubicación actual.
          */
         _seleccionado.value = null
 
         /*
-         * Ejecuta la búsqueda utilizando corrutinas.
+         * Ejecuta la operación mediante corrutinas.
          *
-         * viewModelScope cancela automáticamente
-         * las operaciones cuando el ViewModel
-         * deja de utilizarse.
+         * viewModelScope administra el ciclo de vida
+         * de las operaciones del ViewModel.
          */
         viewModelScope.launch {
 
@@ -168,8 +162,8 @@ class MapaViewModel(
                     // =========================================
 
                     /*
-                     * Ya conocemos las coordenadas
-                     * actuales del dispositivo.
+                     * El repositorio devolvió correctamente
+                     * las coordenadas del dispositivo.
                      *
                      * Ahora calcularemos la distancia
                      * hasta cada lugar del campus.
@@ -185,8 +179,9 @@ class MapaViewModel(
                         lugaresRepo.obtenerLugares().map { lugar ->
 
                             /*
-                             * Calcula la distancia en metros
-                             * entre el usuario y el lugar.
+                             * Calcula la distancia aproximada
+                             * en metros entre el usuario
+                             * y el lugar del campus.
                              */
                             val metros = Distancia.calcularMetros(
 
@@ -197,7 +192,7 @@ class MapaViewModel(
 
                             /*
                              * Relaciona el lugar
-                             * con la distancia calculada.
+                             * con su distancia calculada.
                              */
                             LugarConDistancia(
 
@@ -209,15 +204,15 @@ class MapaViewModel(
 
 
                     // =========================================
-                    // 4.3 ORDENAR POR DISTANCIA
+                    // 4.3 ORDENAR LUGARES
                     // =========================================
 
                     /*
-                     * sortedBy ordena los resultados
-                     * de menor a mayor.
+                     * Ordena los lugares por distancia.
                      *
-                     * El primer elemento será
-                     * el lugar más cercano.
+                     * El primer elemento será el más cercano.
+                     *
+                     * El último elemento será el más lejano.
                      */
                     val lugaresOrdenados =
 
@@ -228,29 +223,29 @@ class MapaViewModel(
 
 
                     // =========================================
-                    // 4.4 ACTUALIZAR LISTA
+                    // 4.4 ACTUALIZAR LISTA DE LUGARES
                     // =========================================
 
                     /*
-                     * Guarda los lugares con sus distancias
-                     * y en el orden correspondiente.
+                     * Guarda la lista con las distancias
+                     * calculadas y ordenadas.
                      *
                      * PantallaMapa y ListaLugares
-                     * recibirán estos nuevos datos.
+                     * observarán los cambios.
                      */
                     _lugares.value = lugaresOrdenados
 
 
                     // =========================================
-                    // 4.5 ACTUALIZAR ESTADO
+                    // 4.5 ACTUALIZAR UBICACIÓN
                     // =========================================
 
                     /*
-                     * Informa a la interfaz que
-                     * la ubicación se obtuvo correctamente.
+                     * Informa que la ubicación
+                     * se obtuvo correctamente.
                      *
                      * Las distancias ya se encuentran
-                     * calculadas antes de publicar este estado.
+                     * calculadas en este momento.
                      */
                     _estado.value = UbicacionUi.Lista(
                         posicion
@@ -264,9 +259,8 @@ class MapaViewModel(
                     // =========================================
 
                     /*
-                     * Si ocurre un problema,
-                     * comunica un mensaje comprensible
-                     * a la interfaz.
+                     * Convierte la excepción recibida
+                     * en un mensaje para el usuario.
                      */
                     _estado.value = UbicacionUi.Error(
 
@@ -282,24 +276,24 @@ class MapaViewModel(
     // =====================================================
 
     /**
-     * Permite seleccionar un lugar registrado.
+     * Permite seleccionar un lugar del campus.
      *
-     * Se ejecuta cuando el usuario:
+     * Esta función es utilizada cuando el usuario:
      *
-     * - Presiona una tarjeta de ListaLugares.
-     * - Selecciona un marcador de Google Maps.
+     * - Selecciona una tarjeta de ListaLugares.
+     * - Presiona un marcador de Google Maps.
      *
-     * @param id Identificador del lugar seleccionado.
+     * @param id Identificador del lugar.
      */
     fun seleccionarLugar(id: Int) {
 
         // =============================================
-        // 5.1 COMPROBAR SI EL LUGAR EXISTE
+        // 5.1 VERIFICAR QUE EL LUGAR EXISTA
         // =============================================
 
         /*
-         * any devuelve true si encuentra
-         * un lugar que coincida con el identificador.
+         * Busca si existe algún lugar
+         * con el identificador recibido.
          */
         val existeLugar = _lugares.value.any { elemento ->
 
@@ -316,9 +310,9 @@ class MapaViewModel(
             /*
              * Guarda el identificador seleccionado.
              *
-             * PantallaMapa observará este cambio
-             * y podrá desplazar la cámara hacia
-             * las coordenadas del lugar.
+             * La interfaz detectará este cambio
+             * y podrá desplazar la cámara
+             * hacia el lugar correspondiente.
              */
             _seleccionado.value = id
         }
@@ -326,7 +320,61 @@ class MapaViewModel(
 
 
     // =====================================================
-    // 6. PERMISO DE UBICACIÓN DENEGADO
+    // 6. SELECCIONAR EL LUGAR MÁS CERCANO
+    // =====================================================
+
+    /**
+     * Identifica automáticamente el lugar
+     * más cercano a la ubicación del usuario.
+     *
+     * Esta función pertenece al octavo commit.
+     *
+     * Como los lugares ya están ordenados
+     * de menor a mayor distancia, utilizamos
+     * el primer lugar que tenga una distancia válida.
+     */
+    fun seleccionarMasCercano() {
+
+        // =============================================
+        // 6.1 BUSCAR EL LUGAR MÁS CERCANO
+        // =============================================
+
+        /*
+         * Obtiene el primer lugar cuya distancia
+         * ya haya sido calculada.
+         *
+         * Si todavía no conocemos la ubicación,
+         * el resultado será null.
+         */
+        val cercano = _lugares.value.firstOrNull { elemento ->
+
+            elemento.metros != null
+        }
+
+
+        // =============================================
+        // 6.2 SELECCIONAR EL LUGAR
+        // =============================================
+
+        if (cercano != null) {
+
+            /*
+             * Reutiliza seleccionarLugar().
+             *
+             * Esto actualiza el identificador seleccionado
+             * y permite que Google Maps navegue
+             * hacia las coordenadas correspondientes.
+             */
+            seleccionarLugar(
+
+                cercano.lugar.id
+            )
+        }
+    }
+
+
+    // =====================================================
+    // 7. PERMISO DE UBICACIÓN DENEGADO
     // =====================================================
 
     /**
@@ -343,21 +391,6 @@ class MapaViewModel(
 
 
     // =====================================================
-    // 7. FUNCIONALIDADES DEL SIGUIENTE COMMIT
-    // =====================================================
-
-    /*
-     * TODO - Octavo commit:
-     *
-     * Identificar automáticamente el lugar
-     * más cercano a la ubicación del usuario.
-     *
-     * También permitiremos resaltarlo
-     * y desplazar la cámara hasta él.
-     */
-
-
-    // =====================================================
     // 8. MANEJO DE ERRORES
     // =====================================================
 
@@ -367,7 +400,7 @@ class MapaViewModel(
      *
      * @param error Excepción recibida.
      *
-     * @return Mensaje que se mostrará en la interfaz.
+     * @return Mensaje que se mostrará en PantallaMapa.
      */
     private fun mensajeDe(
         error: Throwable
@@ -375,7 +408,7 @@ class MapaViewModel(
 
         return when (error) {
 
-            // Error relacionado con permisos.
+            // Error relacionado con los permisos.
             is SecurityException -> {
 
                 "Falta el permiso de ubicación"

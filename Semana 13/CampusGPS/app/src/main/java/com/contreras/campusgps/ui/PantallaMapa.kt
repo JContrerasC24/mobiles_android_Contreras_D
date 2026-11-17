@@ -45,13 +45,14 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 
-// Google Maps Compose.
+// Google Maps para Jetpack Compose.
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
+// Modelos y ViewModel.
 import com.contreras.campusgps.model.LugarConDistancia
 import com.contreras.campusgps.model.UbicacionUi
 import com.contreras.campusgps.viewmodel.MapaViewModel
@@ -60,13 +61,18 @@ import com.contreras.campusgps.viewmodel.MapaViewModel
 /**
  * Pantalla principal de CampusGPS.
  *
- * Integra:
- * - Permisos de ubicación.
- * - Google Maps.
- * - Marcadores del campus.
- * - Distancias calculadas.
- * - Lista interactiva de lugares.
- * - Selección de lugares en el mapa.
+ * Funcionalidades:
+ *
+ * 1. Solicitar permisos de ubicación.
+ * 2. Obtener las coordenadas del usuario.
+ * 3. Mostrar Google Maps.
+ * 4. Representar los lugares del campus.
+ * 5. Mostrar las distancias calculadas.
+ * 6. Seleccionar lugares desde una lista.
+ * 7. Navegar hacia los marcadores seleccionados.
+ * 8. Identificar y resaltar el lugar más cercano.
+ *
+ * Utiliza la arquitectura MVVM.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,47 +81,83 @@ fun PantallaMapa(
 ) {
 
     // =====================================================
-    // ESTADOS DEL VIEWMODEL
+    // 1. ESTADOS DEL VIEWMODEL
     // =====================================================
 
+    /*
+     * Observa el estado de la ubicación.
+     *
+     * Puede ser:
+     * Inicial, Buscando, Lista o Error.
+     */
     val estado by vm.estado.collectAsState()
 
+    /*
+     * Obtiene los lugares del campus.
+     *
+     * Los lugares ya están ordenados por distancia
+     * después de obtener la ubicación.
+     */
     val lugares by vm.lugares.collectAsState()
 
-    // Identificador del lugar seleccionado.
+    /*
+     * Observa el identificador del lugar
+     * seleccionado por el usuario.
+     */
     val seleccionado by vm.seleccionado.collectAsState()
 
+    // Obtiene el contexto de Android.
     val contexto = LocalContext.current
 
+    // Mensaje utilizado cuando se deniegan los permisos.
     var mensajePermiso by remember {
         mutableStateOf<String?>(null)
     }
 
+    /*
+     * Permite volver a centrar el mapa incluso
+     * si el usuario selecciona nuevamente
+     * un lugar que ya estaba seleccionado.
+     */
+    var versionNavegacion by remember {
+        mutableStateOf(0)
+    }
+
 
     // =====================================================
-    // SOLICITUD DE PERMISOS
+    // 2. SOLICITAR PERMISOS DE UBICACIÓN
     // =====================================================
 
+    /*
+     * Permite solicitar simultáneamente
+     * los permisos de ubicación precisa
+     * y ubicación aproximada.
+     */
     val solicitarPermisos = rememberLauncherForActivityResult(
 
         contract = ActivityResultContracts.RequestMultiplePermissions()
 
     ) { permisos ->
 
+        // Comprueba si se autorizó la ubicación precisa.
         val permisoPreciso =
             permisos[Manifest.permission.ACCESS_FINE_LOCATION] == true
 
+        // Comprueba si se autorizó la ubicación aproximada.
         val permisoAproximado =
             permisos[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
         if (permisoPreciso || permisoAproximado) {
 
+            // Elimina los mensajes anteriores.
             mensajePermiso = null
 
+            // Solicita la ubicación al ViewModel.
             vm.buscar()
 
         } else {
 
+            // Informa que el usuario rechazó los permisos.
             mensajePermiso =
                 "Permiso denegado. Autoriza la ubicación " +
                         "para utilizar CampusGPS."
@@ -124,11 +166,12 @@ fun PantallaMapa(
 
 
     // =====================================================
-    // INTERFAZ PRINCIPAL
+    // 3. INTERFAZ PRINCIPAL
     // =====================================================
 
     Scaffold(
 
+        // Barra superior de CampusGPS.
         topBar = {
 
             TopAppBar(
@@ -165,7 +208,7 @@ fun PantallaMapa(
         ) {
 
             // =================================================
-            // TÍTULO
+            // 4. TÍTULO PRINCIPAL
             // =================================================
 
             Text(
@@ -181,13 +224,17 @@ fun PantallaMapa(
 
 
             // =================================================
-            // BOTÓN DE UBICACIÓN
+            // 5. BOTÓN PARA OBTENER LA UBICACIÓN
             // =================================================
 
             Button(
 
                 onClick = {
 
+                    /*
+                     * Comprueba si la aplicación
+                     * tiene permiso de ubicación precisa.
+                     */
                     val tienePermisoPreciso =
                         ContextCompat.checkSelfPermission(
 
@@ -198,6 +245,10 @@ fun PantallaMapa(
                         ) == PackageManager.PERMISSION_GRANTED
 
 
+                    /*
+                     * Comprueba si la aplicación
+                     * tiene permiso de ubicación aproximada.
+                     */
                     val tienePermisoAproximado =
                         ContextCompat.checkSelfPermission(
 
@@ -208,17 +259,31 @@ fun PantallaMapa(
                         ) == PackageManager.PERMISSION_GRANTED
 
 
+                    // =========================================
+                    // COMPROBACIÓN DE PERMISOS
+                    // =========================================
+
                     if (
                         tienePermisoPreciso ||
                         tienePermisoAproximado
                     ) {
 
+                        /*
+                         * Ya tenemos autorización.
+                         *
+                         * Solicitamos la ubicación
+                         * directamente al ViewModel.
+                         */
                         mensajePermiso = null
 
                         vm.buscar()
 
                     } else {
 
+                        /*
+                         * Si no tenemos permisos,
+                         * Android mostrará la solicitud.
+                         */
                         solicitarPermisos.launch(
 
                             arrayOf(
@@ -232,6 +297,7 @@ fun PantallaMapa(
                     }
                 },
 
+                // Evita búsquedas repetidas.
                 enabled = estado != UbicacionUi.Buscando
 
             ) {
@@ -246,7 +312,7 @@ fun PantallaMapa(
 
 
             // =================================================
-            // MENSAJE DE PERMISOS
+            // 6. MENSAJE DE PERMISOS
             // =================================================
 
             if (mensajePermiso != null) {
@@ -265,10 +331,14 @@ fun PantallaMapa(
 
 
             // =================================================
-            // ESTADOS DE UBICACIÓN
+            // 7. ESTADOS DEL VIEWMODEL
             // =================================================
 
             when (val actual = estado) {
+
+                // ---------------------------------------------
+                // ESTADO INICIAL
+                // ---------------------------------------------
 
                 UbicacionUi.Inicial -> {
 
@@ -277,6 +347,10 @@ fun PantallaMapa(
                     )
                 }
 
+
+                // ---------------------------------------------
+                // BUSCANDO UBICACIÓN
+                // ---------------------------------------------
 
                 UbicacionUi.Buscando -> {
 
@@ -292,7 +366,33 @@ fun PantallaMapa(
                 }
 
 
+                // ---------------------------------------------
+                // UBICACIÓN ENCONTRADA
+                // ---------------------------------------------
+
                 is UbicacionUi.Lista -> {
+
+                    // =========================================
+                    // 8. IDENTIFICAR EL LUGAR MÁS CERCANO
+                    // =========================================
+
+                    /*
+                     * La lista ya está ordenada por distancia
+                     * desde MapaViewModel.
+                     *
+                     * Por lo tanto, el primer lugar
+                     * con una distancia calculada
+                     * será el más cercano.
+                     */
+                    val masCercano = lugares.firstOrNull { elemento ->
+
+                        elemento.metros != null
+                    }
+
+
+                    // =========================================
+                    // 9. MENSAJE DE UBICACIÓN
+                    // =========================================
 
                     Text(
 
@@ -307,9 +407,72 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // MAPA INTERACTIVO
+                    // 10. MOSTRAR LUGAR MÁS CERCANO
                     // =========================================
 
+                    if (masCercano != null) {
+
+                        Text(
+
+                            text = "Más cercano: ${masCercano.lugar.nombre}",
+
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+
+                        // =====================================
+                        // BOTÓN PARA IR AL MÁS CERCANO
+                        // =====================================
+
+                        Button(
+
+                            onClick = {
+
+                                /*
+                                 * Solicita al ViewModel
+                                 * seleccionar el lugar
+                                 * más cercano.
+                                 */
+                                vm.seleccionarMasCercano()
+
+                                /*
+                                 * Fuerza una nueva navegación
+                                 * incluso si ese lugar ya
+                                 * estaba seleccionado.
+                                 */
+                                versionNavegacion++
+                            }
+
+                        ) {
+
+                            Text("Ir al lugar más cercano")
+                        }
+
+                        Spacer(
+                            modifier = Modifier.height(16.dp)
+                        )
+                    }
+
+
+                    // =========================================
+                    // 11. GOOGLE MAPS
+                    // =========================================
+
+                    /*
+                     * Enviamos al mapa:
+                     *
+                     * - La ubicación del usuario.
+                     * - Los lugares del campus.
+                     * - El lugar seleccionado.
+                     * - La versión de navegación.
+                     *
+                     * Cuando cambia la selección,
+                     * la cámara se desplaza hacia el lugar.
+                     */
                     MapaUbicacionActual(
 
                         latitud = actual.posicion.latitud,
@@ -320,13 +483,13 @@ fun PantallaMapa(
 
                         seleccionadoId = seleccionado,
 
+                        versionNavegacion = versionNavegacion,
+
                         onSeleccionarLugar = { id ->
 
-                            /*
-                             * Comunica al ViewModel
-                             * qué lugar fue seleccionado.
-                             */
                             vm.seleccionarLugar(id)
+
+                            versionNavegacion++
                         }
                     )
 
@@ -337,14 +500,16 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // COORDENADAS
+                    // 12. COORDENADAS DEL USUARIO
                     // =========================================
 
                     Text(
+
                         text = "Latitud: ${actual.posicion.latitud}"
                     )
 
                     Text(
+
                         text = "Longitud: ${actual.posicion.longitud}"
                     )
 
@@ -355,12 +520,15 @@ fun PantallaMapa(
 
 
                     // =========================================
-                    // LISTA DE LUGARES
+                    // 13. LISTA INTERACTIVA DE LUGARES
                     // =========================================
 
                     /*
-                     * Muestra los lugares ordenados
-                     * por distancia desde el ViewModel.
+                     * Muestra los cinco lugares
+                     * ordenados por distancia.
+                     *
+                     * La tarjeta del lugar más cercano
+                     * aparecerá resaltada.
                      */
                     ListaLugares(
 
@@ -368,13 +536,27 @@ fun PantallaMapa(
 
                         seleccionadoId = seleccionado,
 
+                        // Identificador del lugar más cercano.
+                        masCercanoId = masCercano?.lugar?.id,
+
                         onSeleccionar = { id ->
 
+                            /*
+                             * Selecciona el lugar
+                             * y permite que el mapa
+                             * se desplace hasta él.
+                             */
                             vm.seleccionarLugar(id)
+
+                            versionNavegacion++
                         }
                     )
                 }
 
+
+                // ---------------------------------------------
+                // ERROR
+                // ---------------------------------------------
 
                 is UbicacionUi.Error -> {
 
@@ -392,14 +574,14 @@ fun PantallaMapa(
 
 
 // =========================================================
-// MAPA INTERACTIVO
+// 14. COMPONENTE DE GOOGLE MAPS
 // =========================================================
 
 /**
- * Muestra Google Maps y permite seleccionar lugares.
+ * Muestra Google Maps y los marcadores del campus.
  *
- * Cuando cambia seleccionadoId, la cámara se desplaza
- * hacia las coordenadas del lugar seleccionado.
+ * También permite desplazar la cámara
+ * hacia el lugar seleccionado.
  */
 @Composable
 private fun MapaUbicacionActual(
@@ -412,24 +594,36 @@ private fun MapaUbicacionActual(
 
     seleccionadoId: Int?,
 
+    versionNavegacion: Int,
+
     onSeleccionarLugar: (Int) -> Unit
 
 ) {
 
     // =====================================================
-    // UBICACIÓN DEL USUARIO
+    // 15. UBICACIÓN ACTUAL DEL USUARIO
     // =====================================================
 
+    /*
+     * LatLng representa una posición
+     * mediante latitud y longitud.
+     */
     val ubicacionUsuario = LatLng(
+
         latitud,
+
         longitud
     )
 
 
     // =====================================================
-    // CÁMARA DEL MAPA
+    // 16. CONFIGURACIÓN DE LA CÁMARA
     // =====================================================
 
+    /*
+     * Inicialmente centramos el mapa
+     * sobre la ubicación del dispositivo.
+     */
     val estadoCamara = rememberCameraPositionState {
 
         position = CameraPosition.fromLatLngZoom(
@@ -442,13 +636,12 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // ESTADO DE CARGA DEL MAPA
+    // 17. ESTADO DE CARGA DEL MAPA
     // =====================================================
 
     /*
-     * Nos permite saber cuándo el mapa terminó de cargar.
-     *
-     * Solo moveremos la cámara después de ese momento.
+     * Nos permite saber cuándo Google Maps
+     * terminó de cargar correctamente.
      */
     var mapaCargado by remember {
         mutableStateOf(false)
@@ -456,9 +649,13 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // MARCADOR DEL USUARIO
+    // 18. MARCADOR DEL USUARIO
     // =====================================================
 
+    /*
+     * Representa las coordenadas actuales
+     * mediante un marcador de Google Maps.
+     */
     val marcadorUsuario = rememberUpdatedMarkerState(
 
         position = ubicacionUsuario
@@ -466,9 +663,13 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // MARCADORES DEL CAMPUS
+    // 19. MARCADORES DE LOS LUGARES DEL CAMPUS
     // =====================================================
 
+    /*
+     * Convierte los lugares del repositorio
+     * en marcadores de Google Maps.
+     */
     val marcadoresCampus = remember(lugares) {
 
         lugares.map { elemento ->
@@ -483,6 +684,7 @@ private fun MapaUbicacionActual(
             )
 
             lugar to MarkerState(
+
                 position = posicion
             )
         }
@@ -490,12 +692,12 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // BUSCAR LUGAR SELECCIONADO
+    // 20. OBTENER EL LUGAR SELECCIONADO
     // =====================================================
 
     /*
-     * Busca las coordenadas correspondientes
-     * al lugar seleccionado desde la lista.
+     * Busca en la lista el lugar cuyo identificador
+     * coincida con el que seleccionó el usuario.
      */
     val lugarSeleccionado = lugares.firstOrNull { elemento ->
 
@@ -505,21 +707,27 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // NAVEGAR HACIA EL LUGAR SELECCIONADO
+    // 21. NAVEGAR HACIA EL LUGAR SELECCIONADO
     // =====================================================
 
     /*
-     * LaunchedEffect observa los cambios de selección.
+     * LaunchedEffect se ejecuta cuando cambia:
      *
-     * Cuando el usuario selecciona un lugar:
+     * - El lugar seleccionado.
+     * - El estado de carga del mapa.
+     * - La versión de navegación.
      *
-     * 1. Obtiene sus coordenadas.
-     * 2. Espera que el mapa esté cargado.
-     * 3. Desplaza la cámara hasta el marcador.
+     * Esto permite desplazar la cámara
+     * incluso si se vuelve a pulsar el mismo lugar.
      */
     LaunchedEffect(
+
         seleccionadoId,
-        mapaCargado
+
+        mapaCargado,
+
+        versionNavegacion
+
     ) {
 
         if (
@@ -527,6 +735,7 @@ private fun MapaUbicacionActual(
             lugarSeleccionado != null
         ) {
 
+            // Coordenadas del lugar seleccionado.
             val destino = LatLng(
 
                 lugarSeleccionado.latitud,
@@ -534,9 +743,10 @@ private fun MapaUbicacionActual(
                 lugarSeleccionado.longitud
             )
 
+
             /*
              * Desplaza suavemente la cámara
-             * hasta el lugar seleccionado.
+             * hacia el lugar seleccionado.
              */
             estadoCamara.animate(
 
@@ -554,7 +764,7 @@ private fun MapaUbicacionActual(
 
 
     // =====================================================
-    // GOOGLE MAPS
+    // 22. MOSTRAR GOOGLE MAPS
     // =====================================================
 
     GoogleMap(
@@ -565,10 +775,7 @@ private fun MapaUbicacionActual(
 
         cameraPositionState = estadoCamara,
 
-        /*
-         * Android notificará cuando el mapa termine
-         * de cargar y pueda recibir movimientos de cámara.
-         */
+        // Confirma que el mapa terminó de cargar.
         onMapLoaded = {
 
             mapaCargado = true
@@ -577,7 +784,7 @@ private fun MapaUbicacionActual(
     ) {
 
         // =================================================
-        // MARCADOR DE UBICACIÓN ACTUAL
+        // 23. MARCADOR DE UBICACIÓN ACTUAL
         // =================================================
 
         Marker(
@@ -591,9 +798,15 @@ private fun MapaUbicacionActual(
 
 
         // =================================================
-        // MARCADORES DE LOS LUGARES DEL CAMPUS
+        // 24. MARCADORES DEL CAMPUS
         // =================================================
 
+        /*
+         * Dibuja un marcador por cada lugar.
+         *
+         * También permite seleccionar lugares
+         * directamente desde Google Maps.
+         */
         marcadoresCampus.forEach { (lugar, marcador) ->
 
             Marker(
@@ -604,18 +817,17 @@ private fun MapaUbicacionActual(
 
                 snippet = lugar.categoria,
 
-                /*
-                 * También permitimos seleccionar lugares
-                 * directamente desde los marcadores.
-                 */
                 onClick = {
 
+                    /*
+                     * Notifica la selección al ViewModel
+                     * mediante el callback recibido.
+                     */
                     onSeleccionarLugar(lugar.id)
 
                     /*
-                     * false permite conservar
-                     * el comportamiento normal del marcador,
-                     * incluida su ventana de información.
+                     * Permite que Google Maps siga mostrando
+                     * la ventana de información del marcador.
                      */
                     false
                 }
