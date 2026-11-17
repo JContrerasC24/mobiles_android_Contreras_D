@@ -1,43 +1,164 @@
 package com.contreras.campusgps.model
 
-// Representa la ubicación geográfica mediante latitud y longitud.
+
+// =====================================================
+// 1. POSICIÓN GEOGRÁFICA
+// =====================================================
+
+/**
+ * Representa una ubicación geográfica
+ * mediante coordenadas de latitud y longitud.
+ */
 data class Posicion(
+
     val latitud: Double,
+
     val longitud: Double
 )
 
-// Representa un lugar dentro del campus.
+
+// =====================================================
+// 2. LUGAR DEL CAMPUS
+// =====================================================
+
+/**
+ * Representa un lugar registrado en el campus.
+ *
+ * Cada lugar tiene:
+ * - Identificador.
+ * - Nombre.
+ * - Categoría.
+ * - Latitud.
+ * - Longitud.
+ */
 data class Lugar(
+
     val id: Int,
+
     val nombre: String,
+
     val categoria: String,
+
     val latitud: Double,
+
     val longitud: Double
 )
 
-// Relaciona un lugar con la distancia respecto al usuario.
-// metros será null mientras no conozcamos la ubicación.
+
+// =====================================================
+// 3. LUGAR CON DISTANCIA
+// =====================================================
+
+/**
+ * Relaciona un lugar con su distancia
+ * respecto a la ubicación actual del usuario.
+ *
+ * metros será null mientras todavía
+ * no conozcamos la ubicación.
+ */
 data class LugarConDistancia(
+
     val lugar: Lugar,
+
     val metros: Float?
 )
 
-// Representa los diferentes estados de la ubicación.
+
+// =====================================================
+// 4. TIPOS DE ERRORES
+// =====================================================
+
+/**
+ * Clasifica los problemas que pueden ocurrir
+ * durante la obtención de la ubicación.
+ *
+ * Permite que la interfaz muestre una acción
+ * diferente dependiendo del problema.
+ */
+enum class TipoErrorUbicacion {
+
+    // El usuario rechazó el permiso de ubicación.
+    PERMISO_DENEGADO,
+
+    // Los servicios de ubicación están desactivados.
+    GPS_APAGADO,
+
+    // Google Play Services no está disponible.
+    PLAY_SERVICES,
+
+    // Ocurrió un problema diferente.
+    GENERICO
+}
+
+
+// =====================================================
+// 5. ESTADOS DE LA UBICACIÓN
+// =====================================================
+
+/**
+ * Representa los diferentes estados
+ * que puede tener la búsqueda de ubicación.
+ *
+ * La interfaz observa estos estados
+ * mediante el ViewModel.
+ */
 sealed interface UbicacionUi {
 
-    // Estado inicial: todavía no se solicita la ubicación.
+
+    // -------------------------------------------------
+    // ESTADO INICIAL
+    // -------------------------------------------------
+
+    /**
+     * Todavía no se ha solicitado la ubicación.
+     */
     data object Inicial : UbicacionUi
 
-    // Indica que se está buscando la ubicación.
+
+    // -------------------------------------------------
+    // ESTADO BUSCANDO
+    // -------------------------------------------------
+
+    /**
+     * Se está intentando obtener la ubicación.
+     */
     data object Buscando : UbicacionUi
 
-    // La ubicación se obtuvo correctamente.
+
+    // -------------------------------------------------
+    // UBICACIÓN ENCONTRADA
+    // -------------------------------------------------
+
+    /**
+     * La ubicación se obtuvo correctamente.
+     *
+     * Contiene las coordenadas actuales.
+     */
     data class Lista(
+
         val posicion: Posicion
+
     ) : UbicacionUi
 
-    // Ocurrió un problema al obtener la ubicación.
+
+    // -------------------------------------------------
+    // ERROR DE UBICACIÓN
+    // -------------------------------------------------
+
+    /**
+     * Ocurrió un problema durante la búsqueda.
+     *
+     * mensaje: explicación para el usuario.
+     *
+     * tipo: identifica el problema y permite
+     * mostrar las opciones correspondientes.
+     */
     data class Error(
-        val mensaje: String
+
+        val mensaje: String,
+
+        val tipo: TipoErrorUbicacion =
+            TipoErrorUbicacion.GENERICO
+
     ) : UbicacionUi
 }
