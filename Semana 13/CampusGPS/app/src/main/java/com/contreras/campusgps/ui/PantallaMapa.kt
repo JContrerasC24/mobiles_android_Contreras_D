@@ -93,7 +93,9 @@ fun PantallaMapa(
     val estado by vm.estado.collectAsState()
 
     // Lugares del campus ordenados por distancia.
-    val lugares by vm.lugares.collectAsState()
+    val lugares by vm.resultados.collectAsState()
+    val consulta by vm.consulta.collectAsState()
+    val categoria by vm.categoria.collectAsState()
 
     // Identificador del lugar seleccionado.
     val seleccionado by vm.seleccionado.collectAsState()
@@ -301,6 +303,11 @@ fun PantallaMapa(
             // =================================================
             // 7. ESTADOS DEL VIEWMODEL
             // =================================================
+
+            BuscadorLugares(consulta, categoria, vm.categorias, vm::cambiarConsulta, vm::cambiarCategoria)
+            if (lugares.isEmpty()) {
+                Text("No hay resultados. Cambia el nombre o la categoría.")
+            }
 
             when (val actual = estado) {
 

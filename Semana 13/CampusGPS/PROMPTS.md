@@ -235,3 +235,8 @@ Esta etapa no incorpora búsqueda, filtros, proveedores nuevos, recorridos ni au
 ## Continuación autorizada — 18 de noviembre de 2026
 El prompt maestro actual autoriza completar las etapas, commits y push exclusivamente en semana13-mejora-ia. Sustituye las restricciones de autorización de solicitudes anteriores, conservadas arriba como historial. Etapa 2: se conserva el rediseño pendiente y se corrige el separador de selección. Verificación inicial: assembleDebug y testDebugUnitTest satisfactorios (17 s); emulador conectado con arranque completo y sin ANR registrado. Commit previsto: feat(ui): moderniza interfaz de CampusGPS con Material 3. Validación visual aún pendiente.
 
+### feat(busqueda): incorpora buscador y filtros de lugares
+
+Etapa 3: búsqueda por nombre insensible a tildes y mayúsculas, filtros combinados y estado vacío. Archivos: FiltroLugares, BuscadorLugares, MapaViewModel, PantallaMapa y FiltroLugaresTest. Tres pruebas nuevas comprueban normalización, filtros y preservación del orden por distancia.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

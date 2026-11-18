@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import com.contreras.campusgps.util.FiltroLugares
 
 
 /**
@@ -132,6 +136,30 @@ class MapaViewModel(
      * Debe ejecutarse después de comprobar
      * que el usuario concedió los permisos.
      */
+    private val _consulta = MutableStateFlow("")
+    val consulta = _consulta.asStateFlow()
+    private val _categoria = MutableStateFlow<String?>(null)
+    val categoria = _categoria.asStateFlow()
+    val categorias = lugaresRepo.obtenerLugares().map { it.categoria }.distinct()
+    val resultados = combine(_lugares, _consulta, _categoria) { lugares, texto, categoria ->
+        FiltroLugares.aplicar(lugares, texto, categoria)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _lugares.value)
+
+    fun cambiarConsulta(texto: String) {
+        _consulta.value = texto
+        validarSeleccionVisible()
+    }
+
+    fun cambiarCategoria(categoria: String?) {
+        _categoria.value = categoria?.takeIf { it in categorias }
+        validarSeleccionVisible()
+    }
+
+    private fun validarSeleccionVisible() {
+        if (FiltroLugares.aplicar(_lugares.value, _consulta.value, _categoria.value)
+                .none { it.lugar.id == _seleccionado.value }) _seleccionado.value = null
+    }
+
     fun buscar() {
 
         // Cambia el estado a Buscando.
@@ -346,7 +374,7 @@ class MapaViewModel(
          * Si todavía no conocemos la ubicación,
          * el resultado será null.
          */
-        val cercano = _lugares.value.firstOrNull { elemento ->
+        val cercano = FiltroLugares.aplicar(_lugares.value, _consulta.value, _categoria.value).firstOrNull { elemento ->
 
             elemento.metros != null
         }
