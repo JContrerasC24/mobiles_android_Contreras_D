@@ -276,3 +276,25 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 9: errores clasificados por permiso, GPS, Play Services; búsqueda GPS previa cancelada y timeout de 15 s. StateFlow se recopila ligado al ciclo de vida. Pantalla informa de carga larga del mapa y catálogo sigue utilizable. Archivos: UbicacionRepositoryGoogle, MapaViewModel, PantallaMapa, PanelReproduccion, AutomovilMapa, build.gradle.kts y CampusFlowTest. Verificación final: assembleDebug, testDebugUnitTest y lintDebug satisfactorios. La prueba instrumentada falló/incompleta porque el emulador Pixel_6 quedó offline a mitad de la suite; una prueba también reportó acción de GPS no encontrada antes de desconectarse. Pruebas de interfaz pendientes de estabilización.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+## Registro de continuidad — nueva copia del repositorio
+
+El usuario indicó continuar en `mobiles_android_Contreras_D_sem13_ia/Semana 13/CampusGPS`. Se verificó la rama `semana13-mejora-ia`, inicialmente limpia, con las etapas de interfaz y búsqueda ya publicadas. Se completaron marcadores, rutas, animación, controles, experiencia y estabilidad, en ese orden. Los identificadores y títulos exactos están registrados en README.md y el historial de Git.
+
+Verificación final de la etapa de estabilidad: `assembleDebug`, `testDebugUnitTest` y `lintDebug` terminan correctamente. Las pruebas unitarias cubren filtros sin tildes, geometría esférica, rumbos, antimeridiano y controles de animación. La prueba instrumentada de seis casos no termina: el caso de interacción no encuentra el control «Pausar» en una ejecución y el dispositivo `emulator-5554` queda offline en otra. No se reporta como suite aprobada. Una nueva ejecución debe resolver primero la estabilidad del AVD.
+
+Diagnóstico observado: imagen Android 17 / API 37.1, 2 GiB RAM de invitado, cuatro núcleos virtuales, WHPX disponible, GPU NVIDIA GeForce RTX 5060. Antes del reinicio en frío ADB respondía lento y `dumpsys meminfo` excedía diez segundos; también había registros de errores Bluetooth y el arranque de Android Studio informaba que faltaba `opengl32sw` antes de caer a OpenGL del sistema. No hubo ANR de la app tras el reinicio. Arranque en frío: 53,7 s; instalación APK: 2,9 s; aperturas: 9,2 s y 3,7 s. Los fallos instrumentados volvieron a desconectar ADB. La causa exacta del «Launching on devices» no está aislada; la aceleración WHPX funciona. El cold boot mejoró el ciclo observado sin borrar datos, pero no se cambió la configuración permanente del AVD ni se instaló/actualizó el emulador.
+
+No se capturó imagen tras la reorganización final ni se completaron pruebas instrumentadas de GPS, orientación, accesibilidad o reproducción del automóvil visual. Aún hacen falta ejecutar la suite corregida en una sesión AVD estable y cerrar con evidencia visual del recorrido.
+
+### docs(ia): documenta mejoras y evidencias finales
+
+Documentación actualizada con funcionalidades, arquitectura, limitaciones y cifras medidas de arranque e instalación. Registra identificadores de commits y resultado fallido/incompleto de instrumentación, ANR y causa del emulador sin exagerar comprobaciones.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### docs(ia): documenta mejoras y evidencias finales
+
+README y PROMPTS registran funcionalidades, arquitectura, limitaciones y cifras medidas de arranque e instalación. Se listan commits y el resultado fallido/incompleto de la instrumentación, con las pruebas pendientes claramente declaradas.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

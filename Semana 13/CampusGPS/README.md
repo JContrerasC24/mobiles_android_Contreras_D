@@ -528,3 +528,41 @@ fundamentales solicitadas para el laboratorio.
 
 Las mejoras adicionales de interfaz y experiencia de usuario
 se desarrollarán posteriormente en la rama mejora-ia.
+
+## Mejoras con IA — estado verificado
+
+Rama de trabajo: `semana13-mejora-ia`. Las mejoras añaden tema Material 3, buscador insensible a tildes, categorías, iconos originales por tipo, panel de destino, recorrido ilustrativo y un automóvil animado con controles de reproducción. La animación usa coordenadas y no afecta la ubicación del dispositivo.
+
+El recorrido dibuja una línea geodésica directa; no calcula calles, instrucciones ni tiempo real de viaje. La distancia de la pantalla se describe como distancia geográfica. No requiere Routes API ni añade servicios de pago.
+
+La aplicación puede explorar los cinco lugares y filtrar el catálogo antes de conceder el permiso GPS. El mapa requiere conexión a Internet, Maps SDK for Android habilitado para la clave configurada localmente y una imagen del emulador con Google Play Services.
+
+### Verificación realizada (18 de noviembre de 2026)
+
+- `assembleDebug`, `testDebugUnitTest` y `lintDebug`: satisfactorios después de la etapa de estabilidad.
+- Ocho pruebas unitarias de filtros, geometría y reproducción; se suman a la prueba unitaria previa del proyecto.
+- La interfaz real mostró el mapa y los cinco marcadores personalizados.
+- AVD Pixel 6 API 37, aceleración WHPX operativa: arranque en frío completado en 53,7 s. Instalación de APK en 2,9 s. Inicio inicial de CampusGPS en 9,2 s y siguiente inicio en 3,7 s. El primer inicio no registró ANR.
+- La suite instrumentada no se completó: una interacción de reproducción no encontró el control esperado y después el dispositivo quedó `offline` durante otras pruebas. Las pruebas de permisos GPS de extremo a extremo, giro animado sobre el mapa, modo horizontal, accesibilidad y un nuevo ciclo completo de pruebas quedan pendientes.
+
+### Configuración local y límites
+
+`local.properties` se mantiene fuera de Git y `.gitignore` lo excluye. Configura `MAPS_API_KEY` localmente, restringe la clave al paquete y al certificado de depuración/despliegue necesarios y rótala si se mostró en una captura previa. Nunca publiques su valor. No se activó otra API.
+
+Para compilar desde CampusGPS:
+
+```powershell
+.\gradlew.bat assembleDebug
+```
+
+### Commits verificados en la rama
+
+- `9e7d275 fix: optimiza errores y estabilidad de CampusGPS`
+- `a3e4673 feat(ui): mejora navegacion y experiencia de usuario`
+- `8110e87 feat(animacion): incorpora controles de reproduccion`
+- `8765970 feat(animacion): agrega vehiculo animado estilo TravelBoast`
+- `8c5581b feat(rutas): incorpora visualizacion de recorridos`
+- `d84a006 feat(mapa): mejora marcadores y detalles de ubicaciones`
+- `8f945bf feat(busqueda): incorpora buscador y filtros de lugares`
+
+El repositorio conserva el commit inicial de planificación y los diez commits originales de `main`; no se reescribió ese historial. La evidencia visual disponible corresponde a una inspección real del emulador; no se presentan capturas fabricadas.
