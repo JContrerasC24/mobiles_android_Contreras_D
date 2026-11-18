@@ -264,3 +264,9 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 7: iniciar, pausar, reanudar, reiniciar y detener, progreso y llegada; pausa al pasar a segundo plano o desmontar pantalla. Archivos: ReproductorRecorrido, PanelReproduccion, MapaViewModel, PantallaMapa y ReproductorTest. Tres pruebas deterministas comprueban tiempo pausado, finalización, doble inicio, reinicio y cancelación. Once pruebas unitarias totales pasan.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### feat(ui): mejora navegacion y experiencia de usuario
+
+Etapa 8: mapa permanente con panel desplazable, distribución lateral en horizontal, catálogo accesible sin permiso GPS, selección que vuelve al panel y oculta teclado, acciones del recorrido junto al mapa e Intent con alternativa web de Google Maps. Archivos: PantallaMapa y DetalleLugar. Se conserva el mapa existente y se elimina comentario repetitivo al extraer el panel. Corregido alcance de maxHeight señalado por compilación; compilación final y once pruebas unitarias pasan.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
