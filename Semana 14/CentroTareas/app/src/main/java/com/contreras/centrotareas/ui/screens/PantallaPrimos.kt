@@ -2,7 +2,7 @@ package com.contreras.centrotareas.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Functions
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +44,7 @@ import com.contreras.centrotareas.model.PrimosUi
 import com.contreras.centrotareas.ui.components.NotionCard
 import com.contreras.centrotareas.ui.components.NotionDangerButton
 import com.contreras.centrotareas.ui.components.NotionPrimaryButton
+import com.contreras.centrotareas.ui.components.NotionSecondaryButton
 import com.contreras.centrotareas.ui.components.NotionStatusBadge
 import com.contreras.centrotareas.ui.theme.NotionSuccess
 import com.contreras.centrotareas.ui.theme.NotionSuccessContainer
@@ -48,6 +52,9 @@ import com.contreras.centrotareas.viewmodel.TareasViewModel
 
 /**
  * Pantalla para el cálculo concurrente de números primos.
+ *
+ * Utiliza Dispatchers.Default para procesamiento matemático intensivo y
+ * permite cancelación cooperativa mediante ensureActive().
  */
 @Composable
 fun PantallaPrimos(
@@ -116,7 +123,7 @@ fun PantallaPrimos(
                         supportingText = {
                             if (!numeroValido && numeroTexto.isNotEmpty()) {
                                 Text(
-                                    text = "Por favor ingresa un número entero mayor o igual a 2",
+                                    text = "Ingresa un entero válido mayor o igual a 2",
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -130,6 +137,21 @@ fun PantallaPrimos(
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
+
+                    // PRESET BOTONES RÁPIDOS DE SELECCIÓN
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("1000", "5000", "20000", "50000").forEach { preset ->
+                            NotionSecondaryButton(
+                                text = preset,
+                                onClick = { numeroTexto = preset },
+                                enabled = !estaCalculando,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -159,18 +181,27 @@ fun PantallaPrimos(
             }
         }
 
-        // VISUALIZACIÓN DE RESULTADOS
+        // VISUALIZACIÓN DE RESULTADOS Y ESTADOS
         item {
             when (val estado = primosState) {
                 PrimosUi.Inicial -> {
                     NotionCard(
                         backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                     ) {
-                        Text(
-                            text = "Presiona 'Calcular Primos' para iniciar el cómputo en Dispatchers.Default.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.Functions,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Ingresa un número N y presiona 'Calcular Primos' para evaluar en Dispatchers.Default.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
                     }
                 }
 
@@ -187,12 +218,12 @@ fun PantallaPrimos(
                             )
                             Column {
                                 Text(
-                                    text = "Calculando números primos...",
+                                    text = "Calculando números primos hasta $numeroTexto...",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "La corrutina verifica divisibilidad en segundo plano.",
+                                    text = "Ejecutando algoritmo en segundo plano sin congelar la UI.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -202,23 +233,26 @@ fun PantallaPrimos(
                 }
 
                 is PrimosUi.Listo -> {
-                    AnimatedVisibility(visible = true, enter = fadeIn(), exit = fadeOut()) {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn() + slideInVertically(initialOffsetY = { 20 })
+                    ) {
                         NotionCard(
                             backgroundColor = NotionSuccessContainer,
                             borderColor = NotionSuccess.copy(alpha = 0.4f)
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Outlined.CheckCircle,
                                         contentDescription = null,
                                         tint = NotionSuccess,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(22.dp)
                                     )
-                                    Spacer(modifier = Modifier.size(8.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Cálculo Finalizado Exitosamente",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        text = "Cálculo Completado",
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = NotionSuccess
                                     )
@@ -229,13 +263,13 @@ fun PantallaPrimos(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Primos encontrados:",
+                                        text = "Cantidad de números primos:",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
                                         text = "${estado.cantidad}",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -246,7 +280,7 @@ fun PantallaPrimos(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Tiempo transcurrido:",
+                                        text = "Tiempo de ejecución:",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -267,11 +301,20 @@ fun PantallaPrimos(
                         backgroundColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
                         borderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
                     ) {
-                        Text(
-                            text = "Operación cancelada. El bucle de cálculo detectó ensureActive() y finalizó de forma cooperativa.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "El cálculo fue cancelado por el usuario. La corrutina interrumpió el bucle mediante ensureActive().",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
