@@ -1,6 +1,7 @@
 package com.contreras.campusgps.ui
 
 import android.content.ActivityNotFoundException
+import androidx.compose.foundation.shape.RoundedCornerShape
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -52,6 +53,7 @@ fun MensajeError(
     Card(
 
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
 
         colors = CardDefaults.cardColors(
 
@@ -63,7 +65,7 @@ fun MensajeError(
 
         Column(
 
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
 
         ) {
 

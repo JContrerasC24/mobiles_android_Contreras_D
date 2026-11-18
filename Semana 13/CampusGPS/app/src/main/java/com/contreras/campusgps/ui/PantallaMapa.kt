@@ -1,5 +1,11 @@
 package com.contreras.campusgps.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Surface
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.animation.animateContentSize
 import android.Manifest
 import android.content.pm.PackageManager
 
@@ -219,7 +225,10 @@ fun PantallaMapa(
             TopAppBar(
 
                 title = {
-                    Text("CampusGPS")
+                    Column {
+ Text("CampusGPS", style = MaterialTheme.typography.titleLarge)
+ Text("Explora tu campus", style = MaterialTheme.typography.labelMedium)
+ }
                 },
 
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -274,6 +283,8 @@ fun PantallaMapa(
                 onClick = buscarConPermisos,
 
                 // Evita solicitudes repetidas.
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary),
                 enabled = estado != UbicacionUi.Buscando
 
             ) {
@@ -365,6 +376,56 @@ fun PantallaMapa(
                     // 10. LUGAR MÁS CERCANO
                     // =========================================
 
+                    MapaUbicacionActual(
+
+                        latitud = actual.posicion.latitud,
+
+                        longitud = actual.posicion.longitud,
+
+                        lugares = lugares,
+
+                        seleccionadoId = seleccionado,
+
+                        versionNavegacion = versionNavegacion,
+
+                        onSeleccionarLugar = { id ->
+
+                            vm.seleccionarLugar(id)
+
+                            versionNavegacion++
+                        }
+                    )
+
+
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+
+
+                    // =========================================
+                    // 12. COORDENADAS DEL USUARIO
+                    // =========================================
+
+                    Text(
+
+                        text = "Latitud: ${actual.posicion.latitud}"
+                    )
+
+                    Text(
+
+                        text = "Longitud: ${actual.posicion.longitud}"
+                    )
+
+
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
+
+
+                    // =========================================
+                    // 13. LISTA DE LUGARES
+                    // =========================================
+
                     if (masCercano != null) {
 
                         Text(
@@ -416,56 +477,6 @@ fun PantallaMapa(
                     // 11. GOOGLE MAPS
                     // =========================================
 
-                    MapaUbicacionActual(
-
-                        latitud = actual.posicion.latitud,
-
-                        longitud = actual.posicion.longitud,
-
-                        lugares = lugares,
-
-                        seleccionadoId = seleccionado,
-
-                        versionNavegacion = versionNavegacion,
-
-                        onSeleccionarLugar = { id ->
-
-                            vm.seleccionarLugar(id)
-
-                            versionNavegacion++
-                        }
-                    )
-
-
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
-                    )
-
-
-                    // =========================================
-                    // 12. COORDENADAS DEL USUARIO
-                    // =========================================
-
-                    Text(
-
-                        text = "Latitud: ${actual.posicion.latitud}"
-                    )
-
-                    Text(
-
-                        text = "Longitud: ${actual.posicion.longitud}"
-                    )
-
-
-                    Spacer(
-                        modifier = Modifier.height(20.dp)
-                    )
-
-
-                    // =========================================
-                    // 13. LISTA DE LUGARES
-                    // =========================================
-
                     ListaLugares(
 
                         lugares = lugares,
@@ -499,14 +510,16 @@ fun PantallaMapa(
                      * para mostrar el problema y permitir
                      * que el usuario pueda solucionarlo.
                      */
+                    AnimatedContent(targetState = actual, label = "mensajeError") { error ->
                     MensajeError(
 
-                        mensaje = actual.mensaje,
+                        mensaje = error.mensaje,
 
-                        tipo = actual.tipo,
+                        tipo = error.tipo,
 
                         onReintentar = buscarConPermisos
                     )
+                    }
                 }
             }
         }
@@ -703,7 +716,8 @@ private fun MapaUbicacionActual(
 
         modifier = Modifier
             .fillMaxWidth()
-            .height(350.dp),
+            .height(420.dp)
+            .clip(RoundedCornerShape(24.dp)),
 
         cameraPositionState = estadoCamara,
 

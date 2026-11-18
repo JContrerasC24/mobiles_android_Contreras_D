@@ -182,3 +182,56 @@ Separar en los textos de interfaz distancia geográfica, longitud del recorrido 
 ## 9. Estado y límites de esta entrega
 
 Esta entrega es exclusivamente documental. Las funcionalidades propuestas siguen pendientes y no se han ejecutado compilaciones ni pruebas de funcionamiento. No se autorizan implícitamente las etapas siguientes por la existencia de este plan. Después de entregar este archivo se esperará autorización del usuario.
+
+## 10. Segunda etapa: rediseño de interfaz (17 de noviembre de 2026)
+
+### Prompt utilizado (registro resumido de la solicitud)
+
+Actuar como desarrollador Android Senior especializado en Kotlin, Jetpack Compose, Material 3, diseño móvil y MVVM. Implementar exclusivamente el rediseño profesional de CampusGPS en semana13-mejora-ia: azul petróleo, turquesa, superficies claras y modo oscuro; barra superior elegante; mapa con espacio suficiente y sin tarjetas superpuestas; tarjetas con nombre, categoría, distancia y selección; botones Material 3 con estados habilitados/deshabilitados; mensajes claros para inicio, búsqueda, éxito y errores; animaciones discretas. Conservar GPS, marcadores, cámara, distancias, selección y lugar más cercano. Revisar ui/ y ui/theme/, no reescribir repositorios ni modificar MapaViewModel sin autorización previa. No añadir dependencias innecesarias, modificar main, otras semanas o local.properties, exponer claves, actualizar versiones sin necesidad, eliminar archivos, realizar commits ni push. No implementar buscadores, filtros avanzados, APIs ni rutas o automóvil animados. Actualizar PROMPTS.md conservando su contenido y registrar objetivo, archivos, cambios y verificaciones. Ejecutar assembleDebug si es posible, corregir errores y comunicar resultados reales y comprobaciones pendientes en emulador. Esperar instrucciones al terminar.
+
+### Objetivo y cambios implementados
+
+Modernizar la interfaz existente sin cambiar sus contratos ni la lógica de ubicación.
+
+- Paleta azul petróleo/turquesa con superficies claras y oscuras. Colores dinámicos desactivados por defecto para conservar la identidad elegida.
+- Barra superior con nombre y subtítulo; encabezado y mensaje inicial orientados a explorar el campus.
+- Botón de ubicación a todo el ancho, color turquesa y texto de búsqueda mientras está deshabilitado.
+- Mapa de 420 dp, esquinas redondeadas y controles del lugar más cercano colocados después del mapa; las tarjetas no se superponen a él. Se conserva el desplazamiento vertical para acceder a todo el contenido.
+- Tarjetas redondeadas con borde, selección semántica, etiqueta de selección y transición de color de 180 ms. Aparición mediante fundido de 220 ms.
+- Mensajes de error con contenedor redondeado, mayor espacio interior y transición AnimatedContent. Se preservan los mensajes y acciones existentes. El mapa no participa en esa transición para evitar instancias duplicadas.
+- Se conservan marcadores, coordenadas, cámara y sus callbacks, permisos y cálculo de distancias.
+
+### Archivos modificados
+
+- `app/src/main/java/com/contreras/campusgps/ui/PantallaMapa.kt`
+- `app/src/main/java/com/contreras/campusgps/ui/ListaLugares.kt`
+- `app/src/main/java/com/contreras/campusgps/ui/MensajeError.kt`
+- `app/src/main/java/com/contreras/campusgps/ui/theme/Theme.kt`
+- `PROMPTS.md` (esta sección añadida sin eliminar el registro anterior).
+
+### Verificaciones realizadas
+
+- Rama comprobada: semana13-mejora-ia; árbol inicialmente limpio.
+- Revisión del diff y `git diff --check`, sin errores de espacios. Git advierte sobre normalización LF/CRLF.
+- Primer intento de Gradle bloqueado por acceso a caché; ejecución posterior con permisos encontró que faltaba la localización del SDK.
+- Se utilizó ANDROID_HOME temporal apuntando al SDK instalado; no se modificó local.properties.
+- Kotlin detectó un cierre de bloque faltante en ListaLugares; fue corregido.
+- Resultado final de `./gradlew.bat assembleDebug`: **BUILD SUCCESSFUL**, código de salida 0. APK debug generado. Advertencia no bloqueante sobre símbolos de libandroidx.graphics.path.so en la primera compilación.
+- No se ejecutaron pruebas instrumentadas ni revisión visual en emulador. Compilar no acredita el funcionamiento real del GPS o la carga del mapa.
+- No se cambiaron ViewModel, modelos, repositorios, dependencias ni versiones. No se ejecutaron commits o push.
+
+### Comprobaciones pendientes en emulador
+
+1. Revisar modo claro/oscuro, pantallas pequeñas, orientación horizontal y texto ampliado; confirmar legibilidad, desplazamiento y acceso a los controles del mapa.
+2. Obtener ubicación precisa y aproximada; comprobar mapa, cinco marcadores, distancias y coordenadas.
+3. Seleccionar tarjetas y marcadores repetidamente; comprobar borde, etiqueta de selección y movimiento de cámara. Probar el lugar más cercano.
+4. Comprobar carga, permisos denegados, GPS apagado, Play Services no disponible y reintentos.
+5. Revisar fluidez de aparición y selección de tarjetas y mensajes con TalkBack y animaciones del sistema.
+
+Limitación previa conservada: el ViewModel emite los errores con tipo genérico; los mensajes específicos se mantienen, pero las acciones condicionadas a otros tipos no se alcanzan desde ese flujo. No se modificó MapaViewModel ni se intentó inferir el tipo a partir del texto. Su corrección requiere autorización aparte.
+
+Esta etapa no incorpora búsqueda, filtros, proveedores nuevos, recorridos ni automóvil. Se espera la siguiente instrucción del usuario.
+
+## Continuación autorizada — 18 de noviembre de 2026
+El prompt maestro actual autoriza completar las etapas, commits y push exclusivamente en semana13-mejora-ia. Sustituye las restricciones de autorización de solicitudes anteriores, conservadas arriba como historial. Etapa 2: se conserva el rediseño pendiente y se corrige el separador de selección. Verificación inicial: assembleDebug y testDebugUnitTest satisfactorios (17 s); emulador conectado con arranque completo y sin ANR registrado. Commit previsto: feat(ui): moderniza interfaz de CampusGPS con Material 3. Validación visual aún pendiente.
+

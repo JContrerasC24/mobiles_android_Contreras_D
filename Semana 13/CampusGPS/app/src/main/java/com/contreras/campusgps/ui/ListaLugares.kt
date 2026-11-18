@@ -13,6 +13,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.runtime.Composable
 
 import androidx.compose.ui.Alignment
@@ -108,6 +119,9 @@ fun ListaLugares(
             // TARJETA INTERACTIVA
             // =================================================
 
+            val fondo by animateColorAsState(colorTarjeta, tween(180), label = "seleccionLugar")
+            val visible = remember(lugar.id) { MutableTransitionState(false).apply { targetState = true } }
+            AnimatedVisibility(visibleState = visible, enter = fadeIn(tween(220))) {
             Card(
 
                 onClick = {
@@ -117,11 +131,14 @@ fun ListaLugares(
 
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp),
+                    .padding(vertical = 6.dp)
+                    .semantics { selected = estaSeleccionado },
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, if (estaSeleccionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
 
                 colors = CardDefaults.cardColors(
 
-                    containerColor = colorTarjeta
+                    containerColor = fondo
                 )
 
             ) {
@@ -158,7 +175,7 @@ fun ListaLugares(
 
                         Text(
 
-                            text = lugar.categoria,
+                            text = if (estaSeleccionado) "${lugar.categoria} · Seleccionado" else lugar.categoria,
 
                             style =
                                 MaterialTheme.typography.bodySmall
@@ -226,6 +243,8 @@ fun ListaLugares(
 /**
  * Muestra las distancias en metros o kilómetros.
  */
+}
+
 private fun formatearDistancia(
     metros: Float?
 ): String {
