@@ -47,16 +47,14 @@ import kotlin.math.roundToInt
 /**
  * Pantalla principal de CentroTareas.
  *
- * Laboratorio 14: Hilos y corrutinas en Android.
+ * Laboratorio 14: Hilos y corrutinas.
  *
- * Muestra tres funcionalidades:
- *
- * 1. Tarea con progreso y cancelación.
- * 2. Cálculo de números primos.
- * 3. Cargas secuenciales y paralelas.
- *
- * Utiliza Jetpack Compose y observa los
- * estados proporcionados por TareasViewModel.
+ * Implementa:
+ * - Tarea con progreso.
+ * - Cancelación de tareas.
+ * - Cálculo de números primos.
+ * - Cargas secuenciales y paralelas.
+ * - Manejo de errores y reintentos.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,40 +66,31 @@ fun PantallaTareas(
     // ESTADOS DEL VIEWMODEL
     // ==========================================
 
-    // Mensaje de la tarea principal.
     val mensaje by vm.mensaje.collectAsState()
 
-    // Progreso de la tarea principal.
     val progreso by vm.progreso.collectAsState()
 
-    // Indica si la tarea principal está ejecutándose.
     val corriendo by vm.corriendo.collectAsState()
 
-    // Estado del cálculo de números primos.
     val primos by vm.primos.collectAsState()
 
-    // Estado de las cargas simuladas.
     val carga by vm.carga.collectAsState()
+
+    val simularError by vm.simularError.collectAsState()
 
 
     // ==========================================
     // ESTADOS LOCALES
     // ==========================================
 
-    // Contador utilizado para comprobar que la UI responde.
+    // Contador para comprobar que la UI responde.
     var toques by remember {
         mutableStateOf(0)
     }
 
-    // Número máximo para el cálculo de primos.
+    // Número máximo para calcular primos.
     var numeroPrimos by remember {
         mutableStateOf("1000")
-    }
-
-    // Interruptor de error simulado.
-    // Se implementará completamente en el Paso 7.
-    var simularError by remember {
-        mutableStateOf(false)
     }
 
 
@@ -109,15 +98,15 @@ fun PantallaTareas(
     // VALIDACIONES
     // ==========================================
 
-    // Comprueba si el cálculo de primos está ejecutándose.
+    // Indica si se están calculando números primos.
     val estaCalculando = primos is PrimosUi.Calculando
 
-    // Valida que el número ingresado sea mayor o igual a 2.
+    // Comprueba que el número ingresado sea válido.
     val numeroValido = numeroPrimos.toIntOrNull()?.let {
         it >= 2
     } == true
 
-    // Comprueba si existe una carga activa.
+    // Indica si hay una carga activa.
     val estaCargando = carga == CargaUi.Cargando
 
 
@@ -177,7 +166,6 @@ fun PantallaTareas(
 
                     ) {
 
-                        // Título de la tarjeta.
                         Text(
 
                             text = "Tarea con progreso",
@@ -188,7 +176,7 @@ fun PantallaTareas(
                         )
 
                         Text(
-                            text = "Ejecuta una tarea con progreso sin bloquear la interfaz."
+                            text = "Ejecuta una tarea en segundo plano sin bloquear la interfaz."
                         )
 
 
@@ -199,7 +187,6 @@ fun PantallaTareas(
                         Button(
 
                             onClick = {
-
                                 toques++
                             }
 
@@ -221,11 +208,9 @@ fun PantallaTareas(
 
                         ) {
 
-                            // Inicia la tarea.
                             Button(
 
                                 onClick = {
-
                                     vm.tareaLarga()
                                 },
 
@@ -237,11 +222,9 @@ fun PantallaTareas(
                             }
 
 
-                            // Cancela la tarea.
                             OutlinedButton(
 
                                 onClick = {
-
                                     vm.cancelar()
                                 },
 
@@ -269,7 +252,7 @@ fun PantallaTareas(
 
 
                         // =====================================
-                        // PORCENTAJE DE PROGRESO
+                        // PORCENTAJE
                         // =====================================
 
                         Text(
@@ -308,7 +291,6 @@ fun PantallaTareas(
 
                     ) {
 
-                        // Título.
                         Text(
 
                             text = "Contar números primos",
@@ -319,7 +301,7 @@ fun PantallaTareas(
                         )
 
                         Text(
-                            text = "Realiza un cálculo pesado utilizando Dispatchers.Default."
+                            text = "Realiza cálculos pesados sin congelar la aplicación."
                         )
 
 
@@ -333,7 +315,6 @@ fun PantallaTareas(
 
                             onValueChange = { nuevoTexto ->
 
-                                // Permite escribir únicamente dígitos.
                                 numeroPrimos = nuevoTexto.filter {
                                     it.isDigit()
                                 }
@@ -363,7 +344,6 @@ fun PantallaTareas(
 
                         ) {
 
-                            // Inicia el cálculo.
                             Button(
 
                                 onClick = {
@@ -382,11 +362,9 @@ fun PantallaTareas(
                             }
 
 
-                            // Cancela el cálculo.
                             OutlinedButton(
 
                                 onClick = {
-
                                     vm.cancelarPrimos()
                                 },
 
@@ -406,7 +384,6 @@ fun PantallaTareas(
                         when (val estado = primos) {
 
 
-                            // Estado inicial.
                             PrimosUi.Inicial -> {
 
                                 Text(
@@ -415,7 +392,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Cálculo ejecutándose.
                             PrimosUi.Calculando -> {
 
                                 CircularProgressIndicator()
@@ -426,7 +402,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Cálculo completado.
                             is PrimosUi.Listo -> {
 
                                 Card(
@@ -467,7 +442,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Cálculo cancelado.
                             PrimosUi.Cancelado -> {
 
                                 Text(
@@ -501,7 +475,6 @@ fun PantallaTareas(
 
                     ) {
 
-                        // Título.
                         Text(
 
                             text = "Dos cargas",
@@ -512,7 +485,7 @@ fun PantallaTareas(
                         )
 
                         Text(
-                            text = "Compara las cargas secuenciales y paralelas utilizando corrutinas."
+                            text = "Compara cargas secuenciales y paralelas utilizando corrutinas."
                         )
 
 
@@ -526,11 +499,10 @@ fun PantallaTareas(
 
                         ) {
 
-                            // Ejecuta primero una carga y después otra.
+                            // Carga secuencial.
                             OutlinedButton(
 
                                 onClick = {
-
                                     vm.cargarUnaPorUna()
                                 },
 
@@ -542,11 +514,10 @@ fun PantallaTareas(
                             }
 
 
-                            // Ejecuta ambas cargas concurrentemente.
+                            // Carga paralela.
                             Button(
 
                                 onClick = {
-
                                     vm.cargarALaVez()
                                 },
 
@@ -575,13 +546,12 @@ fun PantallaTareas(
 
                                 checked = simularError,
 
-                                onCheckedChange = {
+                                onCheckedChange = { valor ->
 
-                                    simularError = it
+                                    vm.cambiarSimularError(valor)
                                 },
 
-                                // Se habilitará en el octavo commit.
-                                enabled = false
+                                enabled = !estaCargando
                             )
                         }
 
@@ -593,7 +563,6 @@ fun PantallaTareas(
                         when (val estado = carga) {
 
 
-                            // Estado inicial.
                             CargaUi.Inicial -> {
 
                                 Text(
@@ -602,7 +571,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Carga ejecutándose.
                             CargaUi.Cargando -> {
 
                                 CircularProgressIndicator()
@@ -613,7 +581,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Carga completada.
                             is CargaUi.Exito -> {
 
                                 Card(
@@ -662,7 +629,6 @@ fun PantallaTareas(
                             }
 
 
-                            // Error durante la carga.
                             is CargaUi.Error -> {
 
                                 Card(
@@ -694,19 +660,25 @@ fun PantallaTareas(
                                         )
 
                                         Text(
+
                                             text = estado.mensaje,
+
                                             color = MaterialTheme.colorScheme.error
                                         )
 
-                                        // Se implementará en el octavo commit.
+
+                                        // =====================================
+                                        // BOTÓN REINTENTAR
+                                        // =====================================
+
                                         OutlinedButton(
 
                                             onClick = {
 
-                                                // TODO Paso 7: reintentar.
+                                                vm.cargarALaVez()
                                             },
 
-                                            enabled = false
+                                            enabled = !estaCargando
 
                                         ) {
 
