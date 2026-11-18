@@ -65,6 +65,9 @@ fun PantallaTareas(
     // Observa los cambios del progreso.
     val progreso by vm.progreso.collectAsState()
 
+    // Indica si la tarea se está ejecutando.
+    val corriendo by vm.corriendo.collectAsState()
+
     val primos by vm.primos.collectAsState()
 
     val carga by vm.carga.collectAsState()
@@ -186,17 +189,45 @@ fun PantallaTareas(
                             )
                         }
 
+                        /**
+                         * Botones para iniciar y cancelar la tarea.
+                         */
+                        Row(
 
-                        // =====================================
-                        // PASO 1: TAREA LARGA INCORRECTA
-                        // =====================================
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
 
-                        Button(
-                            onClick = {
-                                vm.tareaLarga()
-                            }
                         ) {
-                            Text("Iniciar")
+
+                            // Inicia la tarea.
+                            Button(
+
+                                onClick = {
+                                    vm.tareaLarga()
+                                },
+
+                                // Se deshabilita mientras la tarea está activa.
+                                enabled = !corriendo
+
+                            ) {
+
+                                Text("Iniciar")
+                            }
+
+
+                            // Cancela la tarea.
+                            OutlinedButton(
+
+                                onClick = {
+                                    vm.cancelar()
+                                },
+
+                                // Solo se habilita mientras la tarea está activa.
+                                enabled = corriendo
+
+                            ) {
+
+                                Text("Cancelar")
+                            }
                         }
 
                         /**

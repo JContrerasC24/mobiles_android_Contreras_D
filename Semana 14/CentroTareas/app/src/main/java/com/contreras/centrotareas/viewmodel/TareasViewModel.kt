@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 
 /**
  * ViewModel principal de CentroTareas.
@@ -57,6 +58,20 @@ class TareasViewModel(
      * Estado público que observará la interfaz.
      */
     val progreso: StateFlow<Float> = _progreso.asStateFlow()
+    /**
+     * Guarda la tarea que se encuentra ejecutándose.
+     */
+    private var trabajo: Job? = null
+
+    /**
+     * Estado interno que indica si hay una tarea activa.
+     */
+    private val _corriendo = MutableStateFlow(false)
+
+    /**
+     * Estado público observado por la interfaz.
+     */
+    val corriendo: StateFlow<Boolean> = _corriendo.asStateFlow()
 
     /**
      * PASO 1: PROVOCAR EL CONGELAMIENTO
@@ -82,50 +97,90 @@ class TareasViewModel(
      * La operación dura aproximadamente cuatro segundos
      * y actualiza el avance desde 0 % hasta 100 %.
      */
+    /**
+     * Ejecuta una tarea con progreso y cancelación.
+     *
+     * Utiliza Job para controlar la corrutina.
+     */
     fun tareaLarga() {
 
-        viewModelScope.launch {
+        // Evita iniciar dos tareas simultáneamente.
+        if (_corriendo.value) {
+            return
+        }
 
-            // Estado inicial de la tarea.
-            _mensaje.value = "Trabajando..."
+        // Indica que comenzó la ejecución.
+        _corriendo.value = true
 
-            // Reinicia el progreso.
-            _progreso.value = 0f
+        // Reinicia el progreso.
+        _progreso.value = 0f
 
-            // Registra el hilo principal.
-            Log.d(
-                "HILO",
-                "Antes: ${Thread.currentThread().name}"
-            )
+        // Actualiza el mensaje.
+        _mensaje.value = "Trabajando..."
 
-            // Ejecuta la tarea utilizando Dispatchers.Default.
-            withContext(Dispatchers.Default) {
+        // Guarda la referencia de la corrutina.
+        trabajo = viewModelScope.launch {
+
+            try {
 
                 Log.d(
                     "HILO",
-                    "Dentro: ${Thread.currentThread().name}"
+                    "Antes: ${Thread.currentThread().name}"
                 )
 
-                // Realiza 100 iteraciones.
-                for (i in 1..100) {
+                // Ejecuta el trabajo en segundo plano.
+                withContext(Dispatchers.Default) {
 
-                    // Espera 40 milisegundos sin bloquear el hilo.
-                    delay(40)
+                    Log.d(
+                        "HILO",
+                        "Dentro: ${Thread.currentThread().name}"
+                    )
 
-                    // Actualiza el progreso.
-                    _progreso.value = i / 100f
+                    // Simula una tarea de cuatro segundos.
+                    for (i in 1..100) {
+
+                        delay(40)
+
+                        // Actualiza el porcentaje.
+                        _progreso.value = i / 100f
+                    }
                 }
+
+                Log.d(
+                    "HILO",
+                    "Despues: ${Thread.currentThread().name}"
+                )
+
+                // Solo se ejecuta si la tarea termina normalmente.
+                _mensaje.value = "Terminó"
+
+            } finally {
+
+                // Se ejecuta si la tarea termina o es cancelada.
+                _corriendo.value = false
+
+                // Libera la referencia al trabajo.
+                trabajo = null
             }
-
-            // Comprueba el regreso al hilo principal.
-            Log.d(
-                "HILO",
-                "Despues: ${Thread.currentThread().name}"
-            )
-
-            // Informa que terminó la operación.
-            _mensaje.value = "Terminó"
         }
+    }
+    /**
+     * Cancela la tarea que se encuentra ejecutándose.
+     *
+     * Conserva el porcentaje alcanzado.
+     */
+    fun cancelar() {
+
+        // Verifica que exista una tarea activa.
+        if (!_corriendo.value) {
+            return
+        }
+
+        // Solicita la cancelación de la corrutina.
+        trabajo?.cancel()
+
+        // Actualiza el mensaje.
+        _mensaje.value = "Cancelado"
     }
 
     /**
