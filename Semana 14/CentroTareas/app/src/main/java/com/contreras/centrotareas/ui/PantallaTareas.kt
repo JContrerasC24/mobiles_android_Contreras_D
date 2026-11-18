@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import com.contreras.centrotareas.model.CargaUi
 import com.contreras.centrotareas.model.PrimosUi
 import com.contreras.centrotareas.viewmodel.TareasViewModel
+import androidx.compose.material3.LinearProgressIndicator
+import kotlin.math.roundToInt
 
 /**
  * Pantalla principal de CentroTareas.
@@ -59,6 +61,9 @@ fun PantallaTareas(
     // ==========================================
 
     val mensaje by vm.mensaje.collectAsState()
+
+    // Observa los cambios del progreso.
+    val progreso by vm.progreso.collectAsState()
 
     val primos by vm.primos.collectAsState()
 
@@ -191,10 +196,30 @@ fun PantallaTareas(
                                 vm.tareaLarga()
                             }
                         ) {
-                            Text("Tarea larga")
+                            Text("Iniciar")
                         }
 
+                        /**
+                         * Barra que representa el avance de la tarea.
+                         */
+                        LinearProgressIndicator(
 
+                            progress = {
+                                progreso
+                            },
+
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        /**
+                         * Convierte el progreso de 0f a 1f
+                         * en un porcentaje de 0 a 100.
+                         */
+                        Text(
+                            text = "Progreso: ${(progreso * 100).roundToInt()} %"
+                        )
+                        Text(
+                            text = "Estado: $mensaje"
+                        )
                         // =====================================
                         // MENSAJE DEL VIEWMODEL
                         // =====================================

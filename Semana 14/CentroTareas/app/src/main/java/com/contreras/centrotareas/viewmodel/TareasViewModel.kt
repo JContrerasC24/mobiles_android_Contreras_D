@@ -46,6 +46,19 @@ class TareasViewModel(
     val mensaje: StateFlow<String> = _mensaje.asStateFlow()
 
     /**
+     * Estado interno del progreso.
+     *
+     * 0f representa el 0 %.
+     * 1f representa el 100 %.
+     */
+    private val _progreso = MutableStateFlow(0f)
+
+    /**
+     * Estado público que observará la interfaz.
+     */
+    val progreso: StateFlow<Float> = _progreso.asStateFlow()
+
+    /**
      * PASO 1: PROVOCAR EL CONGELAMIENTO
      *
      * Esta función demuestra qué ocurre cuando
@@ -62,21 +75,30 @@ class TareasViewModel(
      * La operación se realiza sin bloquear la interfaz
      * y permite seguir interactuando con la aplicación.
      */
+
+    /**
+     * Ejecuta una tarea con progreso.
+     *
+     * La operación dura aproximadamente cuatro segundos
+     * y actualiza el avance desde 0 % hasta 100 %.
+     */
     fun tareaLarga() {
 
-        // Inicia una corrutina asociada al ciclo de vida del ViewModel.
         viewModelScope.launch {
 
-            // Informa que comenzó la tarea.
+            // Estado inicial de la tarea.
             _mensaje.value = "Trabajando..."
 
-            // Comprueba el hilo antes de la operación.
+            // Reinicia el progreso.
+            _progreso.value = 0f
+
+            // Registra el hilo principal.
             Log.d(
                 "HILO",
                 "Antes: ${Thread.currentThread().name}"
             )
 
-            // Ejecuta la espera utilizando Dispatchers.Default.
+            // Ejecuta la tarea utilizando Dispatchers.Default.
             withContext(Dispatchers.Default) {
 
                 Log.d(
@@ -84,17 +106,24 @@ class TareasViewModel(
                     "Dentro: ${Thread.currentThread().name}"
                 )
 
-                // Suspende la corrutina durante cuatro segundos.
-                delay(4000)
+                // Realiza 100 iteraciones.
+                for (i in 1..100) {
+
+                    // Espera 40 milisegundos sin bloquear el hilo.
+                    delay(40)
+
+                    // Actualiza el progreso.
+                    _progreso.value = i / 100f
+                }
             }
 
-            // Comprueba el hilo después de la operación.
+            // Comprueba el regreso al hilo principal.
             Log.d(
                 "HILO",
                 "Despues: ${Thread.currentThread().name}"
             )
 
-            // Actualiza el mensaje al finalizar.
+            // Informa que terminó la operación.
             _mensaje.value = "Terminó"
         }
     }
