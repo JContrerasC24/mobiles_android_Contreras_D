@@ -240,3 +240,9 @@ El prompt maestro actual autoriza completar las etapas, commits y push exclusiva
 Etapa 3: búsqueda por nombre insensible a tildes y mayúsculas, filtros combinados y estado vacío. Archivos: FiltroLugares, BuscadorLugares, MapaViewModel, PantallaMapa y FiltroLugaresTest. Tres pruebas nuevas comprueban normalización, filtros y preservación del orden por distancia.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### feat(mapa): mejora marcadores y detalles de ubicaciones
+
+Etapa 4 en la nueva carpeta mobiles_android_Contreras_D_sem13_ia: iconos originales por categoría y selección, panel de destino con distancia geográfica. Archivos: IconosMapa, DetalleLugar y PantallaMapa. Compilación y pruebas satisfactorias en 9 s.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

@@ -484,6 +484,8 @@ fun PantallaMapa(
                     // 11. GOOGLE MAPS
                     // =========================================
 
+                    DetalleLugar(lugares.firstOrNull { it.lugar.id == seleccionado })
+
                     ListaLugares(
 
                         lugares = lugares,
@@ -766,6 +768,10 @@ private fun MapaUbicacionActual(
                 title = lugar.nombre,
 
                 snippet = lugar.categoria,
+                icon = remember(lugar.categoria, seleccionadoId == lugar.id) {
+                    IconosMapa.categoria(lugar.categoria, seleccionadoId == lugar.id)
+                },
+                zIndex = if (seleccionadoId == lugar.id) 2f else 1f,
 
                 onClick = {
 
