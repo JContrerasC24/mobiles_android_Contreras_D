@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Barra de navegación inferior minimalista inspirada en Notion.
+ * Barra de navegación inferior sobria y elegante con indicadores desaturados.
  */
 @Composable
 fun NotionBottomNavBar(
@@ -57,7 +57,7 @@ fun NotionBottomNavBar(
                     selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.secondary,
                     unselectedTextColor = MaterialTheme.colorScheme.secondary,
-                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 )
             )
         }

@@ -1,5 +1,7 @@
 package com.contreras.centrotareas.ui
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +74,11 @@ fun PantallaTareas(
         NavHost(
             navController = navController,
             startDestination = Screen.Inicio.route,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() },
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { fadeOut() }
         ) {
             composable(Screen.Inicio.route) {
                 PantallaInicio(
