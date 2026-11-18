@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -31,24 +35,22 @@ import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 import com.contreras.centrotareas.model.CargaUi
 import com.contreras.centrotareas.model.PrimosUi
 import com.contreras.centrotareas.viewmodel.TareasViewModel
-import androidx.compose.material3.LinearProgressIndicator
+
 import kotlin.math.roundToInt
 
 /**
  * Pantalla principal de CentroTareas.
  *
- * Muestra tres tarjetas:
+ * Implementa la interfaz mediante Jetpack Compose
+ * y observa los estados del ViewModel.
  *
- * 1. Tarea con progreso.
- * 2. Contar números primos.
- * 3. Dos cargas de datos.
- *
- * Observa los estados proporcionados por el ViewModel.
+ * Laboratorio 14: Hilos y corrutinas.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,45 +62,48 @@ fun PantallaTareas(
     // ESTADOS DEL VIEWMODEL
     // ==========================================
 
+    // Mensaje de la tarea con progreso.
     val mensaje by vm.mensaje.collectAsState()
 
-    // Observa los cambios del progreso.
+    // Porcentaje de progreso.
     val progreso by vm.progreso.collectAsState()
 
-    // Indica si la tarea se está ejecutando.
+    // Indica si la tarea está ejecutándose.
     val corriendo by vm.corriendo.collectAsState()
 
+    // Estado del cálculo de números primos.
     val primos by vm.primos.collectAsState()
 
+    // Estado de las cargas simuladas.
     val carga by vm.carga.collectAsState()
 
 
     // ==========================================
-    // ESTADOS LOCALES DE LA INTERFAZ
+    // ESTADOS LOCALES
     // ==========================================
 
-    /**
-     * Contador utilizado para comprobar
-     * si la pantalla continúa respondiendo.
-     */
+    // Contador utilizado para comprobar que la UI responde.
     var toques by remember {
         mutableStateOf(0)
     }
 
-    /**
-     * Número utilizado para el cálculo
-     * de números primos.
-     */
+    // Número máximo para calcular primos.
     var numeroPrimos by remember {
         mutableStateOf("1000")
     }
 
-    /**
-     * Control para simular errores.
-     */
+    // Interruptor para simular errores.
     var simularError by remember {
         mutableStateOf(false)
     }
+
+    // Comprueba si se están calculando números primos.
+    val estaCalculando = primos is PrimosUi.Calculando
+
+    // Valida el número ingresado.
+    val numeroValido = numeroPrimos.toIntOrNull()?.let {
+        it >= 2
+    } == true
 
 
     // ==========================================
@@ -167,18 +172,17 @@ fun PantallaTareas(
                         )
 
                         Text(
-                            text = "Comprueba cómo responde la aplicación mientras se ejecuta una tarea larga."
+                            text = "Ejecuta una tarea sin bloquear la interfaz."
                         )
 
 
                         // =====================================
-                        // BOTÓN DE PRUEBA DE VIDA
+                        // CONTADOR DE TOQUES
                         // =====================================
 
                         Button(
 
                             onClick = {
-
                                 toques++
                             }
 
@@ -189,23 +193,23 @@ fun PantallaTareas(
                             )
                         }
 
-                        /**
-                         * Botones para iniciar y cancelar la tarea.
-                         */
+
+                        // =====================================
+                        // BOTONES INICIAR Y CANCELAR
+                        // =====================================
+
                         Row(
 
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
 
                         ) {
 
-                            // Inicia la tarea.
                             Button(
 
                                 onClick = {
                                     vm.tareaLarga()
                                 },
 
-                                // Se deshabilita mientras la tarea está activa.
                                 enabled = !corriendo
 
                             ) {
@@ -214,14 +218,12 @@ fun PantallaTareas(
                             }
 
 
-                            // Cancela la tarea.
                             OutlinedButton(
 
                                 onClick = {
                                     vm.cancelar()
                                 },
 
-                                // Solo se habilita mientras la tarea está activa.
                                 enabled = corriendo
 
                             ) {
@@ -230,9 +232,11 @@ fun PantallaTareas(
                             }
                         }
 
-                        /**
-                         * Barra que representa el avance de la tarea.
-                         */
+
+                        // =====================================
+                        // BARRA DE PROGRESO
+                        // =====================================
+
                         LinearProgressIndicator(
 
                             progress = {
@@ -241,30 +245,25 @@ fun PantallaTareas(
 
                             modifier = Modifier.fillMaxWidth()
                         )
-                        /**
-                         * Convierte el progreso de 0f a 1f
-                         * en un porcentaje de 0 a 100.
-                         */
+
+
+                        // =====================================
+                        // PORCENTAJE
+                        // =====================================
+
                         Text(
+
                             text = "Progreso: ${(progreso * 100).roundToInt()} %"
                         )
+
+
+                        // =====================================
+                        // MENSAJE
+                        // =====================================
+
                         Text(
                             text = "Estado: $mensaje"
                         )
-                        // =====================================
-                        // MENSAJE DEL VIEWMODEL
-                        // =====================================
-
-                        Text(
-                            text = "Estado: $mensaje"
-                        )
-
-
-                        // TODO Paso 3:
-                        // Agregar LinearProgressIndicator.
-
-                        // TODO Paso 4:
-                        // Agregar botón Cancelar.
                     }
                 }
             }
@@ -297,21 +296,34 @@ fun PantallaTareas(
                             color = Color(0xFF1565C0)
                         )
 
+                        Text(
+                            text = "Calcula números primos utilizando Dispatchers.Default."
+                        )
 
-                        // Número máximo para el cálculo.
+
+                        // =====================================
+                        // CAMPO NUMÉRICO
+                        // =====================================
+
                         OutlinedTextField(
 
                             value = numeroPrimos,
 
-                            onValueChange = {
+                            onValueChange = { nuevoTexto ->
 
-                                numeroPrimos = it
+                                // Permite ingresar solo números.
+                                numeroPrimos = nuevoTexto.filter {
+                                    it.isDigit()
+                                }
                             },
 
                             label = {
-
                                 Text("Número máximo")
                             },
+
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            ),
 
                             modifier = Modifier.fillMaxWidth(),
 
@@ -320,7 +332,7 @@ fun PantallaTareas(
 
 
                         // =====================================
-                        // BOTONES DE CÁLCULO
+                        // BOTONES CONTAR Y CANCELAR
                         // =====================================
 
                         Row(
@@ -333,10 +345,13 @@ fun PantallaTareas(
 
                                 onClick = {
 
-                                    // TODO Paso 5
+                                    numeroPrimos.toIntOrNull()?.let { numero ->
+
+                                        vm.contar(numero)
+                                    }
                                 },
 
-                                enabled = false
+                                enabled = !estaCalculando && numeroValido
 
                             ) {
 
@@ -347,11 +362,10 @@ fun PantallaTareas(
                             OutlinedButton(
 
                                 onClick = {
-
-                                    // TODO Paso 5
+                                    vm.cancelarPrimos()
                                 },
 
-                                enabled = false
+                                enabled = estaCalculando
 
                             ) {
 
@@ -366,15 +380,18 @@ fun PantallaTareas(
 
                         when (val estado = primos) {
 
+
                             PrimosUi.Inicial -> {
 
                                 Text(
-                                    "Todavía no se ha iniciado el cálculo."
+                                    "Presiona Contar para iniciar el cálculo."
                                 )
                             }
 
 
                             PrimosUi.Calculando -> {
+
+                                CircularProgressIndicator()
 
                                 Text(
                                     "Calculando números primos..."
@@ -384,20 +401,52 @@ fun PantallaTareas(
 
                             is PrimosUi.Listo -> {
 
-                                Text(
-                                    text = "Cantidad de primos: ${estado.cantidad}"
-                                )
+                                // Resultado en un recuadro verde.
+                                Card(
 
-                                Text(
-                                    text = "Tiempo: ${estado.milisegundos} ms"
-                                )
+                                    colors = CardDefaults.cardColors(
+
+                                        containerColor = Color(0xFFE8F5E9)
+                                    ),
+
+                                    modifier = Modifier.fillMaxWidth()
+
+                                ) {
+
+                                    Column(
+
+                                        modifier = Modifier.padding(16.dp),
+
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                                    ) {
+
+                                        Text(
+
+                                            text = "Cálculo completado",
+
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+
+                                        Text(
+                                            text = "Cantidad de primos: ${estado.cantidad}"
+                                        )
+
+                                        Text(
+                                            text = "Tiempo: ${estado.milisegundos} ms"
+                                        )
+                                    }
+                                }
                             }
 
 
                             PrimosUi.Cancelado -> {
 
                                 Text(
-                                    "Cálculo cancelado."
+
+                                    text = "Cálculo cancelado",
+
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             }
                         }
@@ -434,7 +483,7 @@ fun PantallaTareas(
                         )
 
                         Text(
-                            text = "Compara la ejecución secuencial y paralela de dos cargas simuladas."
+                            text = "Compara la ejecución secuencial y paralela de dos operaciones."
                         )
 
 
@@ -452,7 +501,8 @@ fun PantallaTareas(
 
                                 onClick = {
 
-                                    // TODO Paso 6
+                                    // TODO Paso 6:
+                                    // Ejecutar cargarUnaPorUna().
                                 },
 
                                 enabled = false
@@ -467,7 +517,8 @@ fun PantallaTareas(
 
                                 onClick = {
 
-                                    // TODO Paso 6
+                                    // TODO Paso 6:
+                                    // Ejecutar cargarALaVez().
                                 },
 
                                 enabled = false
@@ -496,7 +547,6 @@ fun PantallaTareas(
                                 checked = simularError,
 
                                 onCheckedChange = {
-
                                     simularError = it
                                 },
 
@@ -522,6 +572,8 @@ fun PantallaTareas(
 
                             CargaUi.Cargando -> {
 
+                                CircularProgressIndicator()
+
                                 Text(
                                     "Cargando información..."
                                 )
@@ -530,21 +582,42 @@ fun PantallaTareas(
 
                             is CargaUi.Exito -> {
 
-                                Text(
-                                    "Modo: ${estado.modo}"
-                                )
+                                Card(
 
-                                Text(
-                                    "Perfil: ${estado.perfil}"
-                                )
+                                    colors = CardDefaults.cardColors(
 
-                                Text(
-                                    "Pedidos: ${estado.pedidos}"
-                                )
+                                        containerColor = Color(0xFFE8F5E9)
+                                    ),
 
-                                Text(
-                                    "Tiempo: ${estado.milisegundos} ms"
-                                )
+                                    modifier = Modifier.fillMaxWidth()
+
+                                ) {
+
+                                    Column(
+
+                                        modifier = Modifier.padding(16.dp),
+
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                                    ) {
+
+                                        Text(
+                                            text = "Modo: ${estado.modo}"
+                                        )
+
+                                        Text(
+                                            text = "Perfil: ${estado.perfil}"
+                                        )
+
+                                        Text(
+                                            text = "Pedidos: ${estado.pedidos}"
+                                        )
+
+                                        Text(
+                                            text = "Tiempo: ${estado.milisegundos} ms"
+                                        )
+                                    }
+                                }
                             }
 
 
@@ -562,7 +635,8 @@ fun PantallaTareas(
 
                                     onClick = {
 
-                                        // TODO Paso 7
+                                        // TODO Paso 7:
+                                        // Implementar reintento.
                                     },
 
                                     enabled = false

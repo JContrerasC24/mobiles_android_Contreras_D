@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 
 /**
  * ViewModel principal de CentroTareas.
@@ -228,6 +229,77 @@ class TareasViewModel(
      * Estado público del cálculo.
      */
     val primos: StateFlow<PrimosUi> = _primos.asStateFlow()
+
+    /**
+     * Guarda la corrutina que realiza
+     * el cálculo de números primos.
+     */
+    private var trabajoPrimos: Job? = null
+
+    /**
+     * Inicia el cálculo de números primos.
+     *
+     * Recibe el número máximo hasta el cual
+     * se realizará la búsqueda.
+     */
+    fun contar(hasta: Int) {
+
+        // Ignora valores menores que 2.
+        if (hasta < 2) {
+            return
+        }
+
+        // Evita iniciar otro cálculo si ya existe uno activo.
+        if (trabajoPrimos?.isActive == true) {
+            return
+        }
+
+        // Actualiza el estado.
+        _primos.value = PrimosUi.Calculando
+
+        // Inicia el cálculo.
+        trabajoPrimos = viewModelScope.launch {
+
+            val inicio = System.currentTimeMillis()
+
+            try {
+
+                // Solicita el cálculo al Repository.
+                val cantidad = repo.contarPrimos(hasta)
+
+                // Calcula el tiempo transcurrido.
+                val tiempo = System.currentTimeMillis() - inicio
+
+                // Informa que el cálculo terminó.
+                _primos.value = PrimosUi.Listo(
+                    cantidad = cantidad,
+                    milisegundos = tiempo
+                )
+
+            } catch (e: CancellationException) {
+
+                // Informa que el usuario canceló el cálculo.
+                _primos.value = PrimosUi.Cancelado
+
+                // Conserva el comportamiento de cancelación.
+                throw e
+
+            } finally {
+
+                // Libera la referencia al trabajo.
+                trabajoPrimos = null
+            }
+        }
+    }
+
+    /**
+     * Solicita la cancelación del cálculo
+     * de números primos.
+     */
+    fun cancelarPrimos() {
+
+        trabajoPrimos?.cancel()
+    }
 
     /**
      * PASO 5:
