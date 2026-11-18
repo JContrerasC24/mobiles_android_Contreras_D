@@ -1,6 +1,7 @@
 package com.contreras.campusgps.ui
 
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
@@ -10,7 +11,7 @@ import com.contreras.campusgps.viewmodel.*
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PanelReproduccion(vm: MapaViewModel) {
-    val estado by vm.reproduccion.collectAsState()
+    val estado by vm.reproduccion.collectAsStateWithLifecycle()
     val texto = when (estado.estado) {
         EstadoReproduccion.LISTO -> "Listo para iniciar"
         EstadoReproduccion.REPRODUCIENDO -> "Recorriendo la demostración"

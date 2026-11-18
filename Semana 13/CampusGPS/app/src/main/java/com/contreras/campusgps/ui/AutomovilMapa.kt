@@ -1,6 +1,7 @@
 package com.contreras.campusgps.ui
 
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.geometry.Offset
 import com.contreras.campusgps.model.Recorrido
 import com.contreras.campusgps.util.Trayectoria
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun AutomovilMapa(recorrido: Recorrido, reproduccion: StateFlow<Reproduccion>) {
     // Solo este marcador observa cada fotograma; el catálogo y el mapa no se reconstruyen.
-    val estado by reproduccion.collectAsState()
+    val estado by reproduccion.collectAsStateWithLifecycle()
     val trayectoria = remember(recorrido) { Trayectoria(recorrido.puntos) }
     val punto = trayectoria.punto(estado.progreso)
     Marker(state = rememberUpdatedMarkerState(LatLng(punto.posicion.latitud, punto.posicion.longitud)),

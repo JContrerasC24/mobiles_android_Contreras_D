@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import com.contreras.campusgps.model.TipoErrorUbicacion
+import com.contreras.campusgps.data.GpsDesactivadoException
+import com.contreras.campusgps.data.PlayServicesNoDisponiblesException
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
@@ -183,7 +187,10 @@ class MapaViewModel(
                 .none { it.lugar.id == _seleccionado.value }) _seleccionado.value = null
     }
 
+    private var busqueda: Job? = null
+
     fun buscar() {
+        busqueda?.cancel()
         cerrarRecorrido()
 
         // Cambia el estado a Buscando.
@@ -203,7 +210,7 @@ class MapaViewModel(
          * viewModelScope administra el ciclo de vida
          * de las operaciones del ViewModel.
          */
-        viewModelScope.launch {
+        busqueda = viewModelScope.launch {
 
             ubicacionRepo.obtenerPosicion()
 
@@ -316,7 +323,13 @@ class MapaViewModel(
                      */
                     _estado.value = UbicacionUi.Error(
 
-                        mensajeDe(error)
+                        mensajeDe(error),
+                        when (error) {
+                            is SecurityException -> TipoErrorUbicacion.PERMISO_DENEGADO
+                            is GpsDesactivadoException -> TipoErrorUbicacion.GPS_APAGADO
+                            is PlayServicesNoDisponiblesException -> TipoErrorUbicacion.PLAY_SERVICES
+                            else -> TipoErrorUbicacion.GENERICO
+                        }
                     )
                 }
         }
@@ -435,10 +448,13 @@ class MapaViewModel(
      * los permisos de ubicación.
      */
     fun permisoDenegado() {
+        busqueda?.cancel()
+        cerrarRecorrido()
 
         _estado.value = UbicacionUi.Error(
 
-            "Sin permiso de ubicación no puedo mostrar dónde estás"
+            "Sin permiso de ubicación no puedo mostrar dónde estás",
+            TipoErrorUbicacion.PERMISO_DENEGADO
         )
     }
 

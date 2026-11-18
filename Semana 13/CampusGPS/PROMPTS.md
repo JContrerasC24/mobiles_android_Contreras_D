@@ -270,3 +270,9 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 8: mapa permanente con panel desplazable, distribución lateral en horizontal, catálogo accesible sin permiso GPS, selección que vuelve al panel y oculta teclado, acciones del recorrido junto al mapa e Intent con alternativa web de Google Maps. Archivos: PantallaMapa y DetalleLugar. Se conserva el mapa existente y se elimina comentario repetitivo al extraer el panel. Corregido alcance de maxHeight señalado por compilación; compilación final y once pruebas unitarias pasan.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### fix: optimiza errores y estabilidad de CampusGPS
+
+Etapa 9: errores clasificados por permiso, GPS, Play Services; búsqueda GPS previa cancelada y timeout de 15 s. StateFlow se recopila ligado al ciclo de vida. Pantalla informa de carga larga del mapa y catálogo sigue utilizable. Archivos: UbicacionRepositoryGoogle, MapaViewModel, PantallaMapa, PanelReproduccion, AutomovilMapa, build.gradle.kts y CampusFlowTest. Verificación final: assembleDebug, testDebugUnitTest y lintDebug satisfactorios. La prueba instrumentada falló/incompleta porque el emulador Pixel_6 quedó offline a mitad de la suite; una prueba también reportó acción de GPS no encontrada antes de desconectarse. Pruebas de interfaz pendientes de estabilización.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

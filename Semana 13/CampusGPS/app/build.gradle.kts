@@ -80,6 +80,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
 
     // =====================================================
     // DEPENDENCIAS PRINCIPALES DE ANDROID

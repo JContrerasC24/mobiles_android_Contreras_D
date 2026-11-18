@@ -20,6 +20,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 
 
 /**
@@ -249,13 +250,9 @@ class UbicacionRepositoryGoogle(
 
             val ubicacion = try {
 
-                cliente.getCurrentLocation(
-
-                    prioridad,
-
-                    cancelacion.token
-
-                ).await()
+                withTimeoutOrNull(15_000L) {
+                    cliente.getCurrentLocation(prioridad, cancelacion.token).await()
+                }
 
             } finally {
 
@@ -276,7 +273,7 @@ class UbicacionRepositoryGoogle(
 
                 throw IllegalStateException(
 
-                    "No se pudo obtener la ubicación actual. " +
+                    "No se obtuvo una ubicación en 15 segundos. " +
                             "Inténtalo nuevamente."
                 )
             }

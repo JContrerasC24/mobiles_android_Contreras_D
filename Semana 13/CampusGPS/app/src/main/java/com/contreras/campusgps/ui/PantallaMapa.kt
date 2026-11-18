@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -34,10 +35,10 @@ fun PantallaMapa(vm: MapaViewModel) {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer); vm.pausarRecorrido() }
     }
-    val estado by vm.estado.collectAsState()
-    val lugares by vm.resultados.collectAsState()
-    val seleccionado by vm.seleccionado.collectAsState()
-    val recorrido by vm.recorrido.collectAsState()
+    val estado by vm.estado.collectAsStateWithLifecycle()
+    val lugares by vm.resultados.collectAsStateWithLifecycle()
+    val seleccionado by vm.seleccionado.collectAsStateWithLifecycle()
+    val recorrido by vm.recorrido.collectAsStateWithLifecycle()
     val contexto = LocalContext.current
     val teclado = LocalSoftwareKeyboardController.current
     val scroll = rememberScrollState()
@@ -92,8 +93,8 @@ fun PantallaMapa(vm: MapaViewModel) {
 @Composable
 private fun PanelCampus(vm: MapaViewModel, estado: UbicacionUi, lugares: List<LugarConDistancia>,
     seleccionado: Int?, recorrido: Recorrido?, buscar: () -> Unit, seleccionar: (Int) -> Unit) {
-    val consulta by vm.consulta.collectAsState()
-    val categoria by vm.categoria.collectAsState()
+    val consulta by vm.consulta.collectAsStateWithLifecycle()
+    val categoria by vm.categoria.collectAsStateWithLifecycle()
     val destino = lugares.firstOrNull { it.lugar.id == seleccionado }
     if (recorrido != null) {
         Text(recorrido.destino.nombre, style = MaterialTheme.typography.titleLarge)
@@ -215,6 +216,8 @@ private fun MapaUbicacionActual(
                 ),
                 durationMs = 800
             )
+        } else if (mapaCargado && recorrido == null && posicion != null) {
+            estadoCamara.animate(CameraUpdateFactory.newLatLngZoom(ubicacionUsuario, 16f), 600)
         }
     }
     // =====================================================
@@ -229,9 +232,13 @@ private fun MapaUbicacionActual(
             } else estadoCamara.animate(CameraUpdateFactory.newLatLngBounds(limites.build(), 80), 600)
         }
     }
+    var cargaLenta by remember { mutableStateOf(false) }
+    LaunchedEffect(mapaCargado) {
+        if (!mapaCargado) { kotlinx.coroutines.delay(15_000); cargaLenta = true }
+    }
+    Box(modifier.clip(RoundedCornerShape(24.dp))) {
     GoogleMap(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp)),
+        modifier = Modifier.fillMaxSize(),
         cameraPositionState = estadoCamara,
         onMapLoaded = {
             mapaCargado = true
@@ -268,5 +275,10 @@ private fun MapaUbicacionActual(
                 }
             )
         }
+    }
+    if (!mapaCargado) Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface.copy(alpha = .94f)) {
+        Text(if (cargaLenta) "El mapa tarda en cargar. Comprueba Internet y la configuración de Maps. Puedes usar el catálogo."
+            else "Cargando mapa…", Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall)
+    }
     }
 }
