@@ -21,6 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +43,14 @@ fun PantallaActividad(
     modifier: Modifier = Modifier
 ) {
     val historial by vm.historial.collectAsState()
+    var filtroEstado by remember { mutableStateOf("Todos") }
+
+    val historialFiltrado = when (filtroEstado) {
+        "Completados" -> historial.filter { it.estado.equals("Completado", ignoreCase = true) }
+        "Cancelados" -> historial.filter { it.estado.equals("Cancelado", ignoreCase = true) }
+        "Errores" -> historial.filter { it.estado.equals("Error", ignoreCase = true) }
+        else -> historial
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -76,7 +87,25 @@ fun PantallaActividad(
             }
         }
 
-        if (historial.isEmpty()) {
+        // CHIPS DE FILTRADO ESTILO TABLA NOTION
+        if (historial.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Todos", "Completados", "Cancelados", "Errores").forEach { filtro ->
+                        NotionSecondaryButton(
+                            text = filtro,
+                            onClick = { filtroEstado = filtro },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+
+        if (historialFiltrado.isEmpty()) {
             item {
                 NotionCard(
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -96,7 +125,7 @@ fun PantallaActividad(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Aún no hay actividades registradas",
+                            text = if (historial.isEmpty()) "Aún no hay actividades registradas" else "No hay registros con filtro '$filtroEstado'",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -111,7 +140,7 @@ fun PantallaActividad(
             }
         } else {
             items(
-                items = historial,
+                items = historialFiltrado,
                 key = { it.id }
             ) { registro ->
                 ItemHistorialCard(registro = registro)
