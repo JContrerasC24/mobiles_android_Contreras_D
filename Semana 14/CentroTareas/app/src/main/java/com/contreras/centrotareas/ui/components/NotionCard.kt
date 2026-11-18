@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Tarjeta elegante con bordes discretos e inspiración visual en Notion.
+ * Tarjeta elegante y minimalista con bordes discretos e inspiración en Notion y Google Drive.
  */
 @Composable
 fun NotionCard(
@@ -25,7 +25,7 @@ fun NotionCard(
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = MaterialTheme.colorScheme.outline,
     onClick: (() -> Unit)? = null,
-    cornerRadius: Dp = 10.dp,
+    cornerRadius: Dp = 12.dp,
     contentPadding: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {

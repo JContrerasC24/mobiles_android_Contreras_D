@@ -3,39 +3,45 @@ package com.contreras.centrotareas.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ==========================================
-// PALETA DE COLORES INSPIRADA EN NOTION (MODO CLARO)
+// PALETA DE COLORES - MODO CLARO (SUAVE Y EQUILIBRADA)
 // ==========================================
-val NotionBackground = Color(0xFFF7F7F5)
-val NotionSurface = Color(0xFFFFFFFF)
-val NotionSurfaceVariant = Color(0xFFF1F1EF)
-val NotionTextPrimary = Color(0xFF191919)
-val NotionTextSecondary = Color(0xFF6B6B6B)
-val NotionBorder = Color(0xFFE5E5E5)
+val FondoPrincipal = Color(0xFFF8F9FB)
+val SuperficieTarjetas = Color(0xFFFFFFFF)
+val ColorPrincipal = Color(0xFF526786)
+val ColorPrincipalSuave = Color(0xFFEAF0F6)
+val TextoPrincipal = Color(0xFF253047)
+val TextoSecundario = Color(0xFF667085)
+val Bordes = Color(0xFFE2E7EE)
 
-// Colores de acento y estados
-val NotionAccent = Color(0xFF2EAADC) // Azul primario Notion
-val NotionAccentDark = Color(0xFF0B6E99)
-val NotionSuccess = Color(0xFF22A06B) // Verde estado
-val NotionSuccessContainer = Color(0xFFEDF7ED)
-val NotionWarning = Color(0xFFD97706) // Ámbar advertencia
-val NotionWarningContainer = Color(0xFFFFFBEB)
-val NotionError = Color(0xFFD92D20) // Rojo error
-val NotionErrorContainer = Color(0xFFFEE2E2)
+val VerdeSuave = Color(0xFFEAF4EE)
+val VerdeIndicadores = Color(0xFF4F8068)
+val RojoSuave = Color(0xFFF9EEEE)
+val RojoIndicadores = Color(0xFFB46E6E)
+val AmarilloSuave = Color(0xFFFAF3E8)
+val NaranjaAdvertencias = Color(0xFFA5834D)
+
+// Aliases de compatibilidad
+val NotionSuccess = VerdeIndicadores
+val NotionSuccessContainer = VerdeSuave
+val NotionError = RojoIndicadores
+val NotionErrorContainer = RojoSuave
+val NotionWarning = NaranjaAdvertencias
+val NotionWarningContainer = AmarilloSuave
 
 // ==========================================
-// PALETA DE COLORES INSPIRADA EN NOTION (MODO OSCURO)
+// PALETA DE COLORES - MODO OSCURO (PROFESIONAL Y SOBRIO)
 // ==========================================
-val NotionDarkBackground = Color(0xFF191919)
-val NotionDarkSurface = Color(0xFF202020)
-val NotionDarkSurfaceVariant = Color(0xFF2A2A2A)
-val NotionDarkTextPrimary = Color(0xFFE6E6E6)
-val NotionDarkTextSecondary = Color(0xFF9B9B9B)
-val NotionDarkBorder = Color(0xFF2E2E2E)
+val FondoDark = Color(0xFF171A20)
+val SuperficieDark = Color(0xFF22262E)
+val TextoPrincipalDark = Color(0xFFF3F4F6)
+val TextoSecundarioDark = Color(0xFFB0B8C5)
+val BordesDark = Color(0xFF343B46)
 
-val NotionDarkAccent = Color(0xFF38BDF8)
-val NotionDarkSuccess = Color(0xFF34D399)
-val NotionDarkSuccessContainer = Color(0xFF064E3B)
-val NotionDarkWarning = Color(0xFFFBBF24)
-val NotionDarkWarningContainer = Color(0xFF78350F)
-val NotionDarkError = Color(0xFFF87171)
-val NotionDarkErrorContainer = Color(0xFF7F1D1D)
+val ColorPrincipalDark = Color(0xFF8BA3C7)
+val ColorPrincipalSuaveDark = Color(0xFF2C3545)
+val VerdeSuaveDark = Color(0xFF1F2E27)
+val VerdeIndicadoresDark = Color(0xFF6DB08E)
+val RojoSuaveDark = Color(0xFF362325)
+val RojoIndicadoresDark = Color(0xFFD18E8E)
+val AmarilloSuaveDark = Color(0xFF332B1E)
+val NaranjaAdvertenciasDark = Color(0xFFC9A76E)

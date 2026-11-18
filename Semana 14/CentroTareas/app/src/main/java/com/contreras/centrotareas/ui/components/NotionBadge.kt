@@ -19,17 +19,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.contreras.centrotareas.ui.theme.NotionAccent
-import com.contreras.centrotareas.ui.theme.NotionError
-import com.contreras.centrotareas.ui.theme.NotionErrorContainer
-import com.contreras.centrotareas.ui.theme.NotionSuccess
-import com.contreras.centrotareas.ui.theme.NotionSuccessContainer
-import com.contreras.centrotareas.ui.theme.NotionTextSecondary
-import com.contreras.centrotareas.ui.theme.NotionWarning
-import com.contreras.centrotareas.ui.theme.NotionWarningContainer
+import com.contreras.centrotareas.ui.theme.AmarilloSuave
+import com.contreras.centrotareas.ui.theme.ColorPrincipal
+import com.contreras.centrotareas.ui.theme.ColorPrincipalSuave
+import com.contreras.centrotareas.ui.theme.NaranjaAdvertencias
+import com.contreras.centrotareas.ui.theme.RojoIndicadores
+import com.contreras.centrotareas.ui.theme.RojoSuave
+import com.contreras.centrotareas.ui.theme.VerdeIndicadores
+import com.contreras.centrotareas.ui.theme.VerdeSuave
 
 /**
- * Insignia / Tag de propiedad estilo Notion para representar estados.
+ * Insignia de estado elegante con tonos desaturados.
  */
 @Composable
 fun NotionBadge(
@@ -41,7 +41,7 @@ fun NotionBadge(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(backgroundColor)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
@@ -76,29 +76,29 @@ fun NotionStatusBadge(
 ) {
     val (bgColor, txtColor, dotColor) = when (status.lowercase()) {
         "ejecutando", "calculando", "cargando", "trabajando..." -> Triple(
-            NotionAccent.copy(alpha = 0.15f),
-            NotionAccent,
-            NotionAccent
+            ColorPrincipalSuave,
+            ColorPrincipal,
+            ColorPrincipal
         )
         "completado", "terminó", "listo", "éxito" -> Triple(
-            NotionSuccessContainer,
-            NotionSuccess,
-            NotionSuccess
+            VerdeSuave,
+            VerdeIndicadores,
+            VerdeIndicadores
         )
-        "cancelado" -> Triple(
-            NotionWarningContainer,
-            NotionWarning,
-            NotionWarning
+        "cancelado", "pendiente" -> Triple(
+            AmarilloSuave,
+            NaranjaAdvertencias,
+            NaranjaAdvertencias
         )
         "error" -> Triple(
-            NotionErrorContainer,
-            NotionError,
-            NotionError
+            RojoSuave,
+            RojoIndicadores,
+            RojoIndicadores
         )
         else -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
-            NotionTextSecondary,
-            NotionTextSecondary
+            MaterialTheme.colorScheme.secondary,
+            MaterialTheme.colorScheme.secondary
         )
     }
 

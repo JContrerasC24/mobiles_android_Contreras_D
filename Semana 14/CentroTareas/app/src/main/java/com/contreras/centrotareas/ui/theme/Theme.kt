@@ -12,41 +12,41 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NotionDarkAccent,
-    onPrimary = NotionDarkBackground,
-    primaryContainer = NotionDarkSurfaceVariant,
-    onPrimaryContainer = NotionDarkTextPrimary,
-    secondary = NotionDarkTextSecondary,
-    onSecondary = NotionDarkSurface,
-    background = NotionDarkBackground,
-    onBackground = NotionDarkTextPrimary,
-    surface = NotionDarkSurface,
-    onSurface = NotionDarkTextPrimary,
-    surfaceVariant = NotionDarkSurfaceVariant,
-    onSurfaceVariant = NotionDarkTextSecondary,
-    outline = NotionDarkBorder,
-    error = NotionDarkError,
-    errorContainer = NotionDarkErrorContainer,
-    onError = NotionDarkBackground
+    primary = ColorPrincipalDark,
+    onPrimary = SuperficieDark,
+    primaryContainer = ColorPrincipalSuaveDark,
+    onPrimaryContainer = TextoPrincipalDark,
+    secondary = TextoSecundarioDark,
+    onSecondary = SuperficieDark,
+    background = FondoDark,
+    onBackground = TextoPrincipalDark,
+    surface = SuperficieDark,
+    onSurface = TextoPrincipalDark,
+    surfaceVariant = ColorPrincipalSuaveDark,
+    onSurfaceVariant = TextoSecundarioDark,
+    outline = BordesDark,
+    error = RojoIndicadoresDark,
+    errorContainer = RojoSuaveDark,
+    onError = FondoDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = NotionAccent,
-    onPrimary = NotionSurface,
-    primaryContainer = NotionSurfaceVariant,
-    onPrimaryContainer = NotionTextPrimary,
-    secondary = NotionTextSecondary,
-    onSecondary = NotionSurface,
-    background = NotionBackground,
-    onBackground = NotionTextPrimary,
-    surface = NotionSurface,
-    onSurface = NotionTextPrimary,
-    surfaceVariant = NotionSurfaceVariant,
-    onSurfaceVariant = NotionTextSecondary,
-    outline = NotionBorder,
-    error = NotionError,
-    errorContainer = NotionErrorContainer,
-    onError = NotionSurface
+    primary = ColorPrincipal,
+    onPrimary = SuperficieTarjetas,
+    primaryContainer = ColorPrincipalSuave,
+    onPrimaryContainer = TextoPrincipal,
+    secondary = TextoSecundario,
+    onSecondary = SuperficieTarjetas,
+    background = FondoPrincipal,
+    onBackground = TextoPrincipal,
+    surface = SuperficieTarjetas,
+    onSurface = TextoPrincipal,
+    surfaceVariant = ColorPrincipalSuave,
+    onSurfaceVariant = TextoSecundario,
+    outline = Bordes,
+    error = RojoIndicadores,
+    errorContainer = RojoSuave,
+    onError = SuperficieTarjetas
 )
 
 @Composable

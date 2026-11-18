@@ -7,14 +7,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Jerarquía tipográfica minimalista inspirada en Notion.
+ * Jerarquía tipográfica refinada y sobria para CentroTareas.
  */
 val Typography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
+        fontSize = 26.sp,
+        lineHeight = 32.sp,
         letterSpacing = (-0.5).sp
     ),
     headlineMedium = TextStyle(

@@ -7,7 +7,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -27,11 +27,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.contreras.centrotareas.ui.theme.NotionError
-import com.contreras.centrotareas.ui.theme.NotionErrorContainer
+import com.contreras.centrotareas.ui.theme.RojoIndicadores
+import com.contreras.centrotareas.ui.theme.RojoSuave
 
 /**
- * Botón primario minimalista estilo Notion.
+ * Botón primario minimalista (#526786).
  */
 @Composable
 fun NotionPrimaryButton(
@@ -52,21 +52,21 @@ fun NotionPrimaryButton(
         enabled = enabled,
         modifier = modifier
             .scale(scale)
-            .height(42.dp),
-        shape = RoundedCornerShape(8.dp),
+            .heightIn(min = 48.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = containerColor.copy(alpha = 0.4f),
             disabledContentColor = contentColor.copy(alpha = 0.6f)
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         interactionSource = interactionSource,
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
-                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.height(18.dp))
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.heightIn(max = 18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(
@@ -81,7 +81,7 @@ fun NotionPrimaryButton(
 }
 
 /**
- * Botón secundario minimalista estilo Notion.
+ * Botón secundario minimalista (Fondo blanco con borde gris).
  */
 @Composable
 fun NotionSecondaryButton(
@@ -100,8 +100,8 @@ fun NotionSecondaryButton(
         enabled = enabled,
         modifier = modifier
             .scale(scale)
-            .height(42.dp),
-        shape = RoundedCornerShape(8.dp),
+            .heightIn(min = 48.dp),
+        shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -109,12 +109,12 @@ fun NotionSecondaryButton(
             disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
             disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         interactionSource = interactionSource
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
-                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.height(18.dp))
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.heightIn(max = 18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(
@@ -129,7 +129,7 @@ fun NotionSecondaryButton(
 }
 
 /**
- * Botón de cancelación / peligro estilo Notion.
+ * Botón de cancelación / peligro suave desaturado.
  */
 @Composable
 fun NotionDangerButton(
@@ -148,21 +148,21 @@ fun NotionDangerButton(
         enabled = enabled,
         modifier = modifier
             .scale(scale)
-            .height(42.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, NotionError.copy(alpha = 0.5f)),
+            .heightIn(min = 48.dp),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, RojoIndicadores.copy(alpha = 0.4f)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = NotionErrorContainer.copy(alpha = 0.3f),
-            contentColor = NotionError,
+            containerColor = RojoSuave.copy(alpha = 0.4f),
+            contentColor = RojoIndicadores,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = NotionError.copy(alpha = 0.38f)
+            disabledContentColor = RojoIndicadores.copy(alpha = 0.38f)
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         interactionSource = interactionSource
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
-                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.height(18.dp))
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.heightIn(max = 18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(
