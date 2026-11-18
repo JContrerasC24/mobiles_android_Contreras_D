@@ -41,16 +41,16 @@ import com.contreras.centrotareas.ui.components.NotionCard
 import com.contreras.centrotareas.ui.components.NotionPrimaryButton
 import com.contreras.centrotareas.ui.components.NotionSecondaryButton
 import com.contreras.centrotareas.ui.components.NotionStatusBadge
-import com.contreras.centrotareas.ui.theme.NotionError
-import com.contreras.centrotareas.ui.theme.NotionErrorContainer
-import com.contreras.centrotareas.ui.theme.NotionSuccess
-import com.contreras.centrotareas.ui.theme.NotionSuccessContainer
+import com.contreras.centrotareas.ui.theme.RojoIndicadores
+import com.contreras.centrotareas.ui.theme.RojoSuave
+import com.contreras.centrotareas.ui.theme.VerdeIndicadores
+import com.contreras.centrotareas.ui.theme.VerdeSuave
 import com.contreras.centrotareas.viewmodel.TareasViewModel
 
 /**
  * Pantalla para comparar el rendimiento de cargas secuenciales vs paralelas.
  *
- * Utiliza indicadores de barras comparativas basados en mediciones reales de tiempo (ms).
+ * Muestra tiempos reales medidos (ms) y barras comparativas horizontales.
  */
 @Composable
 fun PantallaRendimiento(
@@ -64,11 +64,11 @@ fun PantallaRendimiento(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Column {
+            Column(modifier = Modifier.padding(bottom = 4.dp)) {
                 Text(
                     text = "Comparación de Rendimiento",
                     style = MaterialTheme.typography.headlineMedium,
@@ -83,10 +83,12 @@ fun PantallaRendimiento(
             }
         }
 
-        // PANEL DE CONTROLES DE CARGA
+        // CONTROL DE MODO DE CARGA Y ERROR SIMULADO
         item {
-            NotionCard {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            NotionCard(
+                backgroundColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -95,7 +97,8 @@ fun PantallaRendimiento(
                         Text(
                             text = "Modo de Carga de Datos",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         val statusText = when (cargaState) {
                             CargaUi.Inicial -> "Inicial"
@@ -107,14 +110,14 @@ fun PantallaRendimiento(
                     }
 
                     Text(
-                        text = "Perfil toma ~2s y Pedidos toma ~3s. En modo secuencial demoran ~5s; en modo paralelo demoran ~3s.",
+                        text = "Perfil requiere ~2s y Pedidos requiere ~3s. En modo secuencial demoran ~5s; en modo paralelo demoran ~3s.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         NotionSecondaryButton(
                             text = "Una por una (~5s)",
@@ -133,13 +136,13 @@ fun PantallaRendimiento(
                         )
                     }
 
-                    // CONTROL DE SIMULACIÓN DE ERROR
+                    // SWITCH DE ERROR SIMULADO CON ESTILO DESATURADO
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -147,7 +150,8 @@ fun PantallaRendimiento(
                             Text(
                                 text = "Simular Error de Conexión",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "Lanza IOException durante la descarga de pedidos",
@@ -170,15 +174,15 @@ fun PantallaRendimiento(
             }
         }
 
-        // ESTADOS Y GRÁFICO COMPARATIVO
+        // TARJETA DE RESULTADOS Y BARRAS COMPARATIVAS
         item {
             when (val estado = cargaState) {
                 CargaUi.Inicial -> {
                     NotionCard(
-                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        backgroundColor = MaterialTheme.colorScheme.surface
                     ) {
                         Text(
-                            text = "Presiona 'Una por una' o 'A la vez' para iniciar las peticiones y comparar su desempeño real.",
+                            text = "Selecciona 'Una por una' o 'A la vez' para iniciar la carga y medir los tiempos de ejecución.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -186,7 +190,9 @@ fun PantallaRendimiento(
                 }
 
                 CargaUi.Cargando -> {
-                    NotionCard {
+                    NotionCard(
+                        backgroundColor = MaterialTheme.colorScheme.surface
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -198,12 +204,13 @@ fun PantallaRendimiento(
                             )
                             Column {
                                 Text(
-                                    text = "Ejecutando peticiones de datos...",
+                                    text = "Ejecutando cargas simuladas...",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Midiendo tiempos reales de respuesta...",
+                                    text = "Obteniendo perfil y pedidos en segundo plano...",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -214,15 +221,15 @@ fun PantallaRendimiento(
 
                 is CargaUi.Exito -> {
                     NotionCard(
-                        backgroundColor = NotionSuccessContainer,
-                        borderColor = NotionSuccess.copy(alpha = 0.4f)
+                        backgroundColor = VerdeSuave,
+                        borderColor = VerdeIndicadores.copy(alpha = 0.3f)
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
                                 text = "Resultados Medidos en Tiempo Real",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = NotionSuccess
+                                color = VerdeIndicadores
                             )
 
                             Row(
@@ -259,7 +266,7 @@ fun PantallaRendimiento(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            // GRÁFICO DE BARRAS COMPARATIVO
+                            // GRÁFICO COMPARATIVO DE BARRAS HORIZONTALES
                             Text(
                                 text = "Visualización Comparativa de Tiempo (ms)",
                                 style = MaterialTheme.typography.titleMedium,
@@ -280,7 +287,7 @@ fun PantallaRendimiento(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(18.dp)
+                                        .height(16.dp)
                                         .clip(RoundedCornerShape(4.dp))
                                         .background(MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
@@ -301,16 +308,16 @@ fun PantallaRendimiento(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(14.dp)
-                                        .clip(RoundedCornerShape(4.dp))
+                                        .height(12.dp)
+                                        .clip(RoundedCornerShape(3.dp))
                                         .background(MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .fillMaxWidth(3000f / maxTheoretical)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(NotionSuccess)
+                                            .clip(RoundedCornerShape(3.dp))
+                                            .background(VerdeIndicadores)
                                     )
                                 }
 
@@ -322,15 +329,15 @@ fun PantallaRendimiento(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(14.dp)
-                                        .clip(RoundedCornerShape(4.dp))
+                                        .height(12.dp)
+                                        .clip(RoundedCornerShape(3.dp))
                                         .background(MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .fillMaxWidth(5000f / maxTheoretical)
-                                            .clip(RoundedCornerShape(4.dp))
+                                            .clip(RoundedCornerShape(3.dp))
                                             .background(MaterialTheme.colorScheme.secondary)
                                     )
                                 }
@@ -341,15 +348,15 @@ fun PantallaRendimiento(
 
                 is CargaUi.Error -> {
                     NotionCard(
-                        backgroundColor = NotionErrorContainer,
-                        borderColor = NotionError.copy(alpha = 0.4f)
+                        backgroundColor = RojoSuave,
+                        borderColor = RojoIndicadores.copy(alpha = 0.4f)
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Outlined.ErrorOutline,
                                     contentDescription = null,
-                                    tint = NotionError,
+                                    tint = RojoIndicadores,
                                     modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -357,7 +364,7 @@ fun PantallaRendimiento(
                                     text = "Error de Carga Simulado",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = NotionError
+                                    color = RojoIndicadores
                                 )
                             }
 
