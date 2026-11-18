@@ -20,6 +20,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * ViewModel principal de CentroTareas.
@@ -224,6 +226,106 @@ class TareasViewModel(
     private val _primos = MutableStateFlow<PrimosUi>(
         PrimosUi.Inicial
     )
+    /**
+     * Ejecuta dos cargas de manera secuencial.
+     *
+     * Primero carga el perfil.
+     * Después carga los pedidos.
+     *
+     * Tiempo aproximado: 5 segundos.
+     */
+    fun cargarUnaPorUna() {
+
+        // Evita iniciar otra carga mientras existe una activa.
+        if (_carga.value == CargaUi.Cargando) {
+            return
+        }
+
+        // Informa que comenzó la carga.
+        _carga.value = CargaUi.Cargando
+
+        // Ejecuta las operaciones dentro del ViewModel.
+        viewModelScope.launch {
+
+            // Registra el tiempo inicial.
+            val inicio = System.currentTimeMillis()
+
+            // Primera carga: aproximadamente 2 segundos.
+            val perfil = repo.cargarPerfil()
+
+            // Segunda carga: aproximadamente 3 segundos.
+            val pedidos = repo.cargarPedidos(false)
+
+            // Calcula el tiempo transcurrido.
+            val tiempo = System.currentTimeMillis() - inicio
+
+            // Comunica el resultado a la interfaz.
+            _carga.value = CargaUi.Exito(
+                modo = "Una por una",
+                perfil = perfil,
+                pedidos = pedidos.size,
+                milisegundos = tiempo
+            )
+        }
+    }
+    /**
+     * Ejecuta dos cargas de manera paralela.
+     *
+     * Utiliza async para iniciar ambas operaciones
+     * y await para esperar sus resultados.
+     *
+     * Tiempo aproximado: 3 segundos.
+     */
+    fun cargarALaVez() {
+
+        // Evita ejecutar varias cargas simultáneamente.
+        if (_carga.value == CargaUi.Cargando) {
+            return
+        }
+
+        // Actualiza el estado.
+        _carga.value = CargaUi.Cargando
+
+        // Inicia una corrutina asociada al ViewModel.
+        viewModelScope.launch {
+
+            // Registra el tiempo inicial.
+            val inicio = System.currentTimeMillis()
+
+            // Ejecuta ambas operaciones concurrentemente.
+            val (perfil, pedidos) = coroutineScope {
+
+                // Primera operación.
+                val perfilAsync = async {
+
+                    repo.cargarPerfil()
+                }
+
+                // Segunda operación.
+                val pedidosAsync = async {
+
+                    repo.cargarPedidos(false)
+                }
+
+                // Espera los resultados de ambas operaciones.
+                Pair(
+                    perfilAsync.await(),
+                    pedidosAsync.await()
+                )
+            }
+
+            // Calcula el tiempo transcurrido.
+            val tiempo = System.currentTimeMillis() - inicio
+
+            // Comunica el resultado a la interfaz.
+            _carga.value = CargaUi.Exito(
+                modo = "A la vez",
+                perfil = perfil,
+                pedidos = pedidos.size,
+                milisegundos = tiempo
+            )
+        }
+    }
 
     /**
      * Estado público del cálculo.
