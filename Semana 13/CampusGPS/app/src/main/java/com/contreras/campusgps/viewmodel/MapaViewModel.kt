@@ -136,6 +136,18 @@ class MapaViewModel(
      * Debe ejecutarse después de comprobar
      * que el usuario concedió los permisos.
      */
+    private val recorridosRepo = com.contreras.campusgps.data.RecorridosRepositoryDemostracion()
+    private val _recorrido = MutableStateFlow<com.contreras.campusgps.model.Recorrido?>(null)
+    val recorrido = _recorrido.asStateFlow()
+
+    fun verRecorrido() {
+        val origen = (_estado.value as? UbicacionUi.Lista)?.posicion ?: return
+        val destino = _lugares.value.firstOrNull { it.lugar.id == _seleccionado.value }?.lugar ?: return
+        _recorrido.value = recorridosRepo.crear(origen, destino)
+    }
+
+    fun cerrarRecorrido() { _recorrido.value = null }
+
     private val _consulta = MutableStateFlow("")
     val consulta = _consulta.asStateFlow()
     private val _categoria = MutableStateFlow<String?>(null)
@@ -146,11 +158,13 @@ class MapaViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _lugares.value)
 
     fun cambiarConsulta(texto: String) {
+        cerrarRecorrido()
         _consulta.value = texto
         validarSeleccionVisible()
     }
 
     fun cambiarCategoria(categoria: String?) {
+        cerrarRecorrido()
         _categoria.value = categoria?.takeIf { it in categorias }
         validarSeleccionVisible()
     }
@@ -161,6 +175,7 @@ class MapaViewModel(
     }
 
     fun buscar() {
+        cerrarRecorrido()
 
         // Cambia el estado a Buscando.
         _estado.value = UbicacionUi.Buscando
@@ -334,6 +349,7 @@ class MapaViewModel(
         // =============================================
 
         if (existeLugar) {
+            if (_seleccionado.value != id) cerrarRecorrido()
 
             /*
              * Guarda el identificador seleccionado.

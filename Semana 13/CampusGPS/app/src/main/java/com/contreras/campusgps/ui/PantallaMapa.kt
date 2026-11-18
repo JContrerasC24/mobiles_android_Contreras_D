@@ -59,6 +59,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
 // Modelos y ViewModel.
+import com.contreras.campusgps.model.Recorrido
+import com.google.maps.android.compose.Polyline
+import com.google.android.gms.maps.model.LatLngBounds
 import com.contreras.campusgps.model.LugarConDistancia
 import com.contreras.campusgps.model.UbicacionUi
 import com.contreras.campusgps.viewmodel.MapaViewModel
@@ -90,6 +93,7 @@ fun PantallaMapa(
     // =====================================================
 
     // Estado actual de la ubicación.
+    val recorrido by vm.recorrido.collectAsState()
     val estado by vm.estado.collectAsState()
 
     // Lugares del campus ordenados por distancia.
@@ -385,6 +389,7 @@ fun PantallaMapa(
 
                     MapaUbicacionActual(
 
+                        recorrido = recorrido,
                         latitud = actual.posicion.latitud,
 
                         longitud = actual.posicion.longitud,
@@ -485,6 +490,16 @@ fun PantallaMapa(
                     // =========================================
 
                     DetalleLugar(lugares.firstOrNull { it.lugar.id == seleccionado })
+                    if (seleccionado != null && recorrido == null) {
+                        Button(onClick = vm::verRecorrido) { Text("Ver recorrido") }
+                    }
+                    recorrido?.let { ruta ->
+                        Text("Demostración en línea recta · no es una ruta por calles",
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text("Origen: mi ubicación · Destino: ${ruta.destino.nombre}")
+                        Text("Recorrido listo · ${ruta.metros.toInt()} m geográficos")
+                        Button(onClick = vm::cerrarRecorrido) { Text("Cerrar recorrido") }
+                    }
 
                     ListaLugares(
 
@@ -551,6 +566,7 @@ fun PantallaMapa(
  */
 @Composable
 private fun MapaUbicacionActual(
+    recorrido: Recorrido?,
 
     latitud: Double,
 
@@ -721,6 +737,15 @@ private fun MapaUbicacionActual(
     // 23. MOSTRAR GOOGLE MAPS
     // =====================================================
 
+
+    LaunchedEffect(recorrido, mapaCargado) {
+        if (mapaCargado && recorrido != null) {
+            val limites = LatLngBounds.builder()
+            recorrido.puntos.forEach { limites.include(LatLng(it.latitud, it.longitud)) }
+            estadoCamara.animate(CameraUpdateFactory.newLatLngBounds(limites.build(), 80), 600)
+        }
+    }
+
     GoogleMap(
 
         modifier = Modifier
@@ -741,8 +766,11 @@ private fun MapaUbicacionActual(
         // 24. MARCADOR DEL USUARIO
         // =================================================
 
+        recorrido?.let { ruta ->
+            Polyline(points = ruta.puntos.map { LatLng(it.latitud, it.longitud) },
+                color = MaterialTheme.colorScheme.primary, width = 10f, geodesic = true)
+        }
         Marker(
-
             state = marcadorUsuario,
 
             title = "Mi ubicación",

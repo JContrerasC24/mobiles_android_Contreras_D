@@ -246,3 +246,9 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 4 en la nueva carpeta mobiles_android_Contreras_D_sem13_ia: iconos originales por categoría y selección, panel de destino con distancia geográfica. Archivos: IconosMapa, DetalleLugar y PantallaMapa. Compilación y pruebas satisfactorias en 9 s.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### feat(rutas): incorpora visualizacion de recorridos
+
+Etapa 5: Recorrido, RecorridosRepository y conexiones de ViewModel/pantalla permiten abrir y cerrar una Polyline entre ubicación y destino. Se encuadran ambos extremos y se informa que la distancia y la línea son geográficas, sin navegación vial ni API adicional. Cambiar destino, filtros o ubicación cierra la ruta anterior.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
