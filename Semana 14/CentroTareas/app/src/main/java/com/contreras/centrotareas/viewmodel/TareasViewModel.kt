@@ -1,3 +1,4 @@
+
 package com.contreras.centrotareas.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * Administra los estados de las tareas y se comunica
  * con el Repository.
  *
- * No debe contener componentes visuales de Compose.
+ * Laboratorio 14: Hilos y corrutinas en Android.
  */
 class TareasViewModel(
     private val repo: TareasRepository
@@ -26,73 +27,160 @@ class TareasViewModel(
     // PARTE A: TAREA CON PROGRESO
     // ==========================================
 
-    // Estado interno del mensaje.
+    /**
+     * Estado interno del mensaje.
+     */
     private val _mensaje = MutableStateFlow("Listo")
 
-    // Estado público que observará la interfaz.
+    /**
+     * Estado público observado por la interfaz.
+     */
     val mensaje: StateFlow<String> = _mensaje.asStateFlow()
 
-    // TODO Paso 1:
-    // Implementar tareaLargaMala().
+    /**
+     * PASO 1: PROVOCAR EL CONGELAMIENTO
+     *
+     * Esta función demuestra qué ocurre cuando
+     * una tarea pesada se ejecuta directamente
+     * en el hilo principal de Android.
+     *
+     * IMPORTANTE:
+     * Esta implementación es intencionalmente
+     * incorrecta y será reemplazada en el Paso 2.
+     */
+    fun tareaLargaMala() {
 
-    // TODO Paso 2:
-    // Reemplazarla por tareaLarga() utilizando corrutinas.
+        // Indicamos que comenzó la tarea.
+        _mensaje.value = "Trabajando..."
 
-    // TODO Paso 3:
-    // Implementar StateFlow<Float> para el progreso.
+        // Bloquea el hilo principal durante 4 segundos.
+        Thread.sleep(4000)
 
-    // TODO Paso 4:
-    // Implementar Job, estado corriendo y cancelar().
+        // Actualizamos el mensaje después de la espera.
+        _mensaje.value = "Terminó"
+    }
+
+    /**
+     * PASO 2:
+     *
+     * Reemplazar tareaLargaMala() por tareaLarga()
+     * utilizando viewModelScope.launch,
+     * withContext y Dispatchers.Default.
+     */
+
+    /**
+     * PASO 3:
+     *
+     * Implementar el progreso mediante
+     * StateFlow<Float>.
+     *
+     * El progreso deberá avanzar desde
+     * 0f hasta 1f.
+     */
+
+    /**
+     * PASO 4:
+     *
+     * Implementar:
+     *
+     * - Job para controlar la tarea.
+     * - StateFlow<Boolean> para indicar si está corriendo.
+     * - Función cancelar().
+     * - Protección contra ejecuciones duplicadas.
+     */
 
 
     // ==========================================
     // PARTE B: CONTAR NÚMEROS PRIMOS
     // ==========================================
 
-    // Estado interno del cálculo.
+    /**
+     * Estado interno del cálculo de primos.
+     */
     private val _primos = MutableStateFlow<PrimosUi>(
         PrimosUi.Inicial
     )
 
-    // Estado público del cálculo.
+    /**
+     * Estado público del cálculo.
+     */
     val primos: StateFlow<PrimosUi> = _primos.asStateFlow()
 
-    // TODO Paso 5:
-    // Implementar contar(hasta: Int).
+    /**
+     * PASO 5:
+     *
+     * Implementar contar(hasta: Int).
+     *
+     * El cálculo deberá ejecutarse utilizando
+     * Dispatchers.Default.
+     */
 
-    // TODO Paso 5:
-    // Implementar cancelarPrimos().
+    /**
+     * PASO 5:
+     *
+     * Implementar cancelarPrimos().
+     */
 
 
     // ==========================================
     // PARTE C: DOS CARGAS DE DATOS
     // ==========================================
 
-    // Estado interno de las cargas.
+    /**
+     * Estado interno de las cargas.
+     */
     private val _carga = MutableStateFlow<CargaUi>(
         CargaUi.Inicial
     )
 
-    // Estado público de las cargas.
+    /**
+     * Estado público de las cargas.
+     */
     val carga: StateFlow<CargaUi> = _carga.asStateFlow()
 
-    // TODO Paso 6:
-    // Implementar cargarUnaPorUna().
+    /**
+     * PASO 6:
+     *
+     * Implementar cargarUnaPorUna().
+     *
+     * Primero cargará el perfil y después
+     * los pedidos.
+     */
 
-    // TODO Paso 6:
-    // Implementar cargarALaVez().
+    /**
+     * PASO 6:
+     *
+     * Implementar cargarALaVez().
+     *
+     * Utilizará async y await para ejecutar
+     * las dos cargas en paralelo.
+     */
 
 
     // ==========================================
     // PARTE D: MANEJO DE ERRORES
     // ==========================================
 
-    // TODO Paso 7:
-    // Implementar simularError.
+    /**
+     * PASO 7:
+     *
+     * Implementar StateFlow<Boolean>
+     * para simular errores.
+     */
 
-    // TODO Paso 7:
-    // Implementar cambiarSimularError(valor).
+    /**
+     * PASO 7:
+     *
+     * Implementar cambiarSimularError(valor).
+     */
 
-    // TODO Paso 7:
-    // Implementar manejo de errores y reintentos.
+    /**
+     * PASO 7:
+     *
+     * Implementar:
+     *
+     * - Manejo de excepciones.
+     * - Estado de error.
+     * - Reintento de la carga.
+     */
 }
