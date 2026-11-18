@@ -1,6 +1,10 @@
 package com.contreras.centrotareas.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,18 +14,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,10 +46,14 @@ import com.contreras.centrotareas.ui.components.NotionPrimaryButton
 import com.contreras.centrotareas.ui.components.NotionSecondaryButton
 import com.contreras.centrotareas.ui.components.NotionStatusBadge
 import com.contreras.centrotareas.viewmodel.TareasViewModel
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
  * Pantalla para la ejecución y gestión de tareas con progreso en segundo plano.
+ *
+ * Incluye barra de progreso reactiva, tiempo transcurrido en vivo, cancelaciones
+ * mediante Job y prueba de reactividad de la interfaz.
  */
 @Composable
 fun PantallaProcesos(
@@ -51,7 +65,20 @@ fun PantallaProcesos(
     val corriendo by vm.corriendo.collectAsState()
 
     var toques by remember { mutableStateOf(0) }
+    var tiempoTranscurridoMs by remember { mutableLongStateOf(0L) }
+
     val animatedProgress by animateFloatAsState(targetValue = progreso, label = "progressAnim")
+
+    // Temporizador en tiempo real mientras el proceso está activo
+    LaunchedEffect(corriendo) {
+        if (corriendo) {
+            val inicio = System.currentTimeMillis()
+            while (corriendo) {
+                tiempoTranscurridoMs = System.currentTimeMillis() - inicio
+                delay(50)
+            }
+        }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -126,7 +153,7 @@ fun PantallaProcesos(
                     }
 
                     Text(
-                        text = "Simulación de una operación distribuida de 100 iteraciones con Dispatchers.Default y actualización reactiva a 40ms.",
+                        text = "Simulación de una operación distribuida de 100 iteraciones en Dispatchers.Default con actualización de StateFlow a 40ms.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -161,22 +188,68 @@ fun PantallaProcesos(
                         )
                     }
 
-                    // ESTADO ACTUAL
+                    // MÉTRICAS Y TIEMPOS
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "Estado:",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Text(
-                            text = mensaje,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Column {
+                            Text(
+                                text = "Estado actual",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Crossfade(targetState = mensaje, label = "estadoCrossfade") { msg ->
+                                Text(
+                                    text = msg,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Tiempo transcurrido",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = "${tiempoTranscurridoMs} ms",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    // MENSAJE INFORMATIVO / RESULTADO
+                    AnimatedVisibility(
+                        visible = !corriendo && mensaje != "Listo",
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (mensaje == "Terminó") Icons.Outlined.CheckCircle else Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = if (mensaje == "Terminó") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                text = if (mensaje == "Terminó") "Proceso finalizado correctamente al 100%." else "Proceso cancelado por solicitud del usuario.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
 
                     // BOTONES DE CONTROL
