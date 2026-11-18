@@ -10,6 +10,14 @@ import com.contreras.centrotareas.model.PrimosUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.util.Log
+
+import androidx.lifecycle.viewModelScope
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * ViewModel principal de CentroTareas.
@@ -48,16 +56,47 @@ class TareasViewModel(
      * Esta implementación es intencionalmente
      * incorrecta y será reemplazada en el Paso 2.
      */
-    fun tareaLargaMala() {
+    /**
+     * Paso 2: ejecutar una tarea larga mediante corrutinas.
+     *
+     * La operación se realiza sin bloquear la interfaz
+     * y permite seguir interactuando con la aplicación.
+     */
+    fun tareaLarga() {
 
-        // Indicamos que comenzó la tarea.
-        _mensaje.value = "Trabajando..."
+        // Inicia una corrutina asociada al ciclo de vida del ViewModel.
+        viewModelScope.launch {
 
-        // Bloquea el hilo principal durante 4 segundos.
-        Thread.sleep(4000)
+            // Informa que comenzó la tarea.
+            _mensaje.value = "Trabajando..."
 
-        // Actualizamos el mensaje después de la espera.
-        _mensaje.value = "Terminó"
+            // Comprueba el hilo antes de la operación.
+            Log.d(
+                "HILO",
+                "Antes: ${Thread.currentThread().name}"
+            )
+
+            // Ejecuta la espera utilizando Dispatchers.Default.
+            withContext(Dispatchers.Default) {
+
+                Log.d(
+                    "HILO",
+                    "Dentro: ${Thread.currentThread().name}"
+                )
+
+                // Suspende la corrutina durante cuatro segundos.
+                delay(4000)
+            }
+
+            // Comprueba el hilo después de la operación.
+            Log.d(
+                "HILO",
+                "Despues: ${Thread.currentThread().name}"
+            )
+
+            // Actualiza el mensaje al finalizar.
+            _mensaje.value = "Terminó"
+        }
     }
 
     /**

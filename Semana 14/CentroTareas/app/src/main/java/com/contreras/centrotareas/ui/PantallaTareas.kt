@@ -187,16 +187,11 @@ fun PantallaTareas(
                         // =====================================
 
                         Button(
-
                             onClick = {
-
-                                // Ejecuta la tarea en el hilo principal.
-                                vm.tareaLargaMala()
+                                vm.tareaLarga()
                             }
-
                         ) {
-
-                            Text("Tarea larga (MAL)")
+                            Text("Tarea larga")
                         }
 
 
