@@ -31,8 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,13 +58,13 @@ import kotlin.math.roundToInt
 @Composable
 fun PantallaProcesos(
     vm: TareasViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val mensaje by vm.mensaje.collectAsState()
     val progreso by vm.progreso.collectAsState()
     val corriendo by vm.corriendo.collectAsState()
 
-    var toques by remember { mutableStateOf(0) }
+    var toques by remember { mutableIntStateOf(0) }
     var tiempoTranscurridoMs by remember { mutableLongStateOf(0L) }
 
     val animatedProgress by animateFloatAsState(targetValue = progreso, label = "progressAnim")
@@ -216,7 +216,7 @@ fun PantallaProcesos(
                                 color = MaterialTheme.colorScheme.secondary
                             )
                             Text(
-                                text = "${tiempoTranscurridoMs} ms",
+                                text = "$tiempoTranscurridoMs ms",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -226,7 +226,7 @@ fun PantallaProcesos(
 
                     // MENSAJE INFORMATIVO / RESULTADO
                     AnimatedVisibility(
-                        visible = !corriendo && mensaje != "Listo",
+                        visible = (!corriendo && mensaje != "Listo"),
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
