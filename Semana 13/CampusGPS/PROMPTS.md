@@ -252,3 +252,9 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 5: Recorrido, RecorridosRepository y conexiones de ViewModel/pantalla permiten abrir y cerrar una Polyline entre ubicación y destino. Se encuadran ambos extremos y se informa que la distancia y la línea son geográficas, sin navegación vial ni API adicional. Cambiar destino, filtros o ubicación cierra la ruta anterior.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### feat(animacion): agrega vehiculo animado estilo TravelBoast
+
+Etapa 6: automóvil dibujado con Canvas, interpolación esférica por distancia y orientación según segmento. Reproductor con una sola corrutina, reloj monotónico y cancelación al cerrar/cambiar ruta o salir de pantalla. Archivos: Trayectoria, ReproductorRecorrido, AutomovilMapa, PanelReproduccion, IconosMapa, MapaViewModel y PantallaMapa. Cuatro pruebas nuevas: extremos, rumbo/giro, puntos coincidentes y antimeridiano. Compilación y ocho pruebas unitarias totales satisfactorias.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

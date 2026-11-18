@@ -136,6 +136,11 @@ class MapaViewModel(
      * Debe ejecutarse después de comprobar
      * que el usuario concedió los permisos.
      */
+    private val reproductor = ReproductorRecorrido(viewModelScope)
+    val reproduccion = reproductor.estado
+    fun iniciarRecorrido() { if (_recorrido.value != null) reproductor.iniciar() }
+    fun cancelarAnimacion() { reproductor.cancelar() }
+
     private val recorridosRepo = com.contreras.campusgps.data.RecorridosRepositoryDemostracion()
     private val _recorrido = MutableStateFlow<com.contreras.campusgps.model.Recorrido?>(null)
     val recorrido = _recorrido.asStateFlow()
@@ -143,10 +148,11 @@ class MapaViewModel(
     fun verRecorrido() {
         val origen = (_estado.value as? UbicacionUi.Lista)?.posicion ?: return
         val destino = _lugares.value.firstOrNull { it.lugar.id == _seleccionado.value }?.lugar ?: return
+        reproductor.cancelar()
         _recorrido.value = recorridosRepo.crear(origen, destino)
     }
 
-    fun cerrarRecorrido() { _recorrido.value = null }
+    fun cerrarRecorrido() { reproductor.cancelar(); _recorrido.value = null }
 
     private val _consulta = MutableStateFlow("")
     val consulta = _consulta.asStateFlow()

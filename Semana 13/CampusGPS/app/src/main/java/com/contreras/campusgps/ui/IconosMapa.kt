@@ -9,6 +9,27 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 /** Recursos originales dibujados en memoria; no requieren descargas. */
 object IconosMapa {
+    fun automovil(): BitmapDescriptor {
+        val bitmap = Bitmap.createBitmap(64, 96, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.color = Color.rgb(20, 35, 43)
+        canvas.drawRoundRect(7f, 18f, 57f, 38f, 4f, 4f, p)
+        canvas.drawRoundRect(7f, 60f, 57f, 80f, 4f, 4f, p)
+        p.color = Color.rgb(245, 176, 50)
+        canvas.drawRoundRect(13f, 6f, 51f, 90f, 12f, 12f, p)
+        p.color = Color.rgb(26, 70, 85)
+        canvas.drawRoundRect(18f, 25f, 46f, 41f, 4f, 4f, p)
+        canvas.drawRoundRect(18f, 64f, 46f, 76f, 3f, 3f, p)
+        p.color = Color.WHITE
+        canvas.drawRect(17f, 10f, 25f, 16f, p)
+        canvas.drawRect(39f, 10f, 47f, 16f, p)
+        p.color = Color.RED
+        canvas.drawRect(17f, 82f, 24f, 87f, p)
+        canvas.drawRect(40f, 82f, 47f, 87f, p)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
     fun categoria(categoria: String, seleccionado: Boolean): BitmapDescriptor {
         val bitmap = Bitmap.createBitmap(96, 112, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)

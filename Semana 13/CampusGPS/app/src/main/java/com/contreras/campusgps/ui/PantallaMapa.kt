@@ -93,6 +93,9 @@ fun PantallaMapa(
     // =====================================================
 
     // Estado actual de la ubicación.
+    androidx.compose.runtime.DisposableEffect(vm) {
+        onDispose { vm.cancelarAnimacion() }
+    }
     val recorrido by vm.recorrido.collectAsState()
     val estado by vm.estado.collectAsState()
 
@@ -389,6 +392,7 @@ fun PantallaMapa(
 
                     MapaUbicacionActual(
 
+                        reproduccion = vm.reproduccion,
                         recorrido = recorrido,
                         latitud = actual.posicion.latitud,
 
@@ -498,6 +502,7 @@ fun PantallaMapa(
                             style = MaterialTheme.typography.bodyMedium)
                         Text("Origen: mi ubicación · Destino: ${ruta.destino.nombre}")
                         Text("Recorrido listo · ${ruta.metros.toInt()} m geográficos")
+                        PanelReproduccion(vm)
                         Button(onClick = vm::cerrarRecorrido) { Text("Cerrar recorrido") }
                     }
 
@@ -566,6 +571,7 @@ fun PantallaMapa(
  */
 @Composable
 private fun MapaUbicacionActual(
+    reproduccion: kotlinx.coroutines.flow.StateFlow<com.contreras.campusgps.viewmodel.Reproduccion>,
     recorrido: Recorrido?,
 
     latitud: Double,
@@ -767,6 +773,7 @@ private fun MapaUbicacionActual(
         // =================================================
 
         recorrido?.let { ruta ->
+            AutomovilMapa(ruta, reproduccion)
             Polyline(points = ruta.puntos.map { LatLng(it.latitud, it.longitud) },
                 color = MaterialTheme.colorScheme.primary, width = 10f, geodesic = true)
         }
