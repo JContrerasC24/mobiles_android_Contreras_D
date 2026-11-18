@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -30,12 +31,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.contreras.centrotareas.model.ActividadRegistro
 import com.contreras.centrotareas.ui.components.NotionCard
+import com.contreras.centrotareas.ui.components.NotionPrimaryButton
 import com.contreras.centrotareas.ui.components.NotionSecondaryButton
 import com.contreras.centrotareas.ui.components.NotionStatusBadge
 import com.contreras.centrotareas.viewmodel.TareasViewModel
 
 /**
- * Pantalla que muestra el historial dinámico de actividades y operaciones en tiempo real.
+ * Pantalla que muestra el historial dinámico de operaciones en tiempo real con filtros por estado.
  */
 @Composable
 fun PantallaActividad(
@@ -43,20 +45,21 @@ fun PantallaActividad(
     modifier: Modifier = Modifier
 ) {
     val historial by vm.historial.collectAsState()
-    var filtroEstado by remember { mutableStateOf("Todos") }
+    var filtroEstado by remember { mutableStateOf("Todas") }
 
     val historialFiltrado = when (filtroEstado) {
-        "Completados" -> historial.filter { it.estado.equals("Completado", ignoreCase = true) }
-        "Cancelados" -> historial.filter { it.estado.equals("Cancelado", ignoreCase = true) }
+        "Completadas" -> historial.filter { it.estado.equals("Completado", ignoreCase = true) }
+        "Canceladas" -> historial.filter { it.estado.equals("Cancelado", ignoreCase = true) }
         "Errores" -> historial.filter { it.estado.equals("Error", ignoreCase = true) }
         else -> historial
     }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // ENCABEZADO Y BOTÓN DE LIMPIEZA
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -71,13 +74,14 @@ fun PantallaActividad(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Registro dinámico de ejecuciones y eventos de la sesión.",
+                        text = "Registro dinámico de operaciones ejecutadas en la sesión.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
 
                 if (historial.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     NotionSecondaryButton(
                         text = "Limpiar",
                         icon = Icons.Default.Delete,
@@ -87,33 +91,43 @@ fun PantallaActividad(
             }
         }
 
-        // CHIPS DE FILTRADO ESTILO TABLA NOTION
+        // CHIPS DE FILTRADO FUNCIONALES
         if (historial.isNotEmpty()) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("Todos", "Completados", "Cancelados", "Errores").forEach { filtro ->
-                        NotionSecondaryButton(
-                            text = filtro,
-                            onClick = { filtroEstado = filtro },
-                            modifier = Modifier.weight(1f)
-                        )
+                    listOf("Todas", "Completadas", "Canceladas", "Errores").forEach { filtro ->
+                        val isSelected = filtroEstado == filtro
+                        if (isSelected) {
+                            NotionPrimaryButton(
+                                text = filtro,
+                                onClick = { filtroEstado = filtro },
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            NotionSecondaryButton(
+                                text = filtro,
+                                onClick = { filtroEstado = filtro },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
         }
 
+        // ESTADO VACÍO ELEGANTE O LISTA DE REGISTROS
         if (historialFiltrado.isEmpty()) {
             item {
                 NotionCard(
-                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    backgroundColor = MaterialTheme.colorScheme.surface
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 24.dp),
+                            .padding(vertical = 28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -123,15 +137,16 @@ fun PantallaActividad(
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(36.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = if (historial.isEmpty()) "Aún no hay actividades registradas" else "No hay registros con filtro '$filtroEstado'",
+                            text = if (historial.isEmpty()) "Aún no se han registrado operaciones." else "No hay registros bajo el filtro '$filtroEstado'.",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Ejecuta procesos, cálculos o cargas de rendimiento para generar registros reales.",
+                            text = "Ejecuta procesos, cálculos o comparaciones para generar actividad real.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -154,8 +169,11 @@ private fun ItemHistorialCard(
     registro: ActividadRegistro,
     modifier: Modifier = Modifier
 ) {
-    NotionCard(modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    NotionCard(
+        modifier = modifier,
+        backgroundColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -173,7 +191,7 @@ private fun ItemHistorialCard(
             Text(
                 text = registro.descripcion,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
 
             Row(
