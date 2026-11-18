@@ -93,8 +93,16 @@ fun PantallaMapa(
     // =====================================================
 
     // Estado actual de la ubicación.
-    androidx.compose.runtime.DisposableEffect(vm) {
-        onDispose { vm.cancelarAnimacion() }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(vm, lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) vm.pausarRecorrido()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            vm.pausarRecorrido()
+        }
     }
     val recorrido by vm.recorrido.collectAsState()
     val estado by vm.estado.collectAsState()

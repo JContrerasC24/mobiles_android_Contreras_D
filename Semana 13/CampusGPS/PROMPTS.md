@@ -258,3 +258,9 @@ Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente ant
 Etapa 6: automóvil dibujado con Canvas, interpolación esférica por distancia y orientación según segmento. Reproductor con una sola corrutina, reloj monotónico y cancelación al cerrar/cambiar ruta o salir de pantalla. Archivos: Trayectoria, ReproductorRecorrido, AutomovilMapa, PanelReproduccion, IconosMapa, MapaViewModel y PantallaMapa. Cuatro pruebas nuevas: extremos, rumbo/giro, puntos coincidentes y antimeridiano. Compilación y ocho pruebas unitarias totales satisfactorias.
 
 Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.
+
+### feat(animacion): incorpora controles de reproduccion
+
+Etapa 7: iniciar, pausar, reanudar, reiniciar y detener, progreso y llegada; pausa al pasar a segundo plano o desmontar pantalla. Archivos: ReproductorRecorrido, PanelReproduccion, MapaViewModel, PantallaMapa y ReproductorTest. Tres pruebas deterministas comprueban tiempo pausado, finalización, doble inicio, reinicio y cancelación. Once pruebas unitarias totales pasan.
+
+Validación: `assembleDebug testDebugUnitTest` ejecutados satisfactoriamente antes de este commit. Las pruebas visuales se registran por separado.

@@ -140,6 +140,9 @@ class MapaViewModel(
     val reproduccion = reproductor.estado
     fun iniciarRecorrido() { if (_recorrido.value != null) reproductor.iniciar() }
     fun cancelarAnimacion() { reproductor.cancelar() }
+    fun pausarRecorrido() { reproductor.pausar() }
+    fun detenerRecorrido() { reproductor.detener() }
+    fun reiniciarRecorrido() { if (_recorrido.value != null) reproductor.reiniciar() }
 
     private val recorridosRepo = com.contreras.campusgps.data.RecorridosRepositoryDemostracion()
     private val _recorrido = MutableStateFlow<com.contreras.campusgps.model.Recorrido?>(null)
