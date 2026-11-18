@@ -5,6 +5,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,13 +54,12 @@ import kotlin.math.roundToInt
 /**
  * Pantalla para la ejecución y gestión de tareas con progreso en segundo plano.
  *
- * Incluye barra de progreso reactiva, tiempo transcurrido en vivo, cancelaciones
- * mediante Job y prueba de reactividad de la interfaz.
+ * Incluye barra de progreso minimalista, tiempo transcurrido en vivo y toques de prueba de reactividad.
  */
 @Composable
 fun PantallaProcesos(
     vm: TareasViewModel,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val mensaje by vm.mensaje.collectAsState()
     val progreso by vm.progreso.collectAsState()
@@ -69,7 +70,7 @@ fun PantallaProcesos(
 
     val animatedProgress by animateFloatAsState(targetValue = progreso, label = "progressAnim")
 
-    // Temporizador en tiempo real mientras el proceso está activo
+    // Temporizador en milisegundos en vivo mientras la tarea está activa
     LaunchedEffect(corriendo) {
         if (corriendo) {
             val inicio = System.currentTimeMillis()
@@ -82,11 +83,11 @@ fun PantallaProcesos(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Column {
+            Column(modifier = Modifier.padding(bottom = 4.dp)) {
                 Text(
                     text = "Administración de Procesos",
                     style = MaterialTheme.typography.headlineMedium,
@@ -101,10 +102,10 @@ fun PantallaProcesos(
             }
         }
 
-        // PRUEBA DE RESPUESTA DE INTERFAZ
+        // TARJETA 1: PRUEBA DE RESPUESTA DE LA INTERFAZ
         item {
             NotionCard(
-                backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                backgroundColor = MaterialTheme.colorScheme.surface
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -115,15 +116,17 @@ fun PantallaProcesos(
                         Text(
                             text = "Prueba de Respuesta de UI",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Presiona el botón mientras el proceso se ejecuta para verificar que el hilo UI no se bloquee.",
+                            text = "Presiona el botón para comprobar que la interfaz responde fluidamente durante la ejecución.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
                     NotionSecondaryButton(
                         text = "Toques: $toques",
                         icon = Icons.Default.TouchApp,
@@ -133,10 +136,12 @@ fun PantallaProcesos(
             }
         }
 
-        // TARJETA PRINCIPAL DEL PROCESO
+        // TARJETA 2: CONTROL DE TAREA CON PROGRESO
         item {
-            NotionCard {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            NotionCard(
+                backgroundColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,7 +150,8 @@ fun PantallaProcesos(
                         Text(
                             text = "Tarea Larga en Segundo Plano",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         NotionStatusBadge(
                             status = if (corriendo) "Ejecutando" else mensaje
@@ -153,13 +159,13 @@ fun PantallaProcesos(
                     }
 
                     Text(
-                        text = "Simulación de una operación distribuida de 100 iteraciones en Dispatchers.Default con actualización de StateFlow a 40ms.",
+                        text = "Ejecuta 100 iteraciones en Dispatchers.Default a 40ms por ciclo sin bloquear el hilo principal.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
 
-                    // BARRA DE PROGRESO CON ANIMACIÓN
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // BARRA DE PROGRESO MINIMALISTA Y PORCENTAJE
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -181,14 +187,14 @@ fun PantallaProcesos(
                             progress = { animatedProgress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     }
 
-                    // MÉTRICAS Y TIEMPOS
+                    // MÉTRICAS DE ESTADO Y TIEMPO
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -224,7 +230,7 @@ fun PantallaProcesos(
                         }
                     }
 
-                    // MENSAJE INFORMATIVO / RESULTADO
+                    // NOTIFICACIÓN O ESTADO DE FINALIZACIÓN
                     AnimatedVisibility(
                         visible = (!corriendo && mensaje != "Listo"),
                         enter = fadeIn(),
@@ -233,8 +239,9 @@ fun PantallaProcesos(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .padding(vertical = 4.dp),
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
@@ -243,19 +250,19 @@ fun PantallaProcesos(
                                 tint = if (mensaje == "Terminó") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Spacer(modifier = Modifier.size(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (mensaje == "Terminó") "Proceso finalizado correctamente al 100%." else "Proceso cancelado por solicitud del usuario.",
+                                text = if (mensaje == "Terminó") "Tarea finalizada exitosamente al 100%." else "Operación cancelada por solicitud del usuario.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
 
-                    // BOTONES DE CONTROL
+                    // BOTONES DE ACCIÓN
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         NotionPrimaryButton(
                             text = "Iniciar Proceso",
