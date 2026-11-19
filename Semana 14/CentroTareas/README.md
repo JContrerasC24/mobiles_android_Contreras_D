@@ -1,4 +1,4 @@
-# CentroTareas – Rediseño Profesional e Interfaz Moderna Inspirada en Notion
+# CentroTareas – Rediseño Visual Profesional e Interfaz Moderna Sobria
 
 ## Información del Proyecto
 - **Institución:** TECSUP – Diseño y Desarrollo de Software
@@ -10,111 +10,88 @@
 
 ---
 
-## 1. Resumen Ejecutivo de Mejoras Visuales y Funcionales
+## 1. Sistema de Diseño Visual y Paleta de Colores
 
-Se ha transformado completamente **CentroTareas** en una aplicación Android moderna, dinámica e inspirada visualmente en los principios de diseño de **Notion**:
+Se ha realizado una **mejora integral de la interfaz gráfica** de CentroTareas para lograr una experiencia visual desaturada, elegante, moderna y equilibrada, tomando lo mejor de **Notion**, **Google Drive** y **Material Design 3**:
 
-- **Identidad Visual Original:** Paleta de colores minimalista y limpia (`NotionBackground #F7F7F5`, `NotionSurface #FFFFFF`, `NotionTextPrimary #191919`, `NotionAccent #2EAADC`, `NotionSuccess #22A06B`, `NotionWarning #D97706`, `NotionError #D92D20`), bordes discretos de 1.dp (`#E5E5E5`) y esquinas suavizadas (8dp - 10dp).
-- **Tipografía y Jerarquía:** Escala tipográfica refinada inspirada en documentos de Notion.
-- **Botones Modernizados:** Componentes de botón con estados interactivos, animaciones de pulsación (`animateFloatAsState` escala), variantes primarias, secundarias y de cancelación/peligro.
-- **Navegación Dinámica:** Navegación por barra inferior de 5 secciones con `Navigation Compose` y conservación de estados.
+### Modo Claro (Soft & Desaturated Palette):
+- **Fondo Principal:** `#F8F9FB`
+- **Superficie de Tarjetas:** `#FFFFFF`
+- **Color Principal:** `#526786` (Azul/Gris Pizarra Desaturado)
+- **Color Principal Suave:** `#EAF0F6`
+- **Texto Principal:** `#253047`
+- **Texto Secundario:** `#667085`
+- **Bordes / Delimitadores:** `#E2E7EE`
+- **Verde Suave (Contenedores):** `#EAF4EE`
+- **Verde Indicadores (Textos/Iconos):** `#4F8068`
+- **Rojo Suave (Contenedores):** `#F9EEEE`
+- **Rojo Indicadores (Textos/Iconos):** `#B46E6E`
+- **Amarillo Suave (Contenedores):** `#FAF3E8`
+- **Naranja Advertencias (Textos/Iconos):** `#A5834D`
 
----
+### Modo Oscuro (Sobrio & Accesible):
+- **Fondo Principal Dark:** `#171A20`
+- **Superficie Dark:** `#22262E`
+- **Texto Principal Dark:** `#F3F4F6`
+- **Texto Secundario Dark:** `#B0B8C5`
+- **Bordes Dark:** `#343B46`
+- **Acento Principal Dark:** `#8BA3C7`
 
-## 2. Arquitectura de Navegación y Pantallas
-
-El proyecto está estructurado formalmente bajo la arquitectura **MVVM + Repository**:
-
-### 1. Panel de Inicio (`PantallaInicio`)
-- **Encabezado Notion:** Titular workspace con subtítulo descriptivo.
-- **Resumen Dinámico de Métricas:** Contadores en tiempo real derivados del ViewModel (Procesos activos, completados y cancelados).
-- **Última Operación Realizada:** Tarjeta destacada con el estado y hora de la última acción ejecutada.
-- **Accesos Rápidos:** Tarjetas interactivas estilo Notion para navegar a las secciones principales.
-
-### 2. Administración de Procesos (`PantallaProcesos`)
-- Monitoreo de tareas con barra de avance fluida (`LinearProgressIndicator` con animación de float).
-- Porcentaje exacto y temporizador en vivo en milisegundos.
-- Control de inicio y cancelación cooperativa mediante `Job` de Corrutinas.
-- Prueba de reactividad del hilo UI con botón interactivo de toques ("Toques: N").
-
-### 3. Cálculo de Números Primos (`PantallaPrimos`)
-- Procesamiento matemático intensivo en `Dispatchers.Default`.
-- Campo para ingresar valor límite (N ≥ 2) con validación interactiva.
-- Chips de selección rápida de presets (1000, 5000, 20000, 50000).
-- Cancelación cooperativa con `ensureActive()`.
-- Reporte detallado de cantidad de primos y milisegundos requeridos.
-
-### 4. Comparación de Rendimiento (`PantallaRendimiento`)
-- Evaluación práctica de cargas **Secuenciales** (~5s) vs. **Paralelas** (~3s con `async` / `await`).
-- Visualización gráfica mediante **barras comparativas horizontales** alimentadas con los milisegundos medidos en tiempo real.
-- Interruptor para simulación de errores de red (`IOException`) con tarjetas de error estilo Notion y botón de reintento.
-
-### 5. Historial de Actividad (`PantallaActividad`)
-- Registro temporal dinámico en tiempo real de todas las ejecuciones realizadas durante la sesión.
-- Filtros estilo tabla de Notion (*Todos*, *Completados*, *Cancelados*, *Errores*).
-- Opción para limpiar el historial de la sesión.
+### Sistema de Espaciado y Proporciones:
+- **Margen Horizontal:** `16.dp`
+- **Separación entre Tarjetas:** `12.dp`
+- **Separación entre Secciones:** `24.dp`
+- **Relleno Interno (Padding):** `16.dp`
+- **Radio de Esquinas:** `12.dp`
+- **Altura Mínima de Botones:** `48.dp`
 
 ---
 
-## 3. Estructura de Paquetes del Código Fuente
+## 2. Pantallas Rediseñadas
 
-```
-app/src/main/java/com/contreras/centrotareas/
-├── MainActivity.kt
-├── data/
-│   ├── TareasRepository.kt
-│   └── TareasRepositoryLocal.kt
-├── model/
-│   ├── ActividadRegistro.kt
-│   └── Estados.kt
-├── ui/
-│   ├── PantallaTareas.kt
-│   ├── components/
-│   │   ├── NotionBadge.kt
-│   │   ├── NotionButton.kt
-│   │   └── NotionCard.kt
-│   ├── navigation/
-│   │   ├── NotionBottomNavBar.kt
-│   │   └── Screen.kt
-│   ├── screens/
-│   │   ├── PantallaActividad.kt
-│   │   ├── PantallaInicio.kt
-│   │   ├── PantallaPrimos.kt
-│   │   ├── PantallaProcesos.kt
-│   │   └── PantallaRendimiento.kt
-│   └── theme/
-│       ├── Color.kt
-│       ├── Theme.kt
-│       └── Type.kt
-└── viewmodel/
-    ├── TareasViewModel.kt
-    └── TareasViewModelFactory.kt
-```
+1. **Pantalla Principal (Inicio):**
+   - **Encabezado:** Título elegante `CentroTareas` con subtítulo `Tu espacio de trabajo y procesamiento concurrente.`
+   - **Resumen de Procesos:** 3 indicadores uniformes (*Activos*, *Completados*, *Cancelados*) en tarjetas blancas con acentos suaves y cifras numéricas destacadas.
+   - **Última Operación:** Tarjeta horizontal dinámica con resultado de la última acción ejecutada o estado vacío explicativo.
+   - **Accesos Rápidos:** 4 tarjetas blancas uniformes con borde gris suave, icono con acento de color, descripción y flecha de navegación.
+
+2. **Administración de Procesos (`PantallaProcesos`):**
+   - Control de tareas con barra de progreso minimalista (delgada y suavizada).
+   - Porcentaje en vivo y temporizador en milisegundos en tiempo real.
+   - Botón interactivo de prueba de respuesta UI (*Toques: N*).
+   - Botones primarios (`#526786`) y de cancelación desaturados (`RojoSuave`).
+
+3. **Cálculo de Números Primos (`PantallaPrimos`):**
+   - Formulario con validación (N ≥ 2) y chips de prueba rápida (1K, 5K, 20K, 50K).
+   - Cómputo pesado en `Dispatchers.Default` con cancelación cooperativa (`ensureActive()`).
+   - Tarjeta de resultado destacada en verde suave con tiempo medido en milisegundos.
+
+4. **Comparación de Rendimiento (`PantallaRendimiento`):**
+   - Comparativa entre ejecución **Secuencial (~5s)** y **Paralela (~3s)** con `async` / `await`.
+   - Visualización por **barras horizontales proporcionales** a los tiempos reales en milisegundos.
+   - Interruptor de simulación de error de red con tarjeta de recuperación y reintento.
+
+5. **Historial de Actividad (`PantallaActividad`):**
+   - Filas/tarjetas compactas para cada registro (título, hora, duración, estado badge).
+   - **Filtros funcionales** por chips (*Todas*, *Completadas*, *Canceladas*, *Errores*).
+   - Estado vacío elegante y botón de limpieza de sesión.
 
 ---
 
-## 4. Registro de Commits Obligatorios en `semana14-mejora-ia`
+## 3. Registro de Commits en `semana14-mejora-ia`
 
-1. **`style(ui): implementa tema visual inspirado en Notion`**
-   - Creación de paleta de colores Notion, escala tipográfica y componentes reutilizables (`NotionCard`, `NotionButton`, `NotionBadge`).
-2. **`feat(navegacion): incorpora pantallas dinamicas y menu inferior`**
-   - Integración de `Navigation Compose`, destinations (`Screen`), `NotionBottomNavBar` y modularización de pantallas.
-3. **`feat(procesos): moderniza progreso y cancelacion de tareas`**
-   - Animación de barra de avance, temporizador dinámico en milisegundos y toques de prueba de reactividad.
-4. **`feat(primos): rediseña pantalla de calculos y resultados`**
-   - Formulario validado con presets de prueba rápida, procesamiento en `Dispatchers.Default` y reporte exacto de tiempo.
-5. **`feat(rendimiento): visualiza comparacion secuencial y paralela`**
-   - Medición en tiempo real de ejecuciones con `async`/`await`, gráfico de barras comparativo y switch de simulación de errores.
-6. **`feat(actividad): agrega historial dinamico de operaciones`**
-   - Historial dinámico en vivo con filtros por estado y limpieza de sesión.
-7. **`fix(ui): mejora errores reintentos y estados visuales`**
-   - Correcciones de sintaxis, pulido de advertencias, tipos primitivos optimizados y soporte de temas.
-8. **`docs: documenta mejora visual y evidencias`**
-   - Actualización completa de documentación en `README.md`.
+- **`style(theme): implementa nueva paleta desaturada y sistema de componentes`**
+- **`feat(ui): rediseña pantalla principal de inicio y tarjetas de resumen`**
+- **`feat(ui): rediseña pantalla de procesos con barra minimalista y tiempo en vivo`**
+- **`feat(ui): rediseña pantalla de numeros primos y tarjetas de parametros`**
+- **`feat(ui): rediseña comparacion de rendimiento y grafico de barras`**
+- **`feat(ui): rediseña historial de actividad con filtros funcionales`**
+- **`feat(ui): rediseña navegacion inferior y animaciones de transicion`**
+- **`docs: actualiza documentacion con paleta de colores y arquitectura visual`**
 
 ---
 
-## 5. Evidencias de Compilación y Pruebas Unitarias
+## 4. Evidencias de Compilación y Pruebas Unitarias
 
 ### Compilación Debug (`assembleDebug`)
 ```bash
